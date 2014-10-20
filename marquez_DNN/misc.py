@@ -214,7 +214,7 @@ def colorzoom(img, zoom):
 
 def tiffread(fname, strip=False):
     """Read a multi-page TIFF image to a three-dimensional array."""
-    import Image
+    from PIL import Image
     import itertools
     img = Image.open(fname)
     

@@ -36,7 +36,6 @@ from numpy.random import *
 #from cvutils import misc
 import patches
 import misc
-from scipy.misc import imsave
 
 import theano
 import theano.tensor as T
@@ -207,6 +206,7 @@ def imsave_file(CNN,
     W0 = theano.shared(weights[8])
     b0 = theano.shared(weights[9])
     
+    print "Loaded weights: slice %s..." % frame
     # Create the CNN with loaded weights
     layer0_input = x.reshape((batch_size, 1, 51, 51))
 
@@ -228,6 +228,7 @@ def imsave_file(CNN,
 
     layer3 = LogisticRegression(input=layer2.output, n_in=500, n_out=2,W=W3,b=b3)
     
+    print "Created layers slice %s..." % frame
     # Prediction function
     output_pred_model = theano.function([index], layer3.p_y_given_x,
              givens={
@@ -237,15 +238,17 @@ def imsave_file(CNN,
     outputs = numpy.hstack([output_pred_model(i)[:,1] for i in xrange(n_test_batches)])    #for the result of the sigmoid (1 if mito in white)
     outputs = outputs.reshape(422-2*gap,711-2*gap)
     
+    print "Predicted: slice %s..." % frame
     # Save the results as images and npy
     out_filename =  os.path.join(output_path,'%s_train_epoch%s_frame%i.png' % (CNN, num_epoch, frame+1))
     imsave(out_filename, outputs)
     out_filename =  os.path.join(output_path,'%s_train_epoch%s_frame%i' % (CNN, num_epoch, frame+1))
     np.save(out_filename, outputs)
+    print "Saved weights: slice %s..." % frame
 
 def __imsave_file(frame):
     imsave_file(CNN='CNN55', num_epoch='0150', frame=frame,
-        training_path="CNN55", output_path="output")
+        training_path="CNN55", output_path="output2")
 
 if __name__ == '__main__':
     # Load data
@@ -254,9 +257,9 @@ if __name__ == '__main__':
     Gtest[Gtest==255] = 1
     
     # Process
-    # for i in xrange(0,318):
-    #     imsave_file(CNN='CNN55',num_epoch='0150',frame = i,
-    #         training_path="CNN55", output_path="output")
+    for i in xrange(0,1):
+        imsave_file(CNN='CNN55',num_epoch='0150',frame = i,
+            training_path="CNN55", output_path="output")
     
-    pool = mp.Pool(4)
-    pool.map(__imsave_file, xrange(318))
+  #  pool = mp.Pool(1)
+  #  pool.map(__imsave_file, xrange(1))

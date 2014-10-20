@@ -274,6 +274,14 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,
                     best_validation_loss = this_validation_loss
                     best_iter = iter
 
+                    save_file = open('cnn_model_original.pkl','wb')
+                    cPickle.dump(best_params, save_file, -1)
+                    save_file.close()
+                    
+                    save_file = open('cnn_model.pkl','rb')
+                    loaded_params = cPickle.load(save_file)
+                    save_file.close()
+                    
                     # test it on the test set
                     test_losses = [test_model(i) for i in xrange(n_test_batches)]
                     test_score = numpy.mean(test_losses)

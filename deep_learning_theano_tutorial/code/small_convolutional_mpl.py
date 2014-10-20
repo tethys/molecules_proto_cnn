@@ -40,7 +40,6 @@ from mlp import HiddenLayer
 
 class LeNetConvPoolLayer(object):
     """Pool Layer of a convolutional network """
-
     def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2)):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
@@ -103,8 +102,7 @@ class LeNetConvPoolLayer(object):
         # store parameters of this layer
         self.params = [self.W, self.b]
 
-
-def evaluate_lenet5(learning_rate=0.1, n_epochs=10,
+def evaluate_lenet5(learning_rate=0.1, n_epochs=2,
                     dataset='mnist.pkl.gz',
                     nkerns=[10, 10], batch_size=50):
     """ Demonstrates lenet on MNIST dataset
