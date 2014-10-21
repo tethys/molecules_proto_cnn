@@ -17,30 +17,30 @@ _sym_db = _symbol_database.Default()
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='convolutional_neural_network_settings.proto',
-  package='convnn',
-  serialized_pb=_b('\n+convolutional_neural_network_settings.proto\x12\x06\x63onvnn\"\xca\x03\n\x0b\x43NNSettings\x12\x15\n\rlearning_rate\x18\x01 \x01(\x02\x12\x10\n\x08n_epochs\x18\x02 \x01(\x05\x12\x0f\n\x07\x64\x61taset\x18\x03 \x02(\t\x12\x12\n\nbatch_size\x18\x04 \x01(\x05\x12\x10\n\x08poolsize\x18\x05 \x01(\x05\x12:\n\nconv_layer\x18\x06 \x03(\x0b\x32&.convnn.CNNSettings.ConvolutionalLayer\x12\x35\n\x0chidden_layer\x18\x07 \x03(\x0b\x32\x1f.convnn.CNNSettings.HiddenLayer\x12\x31\n\nlast_layer\x18\x08 \x02(\x0b\x32\x1d.convnn.CNNSettings.LastLayer\x12\x15\n\rcost_function\x18\t \x02(\t\x1a;\n\x12\x43onvolutionalLayer\x12\x13\n\x0bnum_filters\x18\x01 \x02(\x05\x12\x10\n\x08\x66ilter_w\x18\x02 \x02(\x05\x1a?\n\x0bHiddenLayer\x12\x13\n\x0bnum_outputs\x18\x01 \x02(\x05\x12\x1b\n\x13\x61\x63tivation_function\x18\x02 \x02(\t\x1a \n\tLastLayer\x12\x13\n\x0bnum_outputs\x18\x01 \x02(\x05')
+  package='',
+  serialized_pb=_b('\n+convolutional_neural_network_settings.proto\";\n\x12\x43onvolutionalLayer\x12\x13\n\x0bnum_filters\x18\x01 \x02(\x05\x12\x10\n\x08\x66ilter_w\x18\x02 \x02(\x05\"?\n\x0bHiddenLayer\x12\x13\n\x0bnum_outputs\x18\x01 \x02(\x05\x12\x1b\n\x13\x61\x63tivation_function\x18\x02 \x02(\t\"=\n\tLastLayer\x12\x13\n\x0bnum_outputs\x18\x01 \x02(\x05\x12\x1b\n\x13\x61\x63tivation_function\x18\x02 \x02(\t\"\xf1\x01\n\x0b\x43NNSettings\x12\x15\n\rlearning_rate\x18\x01 \x01(\x02\x12\x10\n\x08n_epochs\x18\x02 \x01(\x05\x12\x0f\n\x07\x64\x61taset\x18\x03 \x02(\t\x12\x12\n\nbatch_size\x18\x04 \x01(\x05\x12\x10\n\x08poolsize\x18\x05 \x01(\x05\x12\'\n\nconv_layer\x18\x06 \x03(\x0b\x32\x13.ConvolutionalLayer\x12\"\n\x0chidden_layer\x18\x07 \x03(\x0b\x32\x0c.HiddenLayer\x12\x1e\n\nlast_layer\x18\x08 \x02(\x0b\x32\n.LastLayer\x12\x15\n\rcost_function\x18\t \x02(\t')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
 
-_CNNSETTINGS_CONVOLUTIONALLAYER = _descriptor.Descriptor(
+_CONVOLUTIONALLAYER = _descriptor.Descriptor(
   name='ConvolutionalLayer',
-  full_name='convnn.CNNSettings.ConvolutionalLayer',
+  full_name='ConvolutionalLayer',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='num_filters', full_name='convnn.CNNSettings.ConvolutionalLayer.num_filters', index=0,
+      name='num_filters', full_name='ConvolutionalLayer.num_filters', index=0,
       number=1, type=5, cpp_type=1, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='filter_w', full_name='convnn.CNNSettings.ConvolutionalLayer.filter_w', index=1,
+      name='filter_w', full_name='ConvolutionalLayer.filter_w', index=1,
       number=2, type=5, cpp_type=1, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -57,26 +57,27 @@ _CNNSETTINGS_CONVOLUTIONALLAYER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=356,
-  serialized_end=415,
+  serialized_start=47,
+  serialized_end=106,
 )
 
-_CNNSETTINGS_HIDDENLAYER = _descriptor.Descriptor(
+
+_HIDDENLAYER = _descriptor.Descriptor(
   name='HiddenLayer',
-  full_name='convnn.CNNSettings.HiddenLayer',
+  full_name='HiddenLayer',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='num_outputs', full_name='convnn.CNNSettings.HiddenLayer.num_outputs', index=0,
+      name='num_outputs', full_name='HiddenLayer.num_outputs', index=0,
       number=1, type=5, cpp_type=1, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='activation_function', full_name='convnn.CNNSettings.HiddenLayer.activation_function', index=1,
+      name='activation_function', full_name='HiddenLayer.activation_function', index=1,
       number=2, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -93,21 +94,29 @@ _CNNSETTINGS_HIDDENLAYER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=417,
-  serialized_end=480,
+  serialized_start=108,
+  serialized_end=171,
 )
 
-_CNNSETTINGS_LASTLAYER = _descriptor.Descriptor(
+
+_LASTLAYER = _descriptor.Descriptor(
   name='LastLayer',
-  full_name='convnn.CNNSettings.LastLayer',
+  full_name='LastLayer',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='num_outputs', full_name='convnn.CNNSettings.LastLayer.num_outputs', index=0,
+      name='num_outputs', full_name='LastLayer.num_outputs', index=0,
       number=1, type=5, cpp_type=1, label=2,
       has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='activation_function', full_name='LastLayer.activation_function', index=1,
+      number=2, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -122,75 +131,76 @@ _CNNSETTINGS_LASTLAYER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=482,
-  serialized_end=514,
+  serialized_start=173,
+  serialized_end=234,
 )
+
 
 _CNNSETTINGS = _descriptor.Descriptor(
   name='CNNSettings',
-  full_name='convnn.CNNSettings',
+  full_name='CNNSettings',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='learning_rate', full_name='convnn.CNNSettings.learning_rate', index=0,
+      name='learning_rate', full_name='CNNSettings.learning_rate', index=0,
       number=1, type=2, cpp_type=6, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='n_epochs', full_name='convnn.CNNSettings.n_epochs', index=1,
+      name='n_epochs', full_name='CNNSettings.n_epochs', index=1,
       number=2, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='dataset', full_name='convnn.CNNSettings.dataset', index=2,
+      name='dataset', full_name='CNNSettings.dataset', index=2,
       number=3, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='batch_size', full_name='convnn.CNNSettings.batch_size', index=3,
+      name='batch_size', full_name='CNNSettings.batch_size', index=3,
       number=4, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='poolsize', full_name='convnn.CNNSettings.poolsize', index=4,
+      name='poolsize', full_name='CNNSettings.poolsize', index=4,
       number=5, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='conv_layer', full_name='convnn.CNNSettings.conv_layer', index=5,
+      name='conv_layer', full_name='CNNSettings.conv_layer', index=5,
       number=6, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='hidden_layer', full_name='convnn.CNNSettings.hidden_layer', index=6,
+      name='hidden_layer', full_name='CNNSettings.hidden_layer', index=6,
       number=7, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='last_layer', full_name='convnn.CNNSettings.last_layer', index=7,
+      name='last_layer', full_name='CNNSettings.last_layer', index=7,
       number=8, type=11, cpp_type=10, label=2,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='cost_function', full_name='convnn.CNNSettings.cost_function', index=8,
+      name='cost_function', full_name='CNNSettings.cost_function', index=8,
       number=9, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -199,7 +209,7 @@ _CNNSETTINGS = _descriptor.Descriptor(
   ],
   extensions=[
   ],
-  nested_types=[_CNNSETTINGS_CONVOLUTIONALLAYER, _CNNSETTINGS_HIDDENLAYER, _CNNSETTINGS_LASTLAYER, ],
+  nested_types=[],
   enum_types=[
   ],
   options=None,
@@ -207,48 +217,45 @@ _CNNSETTINGS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=56,
-  serialized_end=514,
+  serialized_start=237,
+  serialized_end=478,
 )
 
-_CNNSETTINGS_CONVOLUTIONALLAYER.containing_type = _CNNSETTINGS
-_CNNSETTINGS_HIDDENLAYER.containing_type = _CNNSETTINGS
-_CNNSETTINGS_LASTLAYER.containing_type = _CNNSETTINGS
-_CNNSETTINGS.fields_by_name['conv_layer'].message_type = _CNNSETTINGS_CONVOLUTIONALLAYER
-_CNNSETTINGS.fields_by_name['hidden_layer'].message_type = _CNNSETTINGS_HIDDENLAYER
-_CNNSETTINGS.fields_by_name['last_layer'].message_type = _CNNSETTINGS_LASTLAYER
+_CNNSETTINGS.fields_by_name['conv_layer'].message_type = _CONVOLUTIONALLAYER
+_CNNSETTINGS.fields_by_name['hidden_layer'].message_type = _HIDDENLAYER
+_CNNSETTINGS.fields_by_name['last_layer'].message_type = _LASTLAYER
+DESCRIPTOR.message_types_by_name['ConvolutionalLayer'] = _CONVOLUTIONALLAYER
+DESCRIPTOR.message_types_by_name['HiddenLayer'] = _HIDDENLAYER
+DESCRIPTOR.message_types_by_name['LastLayer'] = _LASTLAYER
 DESCRIPTOR.message_types_by_name['CNNSettings'] = _CNNSETTINGS
 
+ConvolutionalLayer = _reflection.GeneratedProtocolMessageType('ConvolutionalLayer', (_message.Message,), dict(
+  DESCRIPTOR = _CONVOLUTIONALLAYER,
+  __module__ = 'convolutional_neural_network_settings_pb2'
+  # @@protoc_insertion_point(class_scope:ConvolutionalLayer)
+  ))
+_sym_db.RegisterMessage(ConvolutionalLayer)
+
+HiddenLayer = _reflection.GeneratedProtocolMessageType('HiddenLayer', (_message.Message,), dict(
+  DESCRIPTOR = _HIDDENLAYER,
+  __module__ = 'convolutional_neural_network_settings_pb2'
+  # @@protoc_insertion_point(class_scope:HiddenLayer)
+  ))
+_sym_db.RegisterMessage(HiddenLayer)
+
+LastLayer = _reflection.GeneratedProtocolMessageType('LastLayer', (_message.Message,), dict(
+  DESCRIPTOR = _LASTLAYER,
+  __module__ = 'convolutional_neural_network_settings_pb2'
+  # @@protoc_insertion_point(class_scope:LastLayer)
+  ))
+_sym_db.RegisterMessage(LastLayer)
+
 CNNSettings = _reflection.GeneratedProtocolMessageType('CNNSettings', (_message.Message,), dict(
-
-  ConvolutionalLayer = _reflection.GeneratedProtocolMessageType('ConvolutionalLayer', (_message.Message,), dict(
-    DESCRIPTOR = _CNNSETTINGS_CONVOLUTIONALLAYER,
-    __module__ = 'convolutional_neural_network_settings_pb2'
-    # @@protoc_insertion_point(class_scope:convnn.CNNSettings.ConvolutionalLayer)
-    ))
-  ,
-
-  HiddenLayer = _reflection.GeneratedProtocolMessageType('HiddenLayer', (_message.Message,), dict(
-    DESCRIPTOR = _CNNSETTINGS_HIDDENLAYER,
-    __module__ = 'convolutional_neural_network_settings_pb2'
-    # @@protoc_insertion_point(class_scope:convnn.CNNSettings.HiddenLayer)
-    ))
-  ,
-
-  LastLayer = _reflection.GeneratedProtocolMessageType('LastLayer', (_message.Message,), dict(
-    DESCRIPTOR = _CNNSETTINGS_LASTLAYER,
-    __module__ = 'convolutional_neural_network_settings_pb2'
-    # @@protoc_insertion_point(class_scope:convnn.CNNSettings.LastLayer)
-    ))
-  ,
   DESCRIPTOR = _CNNSETTINGS,
   __module__ = 'convolutional_neural_network_settings_pb2'
-  # @@protoc_insertion_point(class_scope:convnn.CNNSettings)
+  # @@protoc_insertion_point(class_scope:CNNSettings)
   ))
 _sym_db.RegisterMessage(CNNSettings)
-_sym_db.RegisterMessage(CNNSettings.ConvolutionalLayer)
-_sym_db.RegisterMessage(CNNSettings.HiddenLayer)
-_sym_db.RegisterMessage(CNNSettings.LastLayer)
 
 
 # @@protoc_insertion_point(module_scope)
