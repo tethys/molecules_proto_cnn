@@ -12,6 +12,7 @@ def main():
     sys.path.append('/Users/vivianapetrescu/Documents/theano_tut/convolutional-neural-net/');
     cnn = ConvolutionalNeuralNetwork('cnn_small_test.prototxt');
     cnn.build_model();
+    cnn.train_model();
 
 if __name__ == '__main__':
     main()

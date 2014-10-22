@@ -12,7 +12,7 @@ import numpy
 import theano
 import theano.tensor as T
 
-def load_data(dataset):
+def load_mnist_data(dataset):
     ''' Loads the dataset
 
     :type dataset: string
