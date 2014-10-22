@@ -116,7 +116,6 @@ class ConvolutionalNeuralNetworkTrain(object):
         print('Size train ',self.train_set_x.shape.eval() , ', valid ' , self.valid_set_x.shape.eval(), ', test ' , self.test_set_x.shape.eval())
         print('Size train_batches %d, n_valid_batches %d, n_test_batches %d' %(self.n_train_batches, self.n_valid_batches, self.n_test_batches))
 
-        self.n_epochs = 1;
         # allocate symbolic variables for the data
         self.index = T.lscalar()  # index to a [mini]batch
         self.x = T.matrix('x')   # the data is presented as rasterized images
@@ -127,7 +126,7 @@ class ConvolutionalNeuralNetworkTrain(object):
         # BUILD ACTUAL MODEL #
         ######################
         print 'Building the model ...'
-        nkerns = [2,5]
+        nkerns = [20,50]
         # Reshape matrix of rasterized images of shape (batch_size,28*28)
         # to a 4D tensor, compatible with our LeNetConvPoolLayer
         layer0_input = self.x.reshape((self.batch_size, 1, self.input_shape[0], self.input_shape[1]))
