@@ -44,7 +44,7 @@ from google.protobuf import text_format
 # Cost negative log likelihood
 
 # Make the network read this and setup
-class ConvolutionalNeuralNetwork(object):
+class ConvolutionalNeuralNetworkTrain(object):
     def __init__(self, cnn_settings_protofile):
         settings = pb_cnn.CNNSettings();
         try:        
@@ -250,6 +250,7 @@ class ConvolutionalNeuralNetwork(object):
                           # save best validation score and iteration number
                           best_validation_loss = this_validation_loss
                           best_iter = iter
+                          self.best_params = self.params
                       
                           # test it on the test set
                           test_losses = [self.test_model(i) for i in xrange(self.n_test_batches)]
@@ -262,9 +263,17 @@ class ConvolutionalNeuralNetwork(object):
                     if patience <= iter:
                         done_looping = True
                         break
+          print 'Saving best parameters'
+          self.save_parameters()
 
-    def save_parameters():
-        return 0;
+
+    def save_parameters(self):
+            save_file = open('cnn_model_original.pkl','wb')
+            cPickle.dump(self.best_params, save_file, -1)
+            save_file.close()
+
+
+        
     
         
     
