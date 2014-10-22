@@ -268,9 +268,12 @@ class ConvolutionalNeuralNetworkTrain(object):
 
 
     def save_parameters(self):
-            save_file = open('cnn_model_original.pkl','wb')
-            cPickle.dump(self.best_params, save_file, -1)
-            save_file.close()
+
+            weights = [i.get_value(borrow=True) for i in self.best_params]
+            numpy.save('cnn_model_original2', weights)
+            #save_file = open('cnn_model_original.pkl','wb')
+            #cPickle.dump(self.best_params, save_file, -1)
+            #save_file.close()
 
 
         

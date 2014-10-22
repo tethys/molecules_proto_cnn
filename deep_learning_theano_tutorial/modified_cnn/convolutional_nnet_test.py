@@ -44,7 +44,7 @@ from google.protobuf import text_format
 # Cost negative log likelihood
 
 # Make the network read this and setup
-class ConvolutionalNeuralNetworkTrain(object):
+class ConvolutionalNeuralNetworkTest(object):
     def __init__(self, cnn_settings_protofile):
         settings = pb_cnn.CNNSettings();
         try:        
@@ -93,7 +93,7 @@ class ConvolutionalNeuralNetworkTrain(object):
                 self.poolsize = settings.poolsize;
 
         self.input_shape = (28,28); # this is the size of MNIST images
-        if self.HasField(settings.cached_weights_file):
+        if settings.HasField('cached_weights_file'):
                 self.cached_weights_file = settings.cached_weights_file
 
     def build_model(self):
@@ -126,7 +126,8 @@ class ConvolutionalNeuralNetworkTrain(object):
                         # [int] labels
 
         # Load weights...
-        weights = numpy.load(self.cached_weights_file)
+        weights = numpy.load('cnn_model_original2.npy');
+        #weights = numpy.load(self.cached_weights_file)
     
         W3 = theano.shared(weights[0])
         b3 = theano.shared(weights[1])
@@ -187,104 +188,23 @@ class ConvolutionalNeuralNetworkTrain(object):
 
 
     def test_model(self):
-          # train_model is a function that updates the model parameters by
-          # SGD Since this model has many parameters, it would be tedious to
-          # manually create an update rule for each model parameter. We thus
-          # create the updates list by automatically looping over all
-          # (params[i],grads[i]) pairs.
-          updates = []
-          for param_i, grad_i in zip(self.params, self.grads):
-              updates.append((param_i, param_i - self.learning_rate * grad_i))
-
-          train_model = theano.function([self.index], self.cost, updates=updates,
-              givens={
-                self.x: self.train_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
-                self.y: self.train_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
-
              # create a function to compute the mistakes that are made by the model
           self.test_model = theano.function([self.index], self.layer3.errors(self.y),
              givens={
                 self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
-          self.validate_model = theano.function([self.index], self.layer3.errors(self.y),
-            givens={
-                self.x: self.valid_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
-                self.y: self.valid_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
             ###############
-            # TRAIN MODEL #
+            # TEST MODEL #
             ###############
-          print '... training'
-           # early-stopping parameters
-          patience = 10000  # look as this many examples regardless
-          patience_increase = 2  # wait this much longer when a new best is
-                           # found
-          improvement_threshold = 0.995  # a relative improvement of this much is
-                                   # considered significant
-          validation_frequency = min(self.n_train_batches, patience / 2)
-                                  # go through this many
-                                  # minibatche before checking the network
-                                  # on the validation set; in this case we
-                                  # check every epoch
-
-          best_params = None
-          best_validation_loss = numpy.inf
-          best_iter = 0
-          test_score = 0.
-          start_time = time.clock()
-
-          epoch = 0
-          done_looping = False
-
-          while (epoch < self.n_epochs) and (not done_looping):
-              epoch = epoch + 1
-              for minibatch_index in xrange(self.n_train_batches):
-
-                  iter = (epoch - 1) * self.n_train_batches + minibatch_index
-
-                  if iter % 100 == 0:
-                      print 'training @ iter = ', iter
-                  cost_ij = train_model(minibatch_index)
-
-                  if (iter + 1) % validation_frequency == 0:
-
-                    # compute zero-one loss on validation set
-                    validation_losses = [self.validate_model(i) for i in xrange(self.n_valid_batches)]
-                    this_validation_loss = numpy.mean(validation_losses)
-                    print('epoch %i, minibatch %i/%i, validation error %f %%' % \
-                      (epoch, minibatch_index + 1, self.n_train_batches, \
-                       this_validation_loss * 100.))
-
-                    # if we got the best validation score until now
-                    if this_validation_loss < best_validation_loss:
-
-                      #improve patience if loss improvement is good enough
-                      if this_validation_loss < best_validation_loss * improvement_threshold:
-                          patience = max(patience, iter * patience_increase)
-
-                          # save best validation score and iteration number
-                          best_validation_loss = this_validation_loss
-                          best_iter = iter
-                          self.best_params = self.params
-                      
-                          # test it on the test set
-                          test_losses = [self.test_model(i) for i in xrange(self.n_test_batches)]
-                          test_score = numpy.mean(test_losses)
-                          print(('     epoch %i, minibatch %i/%i, test error of best '
-                             'model %f %%') %
-                             (epoch, minibatch_index + 1, self.n_train_batches,
-                             test_score * 100.))
-
-                    if patience <= iter:
-                        done_looping = True
-                        break
-          print 'Saving best parameters'
-          self.save_parameters()
+          print '... testing'
+ 
+          # test it on the test set
+          test_losses = [self.test_model(i) for i in xrange(self.n_test_batches)]
+          test_score = numpy.mean(test_losses)
+          print(' test error of best ', test_score * 100.)
 
 
-    def save_parameters(self):
-            save_file = open('cnn_model_original.pkl','wb')
-            cPickle.dump(self.best_params, save_file, -1)
-            save_file.close()
+
 
 
         
