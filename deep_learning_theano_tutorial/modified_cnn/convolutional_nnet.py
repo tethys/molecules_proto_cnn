@@ -18,7 +18,8 @@ import theano.tensor as T
 from theano.tensor.signal import downsample
 from theano.tensor.nnet import conv
 
-from logistic_sgd import LogisticRegression, load_data
+import load_data
+from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
 
 import sys
@@ -106,7 +107,7 @@ class ConvolutionalNeuralNetwork(object):
 
         # Reshape matrix of rasterized images of shape (batch_size,28*28)
         # to a 4D tensor, compatible with our LeNetConvPoolLayer
-        layer0_input = x.reshape((self.batch_size, 1, self.ishape[0], self.image[1]))
+        layer0_input = x.reshape((self.batch_size, 1, self.input_shape[0], self.input_shape[1]))
 
         # Construct the first convolutional pooling layer:
         # filtering reduces the image size to (28-5+1,28-5+1)=(24,24)
