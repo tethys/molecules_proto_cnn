@@ -128,37 +128,59 @@ class ConvolutionalNeuralNetworkTrain(object):
         print 'Building the model ...'
         for layer in self.convolutional_layers:
             print layer.num_filters
-            print layer.filter_w            
-        nkerns = [20,50]
+            print layer.filter_w   
+            
+        nkerns = [20, 50]
         # Reshape matrix of rasterized images of shape (batch_size,28*28)
         # to a 4D tensor, compatible with our LeNetConvPoolLayer
-        layer0_input = self.x.reshape((self.batch_size, 1, self.input_shape[0], self.input_shape[1]))
         # Construct the first convolutional pooling layer:
         # filtering reduces the image size to (28-5+1,28-5+1)=(24,24)
-        # maxpooling reduces this further to (24/2,24/2) = (12,12)
-        # 4D output tensor is thus of shape (batch_size,nkerns[0],12,12)
-        layer0 = LeNetConvPoolLayer(rng, input=layer0_input,
-            image_shape=(self.batch_size, 1, 28, 28),
-            filter_shape=(nkerns[0], 1, 5, 5), poolsize=(2, 2))
-
-        # Construct the second convolutional pooling layer
-        # filtering reduces the image size to (12-5+1,12-5+1)=(8,8)
-        # maxpooling reduces this further to (8/2,8/2) = (4,4)
-        # 4D output tensor is thus of shape (nkerns[0],nkerns[1],4,4)
-
-        # layer0 output is a 4d tensor as well
-        layer1 = LeNetConvPoolLayer(rng, input=layer0.output,
-              image_shape=(self.batch_size, nkerns[0], 12, 12),
-              filter_shape=(nkerns[1], nkerns[0], 5, 5), poolsize=(2, 2))
-
-        # the HiddenLayer being fully-connected, it operates on 2D matrices of
-        # shape (batch_size,num_pixels) (i.e matrix of rasterized images).
-        # This will generate a matrix of shape (20,32*4*4) = (20,512)
-        layer2_input = layer1.output.flatten(2)
+        #        # maxpooling reduces this further to (24/2,24/2) = (12,12)
+        #        # 4D output tensor is thus of shape (batch_size,nkerns[0],12,12)
+        #        layer0 = LeNetConvPoolLayer(rng, input=layer0_input,
+        #            image_shape=(self.batch_size, 1, 28, 28),
+        #            filter_shape=(nkerns[0], 1, 5, 5), poolsize=(2, 2))
+        #
+        #        # Construct the second convolutional pooling layer
+        #        # filtering reduces the image size to (12-5+1,12-5+1)=(8,8)
+        #        # maxpooling reduces this further to (8/2,8/2) = (4,4)
+        #        # 4D output tensor is thus of shape (nkerns[0],nkerns[1],4,4)
+        #
+        #        # layer0 output is a 4d tensor as well
+        #        layer1 = LeNetConvPoolLayer(rng, input=layer0.output,
+        #              image_shape=(self.batch_size, nkerns[0], 12, 12),
+        #              filter_shape=(nkerns[1], nkerns[0], 5, 5), poolsize=(2, 2))
+        #
+        #        # the HiddenLayer being fully-connected, it operates on 2D matrices of
+        #        # shape (batch_size,num_pixels) (i.e matrix of rasterized images).
+        #        # This will generate a matrix of shape (20,32*4*4) = (20,512)
+        #        layer2_input = layer1.output.flatten(2)
+                
+        layer_input = self.x.reshape((self.batch_size, 1, self.input_shape[0], self.input_shape[1]))
+        pooled_W = self.input_shape[0];
+        pooled_H = self.input_shape[1];
+        nbr_feature_maps = 1
+        layers = []
+        for clayer_params in self.convolutional_layers:
+            print clayer_params.num_filters
+            print clayer_params.filter_w
+            layer = LeNetConvPoolLayer(rng, input = layer_input, 
+                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
+                                       filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
+                                                     clayer_params.filter_w, clayer_params.filter_w),
+                                       poolsize=(self.poolsize, self.poolsize))
+            layers.append(layer)
+            pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize;
+            pooled_H = (pooled_H - clayer_params.filter_w + 1) / self.poolsize;
+            layer_input = layer.output;
+            nbr_feature_maps = clayer_params.num_filters;
+        
+        
         # construct a fully-connected sigmoidal layer
-        layer2 = HiddenLayer(rng, input=layer2_input, n_in=nkerns[1] * 4 * 4,
+        layer2 = HiddenLayer(rng, input=layer_input.flatten(2), n_in=nkerns[1] * 4 * 4,
                          n_out=500, activation=T.tanh)
 
+        print layer2.params
         # classify the values of the fully-connected sigmoidal layer
         self.layer3 = LogisticRegression(input=layer2.output, n_in=500, n_out=10)
 
@@ -166,8 +188,13 @@ class ConvolutionalNeuralNetworkTrain(object):
         self.cost = self.layer3.negative_log_likelihood(self.y)
 
         # create a list of all model parameters to be fit by gradient descent
-        self.params = self.layer3.params + layer2.params + layer1.params + layer0.params
+        self.params = self.layer3.params + layer2.params
+        print self.params
+        for ll in reversed(layers):
+            print ll.params
+            self.params += ll.params
 
+        print self.params
         # create a list of gradients for all model parameters
         self.grads = T.grad(self.cost, self.params)
 
