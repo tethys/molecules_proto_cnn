@@ -5,26 +5,17 @@ Created on Tue Oct 21 15:27:51 2014
 @author: vivianapetrescu
 """
 
-import cPickle
-import gzip
-import os
-import sys
 import time
-
 import numpy
 
 import theano
 import theano.tensor as T
-from theano.tensor.signal import downsample
-from theano.tensor.nnet import conv
 
 from load_data import load_mnist_data
 from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
 from lenet_conv_pool_layer import LeNetConvPoolLayer
 
-import sys
-import os
 import convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
 # Parameters: make this a protocol buffer
@@ -45,32 +36,51 @@ from google.protobuf import text_format
 
 # Make the network read this and setup
 class ConvolutionalNeuralNetworkTrain(object):
+    """ The class takes a proto bufer as input, setups a CNN according to the 
+        settings, trains the network and save the weights in a file
+    """
     def __init__(self, cnn_settings_protofile):
+        # Create protobuff empty object
         settings = pb_cnn.CNNSettings();
         try:        
-           f = open(cnn_settings_protofile, "r")
-           # Itearte through every layer        
-           data=f.read()
-           print data
+           f = open(cnn_settings_protofile, "r")    
+           data = f.read()
            text_format.Merge(data, settings);
-           print "Network settings are "
-           print  settings.__str__
+           print "Network settings are \n"
+           print settings.__str__
+           print "\n"
+           
+           # Build up the ConvolutionalNeuralNetworkTrain model
            self.create_layers_from_settings(settings);
            f.close();
         except IOError:
            print "Could not open file " + cnn_settings_protofile;
         
     def create_layers_from_settings(self, settings):  
-        # default values        
+        # Default values for optionl parameters       
         self.learning_rate = 0.9;
-        self.n_epochs = 1;
-        # This field is required
+        self.n_epochs = 5;
+        # This fields are required
         self.dataset = settings.dataset;
         self.batch_size = 100;
-        self.poolsize = 5;
+        self.poolsize = 2;
+        
+        if settings.HasField('learning_rate'):
+                self.learning_rate = settings.learning_rate;
+        if settings.HasField('n_epochs'):
+                self.n_epochs = settings.n_epochs;        
+        if settings.HasField('batch_size'):
+                self.batch_size = settings.batch_size;
+        if settings.HasField('poolsize'):
+                self.poolsize = settings.poolsize;
+                
         # TODO this
         self.convolutional_layers = [];
         self.hidden_layers = [];
+        
+       # self.nbr_convolutional_layers = settings.conv_layer.size();
+       # self.nbr_hidden_layers = settings.hidden_layer.size();
+      
         for layer in settings.conv_layer:
               self.convolutional_layers.append(layer)
         for layer in settings.hidden_layer:
@@ -79,18 +89,8 @@ class ConvolutionalNeuralNetworkTrain(object):
         # required at least one layer
         self.output_layer = settings.last_layer;
 
-
         # required parameter
         self.cost_function = settings.cost_function;
-        
-        if settings.HasField('learning_rate'):
-               self.learning_rate = settings.learning_rate;
-        if settings.HasField('n_epochs'):
-                self.n_epochs = settings.n_epochs;        
-        if settings.HasField('batch_size'):
-                self.batch_size = settings.batch_size;
-        if settings.HasField('poolsize'):
-                self.poolsize = settings.poolsize;
 
         self.input_shape = (28,28); # this is the size of MNIST images
 
@@ -126,6 +126,9 @@ class ConvolutionalNeuralNetworkTrain(object):
         # BUILD ACTUAL MODEL #
         ######################
         print 'Building the model ...'
+        for layer in self.convolutional_layers:
+            print layer.num_filters
+            print layer.filter_w            
         nkerns = [20,50]
         # Reshape matrix of rasterized images of shape (batch_size,28*28)
         # to a 4D tensor, compatible with our LeNetConvPoolLayer
@@ -267,18 +270,7 @@ class ConvolutionalNeuralNetworkTrain(object):
 
 
     def save_parameters(self):
-
             weights = [i.get_value(borrow=True) for i in self.best_params]
             numpy.save('cnn_model_original2', weights)
-            #save_file = open('cnn_model_original.pkl','wb')
-            #cPickle.dump(self.best_params, save_file, -1)
-            #save_file.close()
 
 
-        
-    
-        
-    
-    
-    
-    
