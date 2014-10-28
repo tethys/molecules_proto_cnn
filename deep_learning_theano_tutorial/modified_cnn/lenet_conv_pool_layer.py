@@ -23,6 +23,7 @@ References:
 """
 
 import numpy
+import time
 
 import theano
 import theano.tensor as T
@@ -84,13 +85,20 @@ class LeNetConvPoolLayer(object):
             self.b = b
 
         # convolve input feature maps with filters
+        start = time.time()
         conv_out = conv.conv2d(input=input, filters=self.W,
                 filter_shape=filter_shape, image_shape=image_shape)
-
+        end = time.time()
+        self.convolutional_time = (end - start)*1000/image_shape[0]
+        
         # downsample each feature map individually, using maxpooling
+        start = time.time()
         pooled_out = downsample.max_pool_2d(input=conv_out,
                                             ds=poolsize, ignore_border=True)
-
+        end = time.time()
+        self.downsample_time = (end - start)*1000/ image_shape[0]
+        
+        print 'conv {0}, {1} ms'.format(self.convolutional_time, self.downsample_time)
         # add the bias term. Since the bias is a vector (1D array), we first
         # reshape it to a tensor of shape (1,n_filters,1,1). Each bias will
         # thus be broadcasted across mini-batches and feature map

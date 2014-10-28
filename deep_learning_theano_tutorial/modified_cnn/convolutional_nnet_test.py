@@ -5,8 +5,6 @@ Created on Tue Oct 21 15:27:51 2014
 @author: vivianapetrescu
 """
 
-import cPickle
-import gzip
 import os
 import sys
 import time
@@ -23,8 +21,6 @@ from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
 from lenet_conv_pool_layer import LeNetConvPoolLayer
 
-import sys
-import os
 import convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
 # Parameters: make this a protocol buffer
@@ -120,15 +116,6 @@ class ConvolutionalNeuralNetworkTest(object):
 
         # Load weights...
         weights = numpy.load(self.cached_weights_file + '.npy')
-    
-        W3 = theano.shared(weights[0])
-        b3 = theano.shared(weights[1])
-        W2 = theano.shared(weights[2])
-        b2 = theano.shared(weights[3])
-        W1 = theano.shared(weights[4])
-        b1 = theano.shared(weights[5])
-        W0 = theano.shared(weights[6])
-        b0 = theano.shared(weights[7])
 
         cached_weights = []        
         for w in reversed(weights):
@@ -186,14 +173,21 @@ class ConvolutionalNeuralNetworkTest(object):
           self.test_model = theano.function([self.index], self.output_layer.errors(self.y),
              givens={
                 self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
-                self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
+                self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
+                name='cnn_test_model' )
             ###############
             # TEST MODEL #
             ###############
           print '... testing'
  
           # test it on the test set
-          test_losses = [self.test_model(i) for i in xrange(self.n_test_batches)]
+         
+          for i in xrange(self.n_test_batches):
+               start = time.time()
+               test_losses = self.test_model(i)
+               endt = (time.time() - start)*1000/self.batch_size
+               print 'image time {0} in ms '.format(endt)
+               
           test_score = numpy.mean(test_losses)
           print(' test error of best ', test_score * 100.)
 
