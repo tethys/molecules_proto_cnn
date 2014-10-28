@@ -19,4 +19,5 @@ last_layer {
 	num_outputs: 10
 	activation_function: "tanh"
 }
+cached_weights_file: "temp_weights"
 cost_function: "log_likelihood"

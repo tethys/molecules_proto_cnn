@@ -61,7 +61,7 @@ class ConvolutionalNeuralNetworkTrain(object):
         self.learning_rate = 0.9;
         self.n_epochs = 5;
         # This fields are required
-        self.dataset = settings.dataset;
+        self.dataset = 'mnist.pkl.gz' #settings.dataset;
         self.batch_size = 100;
         self.poolsize = 2;
         
@@ -91,7 +91,8 @@ class ConvolutionalNeuralNetworkTrain(object):
 
         # required parameter
         self.cost_function = settings.cost_function;
-
+        self.cached_weights_file = settings.cached_weights_file
+        
         self.input_shape = (28,28); # this is the size of MNIST images
 
     def build_model(self):
@@ -130,7 +131,6 @@ class ConvolutionalNeuralNetworkTrain(object):
             print layer.num_filters
             print layer.filter_w   
             
-        nkerns = [20, 50]
         # Reshape matrix of rasterized images of shape (batch_size,28*28)
         # to a 4D tensor, compatible with our LeNetConvPoolLayer
         # Construct the first convolutional pooling layer:
@@ -219,17 +219,20 @@ class ConvolutionalNeuralNetworkTrain(object):
           train_model = theano.function([self.index], self.cost, updates=updates,
               givens={
                 self.x: self.train_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
-                self.y: self.train_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
+                self.y: self.train_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
+                name = 'train_model')
 
              # create a function to compute the mistakes that are made by the model
           self.test_model = theano.function([self.index], self.output_layer.errors(self.y),
              givens={
                 self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
-                self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
+                self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
+                name = 'test_model')
           self.validate_model = theano.function([self.index], self.output_layer.errors(self.y),
             givens={
                 self.x: self.valid_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
-                self.y: self.valid_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
+                self.y: self.valid_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
+                name = 'validate_model')
             ###############
             # TRAIN MODEL #
             ###############
@@ -246,15 +249,15 @@ class ConvolutionalNeuralNetworkTrain(object):
                                   # on the validation set; in this case we
                                   # check every epoch
 
-          best_params = None
+          self.best_params = None
           best_validation_loss = numpy.inf
-          best_iter = 0
           test_score = 0.
-          start_time = time.clock()
 
           epoch = 0
           done_looping = False
 
+          mean_training_time = 0
+          cnt_times = 0
           while (epoch < self.n_epochs) and (not done_looping):
               epoch = epoch + 1
               for minibatch_index in xrange(self.n_train_batches):
@@ -263,8 +266,13 @@ class ConvolutionalNeuralNetworkTrain(object):
 
                   if iter % 100 == 0:
                       print 'training @ iter = ', iter
-                  cost_ij = train_model(minibatch_index)
-
+                  start = time.time()
+                  train_model(minibatch_index)
+                  end = time.time()
+                  mean_training_time += end - start
+                  cnt_times += 1
+                                    
+                  
                   if (iter + 1) % validation_frequency == 0:
 
                     # compute zero-one loss on validation set
@@ -283,7 +291,6 @@ class ConvolutionalNeuralNetworkTrain(object):
 
                           # save best validation score and iteration number
                           best_validation_loss = this_validation_loss
-                          best_iter = iter
                           self.best_params = self.params
                       
                           # test it on the test set
@@ -299,10 +306,11 @@ class ConvolutionalNeuralNetworkTrain(object):
                         break
           print 'Saving best parameters'
           self.save_parameters()
-
+          mean_training_time /= cnt_times
+          print 'running_times %3.3f', mean_training_time
 
     def save_parameters(self):
             weights = [i.get_value(borrow=True) for i in self.best_params]
-            numpy.save('cnn_model_original2', weights)
+            numpy.save(self.cached_weights_file, weights)
 
 

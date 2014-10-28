@@ -40,5 +40,5 @@ message CNNSettings {
     required string cost_function = 9;
 
     // Load the file of weights
-    optional string cached_weights_file = 10;
+    required string cached_weights_file = 10;
 }
