@@ -160,7 +160,7 @@ class ConvolutionalNeuralNetworkTrain(object):
         pooled_W = self.input_shape[0];
         pooled_H = self.input_shape[1];
         nbr_feature_maps = 1
-        layers = []
+        clayers = []
         for clayer_params in self.convolutional_layers:
             print clayer_params.num_filters
             print clayer_params.filter_w
@@ -169,7 +169,7 @@ class ConvolutionalNeuralNetworkTrain(object):
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
                                                      clayer_params.filter_w, clayer_params.filter_w),
                                        poolsize=(self.poolsize, self.poolsize))
-            layers.append(layer)
+            clayers.append(layer)
             pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize;
             pooled_H = (pooled_H - clayer_params.filter_w + 1) / self.poolsize;
             layer_input = layer.output;
@@ -177,28 +177,33 @@ class ConvolutionalNeuralNetworkTrain(object):
         
         
         # construct a fully-connected sigmoidal layer
-        layer2 = HiddenLayer(rng, input=layer_input.flatten(2), n_in=nkerns[1] * 4 * 4,
-                         n_out=500, activation=T.tanh)
-
-        print layer2.params
+        layer_input = layer_input.flatten(2);
+        nbr_input = nbr_feature_maps * 4 * 4 ## Why is this SO??
+        hlayers = []
+        for hlayer_params in self.hidden_layers:
+            print hlayer_params.num_outputs
+            layer = HiddenLayer(rng, input=layer_input, n_in=nbr_input,
+                         n_out = hlayer_params.num_outputs, activation=T.tanh)
+            nbr_input = hlayer_params.num_outputs;
+            layer_input = layer.output
+            hlayers.append(layer)
+            
         # classify the values of the fully-connected sigmoidal layer
-        self.layer3 = LogisticRegression(input=layer2.output, n_in=500, n_out=10)
+        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=10)
 
         # the cost we minimize during training is the NLL of the model
-        self.cost = self.layer3.negative_log_likelihood(self.y)
+        self.cost = self.output_layer.negative_log_likelihood(self.y)
 
         # create a list of all model parameters to be fit by gradient descent
-        self.params = self.layer3.params + layer2.params
-        print self.params
-        for ll in reversed(layers):
-            print ll.params
-            self.params += ll.params
+        self.params = self.output_layer.params 
+        for hl in reversed(hlayers):
+            self.params += hl.params
+        for cl in reversed(clayers):
+            self.params += cl.params
 
-        print self.params
+ 
         # create a list of gradients for all model parameters
-        self.grads = T.grad(self.cost, self.params)
-
-         
+        self.grads = T.grad(self.cost, self.params)        
 
 
     def train_model(self):
@@ -217,11 +222,11 @@ class ConvolutionalNeuralNetworkTrain(object):
                 self.y: self.train_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
 
              # create a function to compute the mistakes that are made by the model
-          self.test_model = theano.function([self.index], self.layer3.errors(self.y),
+          self.test_model = theano.function([self.index], self.output_layer.errors(self.y),
              givens={
                 self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
-          self.validate_model = theano.function([self.index], self.layer3.errors(self.y),
+          self.validate_model = theano.function([self.index], self.output_layer.errors(self.y),
             givens={
                 self.x: self.valid_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.valid_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]})

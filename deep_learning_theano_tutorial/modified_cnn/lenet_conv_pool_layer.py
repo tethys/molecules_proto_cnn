@@ -21,11 +21,6 @@ References:
    http://yann.lecun.com/exdb/publis/pdf/lecun-98.pdf
 
 """
-import cPickle
-import gzip
-import os
-import sys
-import time
 
 import numpy
 
