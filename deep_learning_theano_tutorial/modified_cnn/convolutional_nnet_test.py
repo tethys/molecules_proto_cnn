@@ -165,7 +165,8 @@ class ConvolutionalNeuralNetworkTest(object):
             iter += 2
             
         # classify the values of the fully-connected sigmoidal layer
-        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=10)
+        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=10, 
+                                               W = cached_weights[iter +1], b = cached_weights[iter])
 
 
     def test_model(self):
@@ -182,14 +183,15 @@ class ConvolutionalNeuralNetworkTest(object):
  
           # test it on the test set
          
+          test_losses = numpy.zeros((self.n_test_batches, 1))
           for i in xrange(self.n_test_batches):
                start = time.time()
-               test_losses = self.test_model(i)
+               test_losses[i] = self.test_model(i)
                endt = (time.time() - start)*1000/self.batch_size
                print 'image time {0} in ms '.format(endt)
                
           test_score = numpy.mean(test_losses)
-          print(' test error of best ', test_score * 100.)
+          print ' test error of best ', test_score * 100.
 
 
 
