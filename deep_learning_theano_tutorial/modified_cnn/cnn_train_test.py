@@ -7,7 +7,7 @@ Created on Tue Oct 21 16:19:55 2014
 """
 
 import argparse
-import getopt, sys
+import sys
 from convolutional_nnet_train import ConvolutionalNeuralNetworkTrain;
 from convolutional_nnet_test import ConvolutionalNeuralNetworkTest;
 
@@ -27,11 +27,11 @@ def main():
     print 'weights file is', results.cached_weights_file
     print 'run mode', results.mode
 
-    if mode == 0 || mode == 2: # train model
+    if results.mode == 0 or results.mode == 2: # train model
     	cnn = ConvolutionalNeuralNetworkTrain(results.prototxt_file, results.cached_weights_file);
     	cnn.build_model()
     	cnn.train_model()
-    if mode == 1 || mode == 2: # test model
+    if results.mode == 1 or results.mode == 2: # test model
     	cnn = ConvolutionalNeuralNetworkTest(results.prototxt_file, results.cached_weights_file);
     	cnn.build_model()
     	cnn.test_model()
