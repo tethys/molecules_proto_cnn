@@ -39,7 +39,7 @@ class ConvolutionalNeuralNetworkTrain(object):
     """ The class takes a proto bufer as input, setups a CNN according to the 
         settings, trains the network and save the weights in a file
     """
-    def __init__(self, cnn_settings_protofile):
+    def __init__(self, cnn_settings_protofile, cached_weights_file):
         # Create protobuff empty object
         settings = pb_cnn.CNNSettings();
         try:        
@@ -91,7 +91,7 @@ class ConvolutionalNeuralNetworkTrain(object):
 
         # required parameter
         self.cost_function = settings.cost_function;
-        self.cached_weights_file = settings.cached_weights_file
+        self.cached_weights_file = cached_weights_file
         
         self.input_shape = (28,28); # this is the size of MNIST images
 

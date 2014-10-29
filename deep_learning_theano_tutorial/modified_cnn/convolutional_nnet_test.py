@@ -41,7 +41,7 @@ from google.protobuf import text_format
 
 # Make the network read this and setup
 class ConvolutionalNeuralNetworkTest(object):
-    def __init__(self, cnn_settings_protofile):
+    def __init__(self, cnn_settings_protofile, cached_weights_file):
         settings = pb_cnn.CNNSettings();
         try:        
            f = open(cnn_settings_protofile, "r")
@@ -91,7 +91,7 @@ class ConvolutionalNeuralNetworkTest(object):
 
         # required parameter
         self.cost_function = settings.cost_function;
-        self.cached_weights_file = settings.cached_weights_file
+        self.cached_weights_file = cached_weights_file
         self.input_shape = (28,28); # this is the size of MNIST images
 
 
