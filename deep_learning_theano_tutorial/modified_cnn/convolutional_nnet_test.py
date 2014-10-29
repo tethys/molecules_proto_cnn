@@ -13,8 +13,6 @@ import numpy
 
 import theano
 import theano.tensor as T
-from theano.tensor.signal import downsample
-from theano.tensor.nnet import conv
 
 from load_data import load_mnist_data
 from logistic_sgd import LogisticRegression
@@ -42,7 +40,8 @@ from google.protobuf import text_format
 # Make the network read this and setup
 class ConvolutionalNeuralNetworkTest(object):
     def __init__(self, cnn_settings_protofile, cached_weights_file):
-        settings = pb_cnn.CNNSettings();
+        settings = pb_cnn.CNNSettings();        
+        self.cached_weights_file = cached_weights_file
         try:        
            f = open(cnn_settings_protofile, "r")
            # Itearte through every layer        
@@ -91,7 +90,6 @@ class ConvolutionalNeuralNetworkTest(object):
 
         # required parameter
         self.cost_function = settings.cost_function;
-        self.cached_weights_file = cached_weights_file
         self.input_shape = (28,28); # this is the size of MNIST images
 
 
