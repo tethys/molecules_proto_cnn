@@ -17,9 +17,9 @@ def main():
     print 'Arguments list:', str(sys.argv)
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--proto_file', help="path to proto file", dest='prototxt_file', required=True)
-    parser.add_argument('--cached_weights_file', help="path to weights file", dest='cached_weights_file', required=True)
-    parser.add_argument('--separable_weights_file', help="path to separable weights file", dest='sep_weights_file',  required=True)
+    parser.add_argument('-p','--proto_file', help="path to proto file", dest='prototxt_file', required=True)
+    parser.add_argument('-w','--cached_weights_file', help="path to weights file", dest='cached_weights_file', required=True)
+    parser.add_argument('-s','--separable_weights_file', help="path to separable weights file", dest='sep_weights_file',  required=True)
     options = parser.parse_args()
     
     print 'protofile is', options.prototxt_file 
@@ -38,10 +38,9 @@ def run(options):
         try:        
            f = open(options.prototxt_file, "r")
            data=f.read()
+           print 'Protofile content:'
            print data
            text_format.Merge(data, settings);
-           print "Network settings are "
-           print  settings.__str__
            f.close();
         except IOError:
            print "Could not open file " + options.prototxt_file;
@@ -54,17 +53,22 @@ def decompose_layers(settings, cached_weights):
     """
      # TODO this
     params = [];
-    N = cached_weights.size
+    N = cached_weights.size - 1
     for layer in settings.conv_layer:
-        params.append(cached_weights[N - 1])
-        if layer.hasField('rank'):
+        params.append(cached_weights[N])
+        if layer.HasField('rank'):
               params.append([])
         else:
-             params.append(cached_weights[N - 2])
+             params.append(cached_weights[N - 1])
         N = N - 2
-    for i in range(N, -1, 0):
+    for i in range(N, -1, -1):
              params.append(cached_weights[i])
-    params = reversed(params)         
+    params = reversed(params)  
+    for p in params:    
+        print p.size
+    print 'cached weights'
+    for w in cached_weights:
+        print w.size
 
 def decompose_tensor():
     pass
