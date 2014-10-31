@@ -99,7 +99,7 @@ class ConvolutionalNeuralNetworkTrain(object):
     def build_model(self):
         rng = numpy.random.RandomState(23455)
 
-        datasets = load_mnist_data('mnist.pkl.gz')
+        datasets = load_mnist_data(self.dataset)
 
         # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784
         self.train_set_x, self.train_set_y = datasets[0]
