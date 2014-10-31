@@ -17,6 +17,7 @@ syntax="proto2";
 message ConvolutionalLayer {
        required int32 num_filters = 1;
        required int32 filter_w = 2;
+       optional int32 rank = 3;
 }
 message HiddenLayer {
        required int32 num_outputs = 1;

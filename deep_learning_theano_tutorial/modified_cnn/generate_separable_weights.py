@@ -6,10 +6,12 @@ Created on Fri Oct 31 10:59:25 2014
 """
 
 import argparse
+import logging
 import numpy as np
 import sys
 import convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
+from sktensor import dtensor, cp_als
 
 def main():
     sys.path.append('/Users/vivianapetrescu/Documents/theano_tut/convolutional-neural-net/');
@@ -57,7 +59,8 @@ def decompose_layers(settings, cached_weights):
     for layer in settings.conv_layer:
         params.append(cached_weights[N])
         if layer.HasField('rank'):
-              params.append([])
+             P_struct = decompose_tensor(cached_weights[N - 1], layer.rank)
+             params.append(P_struct)
         else:
              params.append(cached_weights[N - 1])
         N = N - 2
@@ -70,7 +73,19 @@ def decompose_layers(settings, cached_weights):
     for w in cached_weights:
         print w.size
 
-def decompose_tensor():
-    pass
+def decompose_tensor(filters, rank):
+    """ filters is of type input feature maps, output feature maps, wxh of filter
+        Output is a structure P which contains lambda, U{1}, U{2}, U{3}    
+    """
+    # Set logging to DEBUG to see CP-ALS information
+    logging.basicConfig(level=logging.DEBUG)
+    print filters.shape
+    filters = np.array(filters.reshape((7, 3, 3)))   
+    print filters.shape 
+    print filters.dtype
+    a = np.arange(6)
+    print a.dtype
+    P, fit, itr, exectimes = cp_als(dtensor(filters), rank, init='random')
+    return []
 if __name__ == '__main__':
     main()
