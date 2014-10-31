@@ -18,9 +18,9 @@ def main():
 
      
     parser = argparse.ArgumentParser()
-    parser.add_argument('--proto_file', help="path to proto file", dest='prototxt_file')
-    parser.add_argument('--cached_weights_file', help="path to weights", dest='cached_weights_file')
-    parser.add_argument('--run_mode', help="mode", dest='mode', type = int)
+    parser.add_argument('--proto_file', help="path to proto file", dest='prototxt_file', required=True)
+    parser.add_argument('--cached_weights_file', help="path to weights file", dest='cached_weights_file', required=True)
+    parser.add_argument('--run_mode', help="mode 0 for train\n 1 for test, 2 for train and test", dest='mode', type = int, required=True)
     results = parser.parse_args()
     
     print 'my file is', results.prototxt_file, 'ups'

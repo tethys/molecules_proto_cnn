@@ -140,6 +140,8 @@ class ConvolutionalNeuralNetworkTest(object):
                                                      clayer_params.filter_w, clayer_params.filter_w),
                                        poolsize=(self.poolsize, self.poolsize),
                                         W = cached_weights[iter + 1], b = cached_weights[iter])
+            print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
+            print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
             clayers.append(layer)
             pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize;
             pooled_H = (pooled_H - clayer_params.filter_w + 1) / self.poolsize;
@@ -150,7 +152,7 @@ class ConvolutionalNeuralNetworkTest(object):
         
         # construct a fully-connected sigmoidal layer
         layer_input = layer_input.flatten(2);
-        nbr_input = nbr_feature_maps * 4 * 4 ## Why is this SO??
+        nbr_input = nbr_feature_maps * pooled_W * pooled_H ## Why is this SO??
         hlayers = []
         for hlayer_params in self.hidden_layers:
             print hlayer_params.num_outputs

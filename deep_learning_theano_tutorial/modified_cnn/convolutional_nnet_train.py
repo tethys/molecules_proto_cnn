@@ -90,6 +90,7 @@ class ConvolutionalNeuralNetworkTrain(object):
         # required at least one layer
         self.output_layer = settings.last_layer;
 
+        self.dataset = settings.dataset
         # required parameter
         self.cost_function = settings.cost_function;
         
@@ -98,7 +99,7 @@ class ConvolutionalNeuralNetworkTrain(object):
     def build_model(self):
         rng = numpy.random.RandomState(23455)
 
-        datasets = load_mnist_data(self.dataset)
+        datasets = load_mnist_data('mnist.pkl.gz')
 
         # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784
         self.train_set_x, self.train_set_y = datasets[0]
@@ -178,7 +179,7 @@ class ConvolutionalNeuralNetworkTrain(object):
         
         # construct a fully-connected sigmoidal layer
         layer_input = layer_input.flatten(2);
-        nbr_input = nbr_feature_maps * 4 * 4 ## Why is this SO??
+        nbr_input = nbr_feature_maps * pooled_W * pooled_H ## Why is this SO??
         hlayers = []
         for hlayer_params in self.hidden_layers:
             print hlayer_params.num_outputs
