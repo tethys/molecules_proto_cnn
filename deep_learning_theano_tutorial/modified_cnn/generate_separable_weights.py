@@ -48,7 +48,9 @@ def run(options):
            print "Could not open file " + options.prototxt_file;
         """ Load weights"""
         cached_weights = np.load(options.cached_weights_file)
-        decompose_layers(settings, cached_weights)        
+        params = decompose_layers(settings, cached_weights)
+        np.save(options.sep_weights_file, params)
+        
 def decompose_layers(settings, cached_weights):
     """ Run through every conv layer and check were we have rank enabled.
         If we have it enabled, run decompose tensor.
@@ -66,26 +68,35 @@ def decompose_layers(settings, cached_weights):
         N = N - 2
     for i in range(N, -1, -1):
              params.append(cached_weights[i])
-    params = reversed(params)  
+    params.reverse() 
     for p in params:    
-        print p.size
+        print p
     print 'cached weights'
     for w in cached_weights:
         print w.size
+    return params
 
 def decompose_tensor(filters, rank):
     """ filters is of type input feature maps, output feature maps, wxh of filter
         Output is a structure P which contains lambda, U{1}, U{2}, U{3}    
     """
     # Set logging to DEBUG to see CP-ALS information
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     print filters.shape
-    filters = np.array(filters.reshape((7, 3, 3)))   
+    filters = np.array(filters)   
     print filters.shape 
     print filters.dtype
     a = np.arange(6)
     print a.dtype
-    P, fit, itr, exectimes = cp_als(dtensor(filters), rank, init='random')
-    return []
+    nbr_filters = filters.shape[0]
+    fwidth = filters.shape[2]
+    fheight = filters.shape[3]
+    Pstruct = []
+    for chanel in range(filters.shape[1]):
+        filter_for_channel = filters[:,chanel,:,:]
+        filter_for_channel.reshape(nbr_filters, fwidth, fheight)
+        P, fit, itr, exectimes = cp_als(dtensor(filter_for_channel), rank, init='random')
+        Pstruct.append(P)
+    return Pstruct
 if __name__ == '__main__':
     main()
