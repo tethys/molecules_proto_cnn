@@ -96,6 +96,8 @@ def decompose_tensor(filters, rank):
         filter_for_channel = filters[:,chanel,:,:]
         filter_for_channel.reshape(nbr_filters, fwidth, fheight)
         P, fit, itr, exectimes = cp_als(dtensor(filter_for_channel), rank, init='random')
+        ## P.U, P.lmbda
+        print 'P U0,U1,U2, lambda sizes: ', P.U[0].size, P.U[1].size, P.U[2].size, P.lmbda
         Pstruct.append(P)
     return Pstruct
 if __name__ == '__main__':
