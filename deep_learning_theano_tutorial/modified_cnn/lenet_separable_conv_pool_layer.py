@@ -115,14 +115,17 @@ class LeNetSeparableConvPoolLayer(object):
                                filter_shape = vertical_filter_shape, image_shape = image_shape)
 
         ## numberof images, number of filters, image width, image height
-        input4D = np.zeros((image_shape[0], nbr_filters, image_shape[2], image_shape[3]))
+        #input4D = np.ndarray((image_shape[0], nbr_filters, image_shape[2], image_shape[3]))
+        input4D = theano.shared(np.zeros((image_shape[0], nbr_filters, image_shape[2], image_shape[3])))
         for f in range(nbr_filters):            
             temp = np.zeros((image_shape[0], image_shape[2], image_shape[3]))
             for chanel in range(num_input_feature_maps):
                  alphas = Pstruct[chanel].U[0].reshape(nbr_filters, rank)
                  for r in range(rank):
-                     temp = temp + conv_out[:,r, :,:]* alphas[f, r];    
-            input4D[:,f,:,:]  = temp
+                     out = conv_out[:,r, :,:]* alphas[f, r];   
+                     temp = temp + out
+            print theano.pp(temp)
+            T.set_subtensor(input4D[:,f,:,:], temp)
              
         # downsample each feature map individually, using maxpooling
         start = time.time()
