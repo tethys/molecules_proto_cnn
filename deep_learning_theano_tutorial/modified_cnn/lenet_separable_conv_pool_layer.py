@@ -41,7 +41,8 @@ from theano.tensor.nnet import conv
 class LeNetSeparableConvPoolLayer(object):
     """Pool Layer of a convolutional network """
 
-    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2),  Pstruct = None, b= None):
+    def __init__(self, rng, input_images, filter_shape, image_shape, poolsize=(2, 2),  
+                 Pstruct = None, b= None):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
 
@@ -56,22 +57,21 @@ class LeNetSeparableConvPoolLayer(object):
                               filter height,filter width)
 
         :type image_shape: tuple or list of length 4
-        :param image_shape: (batch size, num input feature maps,
+        :param image_shape: (batch size, num input feature/channels maps,
                              image height, image width)
+                             For a gray image, this is 1 for the first layer.
+                             For the following layers it is equal with the 
+                             number of output  channels/feature maps
 
         :type poolsize: tuple or list of length 2
         :param poolsize: the downsampling (pooling) factor (#rows,#cols)
         """
 
         assert image_shape[1] == filter_shape[1]
-        self.input = input
-
         # the bias is a 1D tensor -- one bias per output feature map
-
         # convolve input feature maps with filters
 
-#(number of filters, num input feature maps,
-#                              filter height,filter width)
+#(number of filters, num input feature maps,  filter height,filter width)
 #   10filters, 1, 20, h 1,
 #   10filtrs, 1,20 , 1 ,w
 
@@ -87,8 +87,8 @@ class LeNetSeparableConvPoolLayer(object):
         
         ## Pstruct is contains an array of PU,lambda for every channel!
         ## We look at the composition for the first channel in the beginning        
-        fwidth = Pstruct[0].U[1].size/ Pstruct[0].rank
-        fheight = Pstruct[0].U[2].size/ Pstruct[0].rank
+        fwidth = Pstruct[0].U[1].size / Pstruct[0].rank
+        fheight = Pstruct[0].U[2].size / Pstruct[0].rank
         rank = Pstruct[0].rank
         nbr_filters = Pstruct[0].U[0].size / rank
         
@@ -97,12 +97,9 @@ class LeNetSeparableConvPoolLayer(object):
         num_input_feature_maps = filter_shape[1]
         horizontal_filter_shape = (rank, num_input_feature_maps, fwidth, 1)
         horizontal_filters = np.ndarray(horizontal_filter_shape)
-        print horizontal_filter_shape
         for chanel in range(num_input_feature_maps):
-            print chanel
-            print horizontal_filters[:, chanel,:, 0].shape
             horizontal_filters[:, chanel,:, 0] = Pstruct[chanel].U[1].reshape(rank,fwidth);
-        horizontal_conv_out = conv.conv2d(input = input, filters = horizontal_filters,
+        horizontal_conv_out = conv.conv2d(input = input_images, filters = horizontal_filters,
                                filter_shape = horizontal_filter_shape, image_shape = image_shape)
                 
         
@@ -116,21 +113,24 @@ class LeNetSeparableConvPoolLayer(object):
 
         ## numberof images, number of filters, image width, image height
         #input4D = np.ndarray((image_shape[0], nbr_filters, image_shape[2], image_shape[3]))
-        input4D = theano.shared(np.zeros((image_shape[0], nbr_filters, image_shape[2], image_shape[3])))
+        batch_size = image_shape[0]
+        n_rows = image_shape[2]
+        n_cols = image_shape[3]
+        input4D = theano.shared(np.zeros((batch_size, nbr_filters, n_rows, n_cols)))
         for f in range(nbr_filters):            
-            temp = np.zeros((image_shape[0], image_shape[2], image_shape[3]))
+            temp = np.zeros((batch_size, n_rows, n_cols))
             for chanel in range(num_input_feature_maps):
                  alphas = Pstruct[chanel].U[0].reshape(nbr_filters, rank)
                  for r in range(rank):
                      out = conv_out[:,r, :,:]* alphas[f, r];   
                      temp = temp + out
-            print theano.pp(temp)
             T.set_subtensor(input4D[:,f,:,:], temp)
              
         # downsample each feature map individually, using maxpooling
         start = time.time()
         pooled_out = downsample.max_pool_2d(input=input4D,
-                                            ds=poolsize, ignore_border=True)
+                                            ds=poolsize, 
+                                            ignore_border=True)
         end = time.time()
         self.downsample_time = (end - start)*1000/ image_shape[0]
         
@@ -138,8 +138,5 @@ class LeNetSeparableConvPoolLayer(object):
         # reshape it to a tensor of shape (1,n_filters,1,1). Each bias will
         # thus be broadcasted across mini-batches and feature map
         # width & height
-        self.output = T.tanh(pooled_out + theano.shared(b).dimshuffle('x', 0, 'x', 'x'))
-
-        print 'pooled out shape ', pooled_out.shape
-        # store parameters of this layer
+        self.output = T.tanh(pooled_out + b.dimshuffle('x', 0, 'x', 'x'))
 
