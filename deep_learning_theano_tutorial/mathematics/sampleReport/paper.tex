@@ -153,7 +153,21 @@ The convergence vector is
     0.4778\\
     0.4257\\
     0.4085\end{array} \right)\]    
-\section{Summary}
+\subsection{Exercise3}
+i)
+E is a stochastic column matrix for i) and iii).
+M is a stochastic column matrix for i) and III) again.
+
+ii) Assume A is stochastic column matrix. A and $A^\top$ have the same eigenvalues, so if we show $A^\top$ has eigenvalue 1, implies A also has eigenvalue of 1.
+$det(A^\top - I) = det((a11- 1  a12 .. a1n)) = det(0 a12 a13 .. a1n) = 0$
+When the first equality we added all the columns to the first column and the fact that the
+determinant of a matrix with a column of 0 equals 0. This implies AT and implicitly A have eigenvalue 1.
+
+Assume that A, $A^\top$ have an eigenvalue greater than 1, $\lambda0$ with eigenvector $v$.
+$A^top v = v* \lambda0$. Then we have $A^\top *v = v$ since the sum of the elements in every row is equal to 1. Then we have 
+$ \sum aij*vi = \lambda vj$ for every j in 0..N. Let k be the index corresponding to the lasrgest
+entry in v. then $ \sum aik*vi < \sum aij vk = vk <\lambda vk$ 
+which is a contradiction, so 1 is the largest eigenvalue.
 
 
 \subsubsection*{Acknowledgments}
