@@ -155,20 +155,47 @@ The convergence vector is
     0.4085\end{array} \right)\]    
 \subsection{Exercise3}
 i)
-E is a stochastic column matrix for i) and iii).
-M is a stochastic column matrix for i) and III) again.
+E is a stochastic column matrix for i) and iii). ii) has a column only with 0 elements.
+M is a stochastic column matrix for i) and iii) again. ii) has a column only of 0.15 values, so it is not .
 
-ii) Assume A is stochastic column matrix. A and $A^\top$ have the same eigenvalues, so if we show $A^\top$ has eigenvalue 1, implies A also has eigenvalue of 1.
-$det(A^\top - I) = det((a11- 1  a12 .. a1n)) = det(0 a12 a13 .. a1n) = 0$
-When the first equality we added all the columns to the first column and the fact that the
-determinant of a matrix with a column of 0 equals 0. This implies AT and implicitly A have eigenvalue 1.
+ii) Let $A$  be a stochastic column matrix. A and $A^\top$ have the same eigenvalues, so it is enough to show that $A^\top$ has eigenvalue 1, which will imply $A$ also has eigenvalue of 1.
 
-Assume that A, $A^\top$ have an eigenvalue greater than 1, $\lambda0$ with eigenvector $v$.
-$A^top v = v* \lambda0$. Then we have $A^\top *v = v$ since the sum of the elements in every row is equal to 1. Then we have 
-$ \sum aij*vi = \lambda vj$ for every j in 0..N. Let k be the index corresponding to the lasrgest
+We use the property that for eigenvalue $\lambda$ of $A^\top$
+$det(A^\top - \lambda* I) = 0$.
+We compute 
+\begin{align}
+det(A^\top - I) & = \det \begin{pmatrix}
+    a_{11} - 1 & a_{21} & ... & a_{n1}\\
+    a_{12}    &  a_{22} - 1& ... & a_{n2}\\
+    ...& ... & ...& ... \\
+    a_{1n} & a_{2n} & ....& a_{nn} - 1
+\end{pmatrix}  
+\\
+det(A^\top - I) & = \det \begin{pmatrix}
+    \sum_{i} a_{i1} - 1 & a_{21} & ... & a_{n1}\\
+    \sum_{i} a_{i2}  - 1   &  a_{22} - 1& ... & a_{n2}\\
+    ...& ... & ...& ... \\
+    \sum_{i} a_{in}  - 1& a_{2n} & ....& a_{nn} - 1
+   \end{pmatrix}  
+ \\
+ det(A^\top - I) & = \det \begin{pmatrix}
+    0 & a_{21} & ... & a_{n1}\\
+    0  &  a_{22} - 1& ... & a_{n2}\\
+    ...& ... & ...& ... \\
+    0 & a_{2n} & ....& a_{nn} - 1
+\end{pmatrix}  
+\end{align}
+For the first equality we added all the columns $2, 3, ...N-1$ to the first column. For the second equality, the determinant of a matrix with a column of 0 equals 0. This implies $A^\top$ and implicitly A have eigenvalue 1.
+
+Assume that $A$, $A^\top$ have an eigenvalue greater than 1, $\lambda_{0}$ with eigenvector $v$.
+$A^\top v = \lambda_{0} v$. Then we have 
+$ \sum_{i} a_{it}*v_{i} = \lambda_{0} v_{t}$ for every $t$ in 0..N. Let m be the index corresponding to the largest
 entry in v. then $ \sum aik*vi < \sum aij vk = vk <\lambda vk$ 
 which is a contradiction, so 1 is the largest eigenvalue.
 
+\subsection{Exercise4}
+Gradient of f
+$\frac{\partial f}{\partial x} = $
 
 \subsubsection*{Acknowledgments}
 
