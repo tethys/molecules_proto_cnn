@@ -22,6 +22,7 @@ function [x, info] = LSAGDR(fx, gradf, parameter)
     fval         = fx(parameter.x0); 
 
     % Main loop.
+    Larray = zeros(parameter.maxit,1);
     for iter = 1:parameter.maxit
               
         x           = x_next;
@@ -38,23 +39,44 @@ function [x, info] = LSAGDR(fx, gradf, parameter)
         % Start the clock.
         timestart   = toc(time1);
         
-        % Evaluate the gradient vectors.
-        d = -gradf(x);
-        % Approximate local Lipschitz constant.
+         % Evaluate the function and the gradients.
+        % Approximate local Lipschitz constant by line-search.
+        L = parameter.Lips/8;
+        d = gradf(y);
+        nrm_d2 = d'*d;
         kappa = 0.1;
-        for j=1:100
-            if fx(x + 2^j/L*d) > fx(x) + kappa* 2^j/L* gradf(x)'*d;
+        for j=1:50
+            if fx(y - 1/L* gradf(y)) <= fx(y) - kappa*0.5/L*nrm_d2;
                 break;
             end
+            L = L*2;
         end
-        alpha = 2^(j-1)/L;
+        % Update the next iteration. local Lipschitz constant.
+        alpha = 1/L;
         % Update the next iteration.
-        x_next = y - 1/parameter.Lips * gradf(y);
+        
+        x_next = y - alpha * gradf(y);
+        Larray(iter) = L;
+  
+        old_f = fx(x);
+        new_f = fx(x_next);
+        % Compare the old_f(x) and new_f(x) to decide to restart or not.
+        if old_f < new_f
+            %% restart
+            y = x;
+            t = 1;
+            x_next = y - alpha * gradf(y);
+        end
+        
         % Restart the iteration if necessary.
-        
-        t_next = 0.5* (1 + sqrt(1+ 4* t*t));
+
+        if (iter >= 2)
+            theta_next = Larray(iter)/ Larray(iter - 1);
+        else
+            theta_next =  (Larray(iter)*8)/parameter.Lips;
+        end
+        t_next = 0.5* (1 + sqrt(1+ 4* theta_next*t*t));
         y = x_next + (t - 1)/t_next*(x_next - x); 
-        
         % Check stopping criterion.
         if norm(x_next - x) <= parameter.tolx 
             break;

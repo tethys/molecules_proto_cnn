@@ -43,8 +43,9 @@ function [x, info] = LSAGD(fx, gradf, parameter)
         L = parameter.Lips/8;
         d = gradf(y);
         nrm_d2 = d'*d;
+        kappa = 0.1;
         for j=1:50
-            if fx(y - 1/L* gradf(y)) <= fx(y) - 0.5/L*nrm_d2;
+            if fx(y - 1/L* gradf(y)) <= fx(y) - kappa*0.5/L*nrm_d2;
                 break;
             end
             L = L*2;

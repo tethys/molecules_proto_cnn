@@ -12,11 +12,11 @@ cfg.strcnvx                 = false;    % false = not strongly convex
 
 % Methods to be checked.
 chk.GD                      = true;    % You can check one or more methods at once.
-chk.AGD                     = true;    
-chk.AGDR                    = true;    
-chk.LSGD                    = true;    
+chk.AGD                     = false;    
+chk.AGDR                    = false;    
+chk.LSGD                    = false;    
 chk.LSAGD                   = true;     
-chk.LSAGDR                  = false;    
+chk.LSAGDR                  = true;    
 chk.CG                      = false;    
                
 % Generate synthetic data.
