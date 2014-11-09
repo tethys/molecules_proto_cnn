@@ -12,12 +12,12 @@ cfg.strcnvx                 = false;    % false = not strongly convex
 
 % Methods to be checked.
 chk.GD                      = true;    % You can check one or more methods at once.
-chk.AGD                     = false;    
-chk.AGDR                    = false;    
-chk.LSGD                    = false;    
+chk.AGD                     = true;    
+chk.AGDR                    = true;    
+chk.LSGD                    = true;    
 chk.LSAGD                   = true;     
 chk.LSAGDR                  = true;    
-chk.CG                      = false;    
+chk.CG                      = true;    
                
 % Generate synthetic data.
 A                           = rand(cfg.n, cfg.p);
@@ -45,7 +45,8 @@ gradf                       = @(x)( A'*(A*x - b) + cfg.lambda*x );
 parameter.x0                = zeros(cfg.p, 1);
 parameter.tolx              = 1e-10;            % You can vary tolx and maxit     
 parameter.maxit             = 1e5;              % to achieve the convergence. 
-
+Phi                         = @(x)(A'*A *x);
+y                           = A'*b;
 
 if chk.GD
 [x.GD     , info.GD     ]   = GD     (fx, gradf, parameter); end
@@ -60,7 +61,7 @@ if chk.LSAGD
 if chk.LSAGDR
 [x.LSAGDR , info.LSAGDR ]   = LSAGDR (fx, gradf, parameter); end
 if chk.CG
-[x.CG     , info.CG     ]   = CG     (fx, gradf, parameter, xtrue); end
+[x.CG     , info.CG     ]   = CG     (fx, Phi,y , parameter); end
 
 fprintf(strcat('Numerical solution process is completed. \n'));
 

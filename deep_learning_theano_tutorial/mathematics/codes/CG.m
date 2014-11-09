@@ -23,7 +23,6 @@ function [x, info] = CG(fx, Phi, y, parameter)
     for iter = 1:parameter.maxit
         
         x   = x_next;
-        
         % Compute error and save data to be plotted later on.
         info.itertime(iter ,1)  = toc(time1) - timestart;
         info.fx(iter, 1)        = fx(x);
@@ -36,7 +35,15 @@ function [x, info] = CG(fx, Phi, y, parameter)
         timestart   = toc(time1);
         
         % Update the next iteration.
-        '???'
+        phi_p = Phi(p);
+        p_phi_p = p'*phi_p;
+        alpha = - (r'*p)/ p_phi_p;
+        x_next = x + alpha*p;
+        r_next = Phi(x_next) - y;
+        beta = (r_next'*phi_p)/p_phi_p;
+        p = - r_next + beta'*p;
+        
+        r = r_next;
         
         % Check stopping criterion.
         if norm(x_next - x) <= parameter.tolx 

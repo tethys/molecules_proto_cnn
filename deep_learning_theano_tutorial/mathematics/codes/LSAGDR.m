@@ -44,7 +44,7 @@ function [x, info] = LSAGDR(fx, gradf, parameter)
         L = parameter.Lips/8;
         d = gradf(y);
         nrm_d2 = d'*d;
-        kappa = 0.1;
+        kappa = 1;
         for j=1:50
             if fx(y - 1/L* gradf(y)) <= fx(y) - kappa*0.5/L*nrm_d2;
                 break;
