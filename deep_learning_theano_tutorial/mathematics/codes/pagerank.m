@@ -8,11 +8,23 @@ datasetname = 'Wiki-Vote.txt';  % Change ??? appropriately to load data.
 datasetname = ['data/', datasetname];
 A  = list2matrix(datasetname);   % A is adjacency matrix
 n  = size(A,1);                  % n is number of nodes
-E  = '???';                      % E is transition matrix
-p  = 0.15;                       % Damping factor.
-Mx = @(x)( '???' );              % An efficient way of implementing M*x 
-                                 % where M is PageRank matrix
+C = size(A,2);
+column_sum = sum(A);
+zero_col_indices = column_sum==0;
+non_zero_col_indices = column_sum~=0;
 
+E = zeros(size(A));
+%count_zero_columns = sum(zero_col_indices);
+%E(:, zero_col_indices)  = ones(n, count_zero_columns)*1/n;
+
+divA = repmat(column_sum(non_zero_col_indices), n , 1);
+E(:, non_zero_col_indices) = A(:,non_zero_col_indices)./ divA;
+v = non_zero_col_indices;
+                                 % E is transition matrix
+p  = 0.15;                       % Damping factor.
+Mx = @(x)(E*x + ones(n,1)*v*1/n * x); % An efficient way of implementing M*x                                  % where M is PageRank matrix
+
+                                 
 % Evaluate the Lipschitz constant and strong convexity parameter.
 penaltyparameter            = 1;               % You can vary penalty parameter
 parameter.Lips              = '???';
