@@ -11,10 +11,10 @@ cfg.strcnvx                 = false;    % false = not strongly convex
                                         % true  = strongly convex with, lambda = 0.01*norm(A'*A)
 
 % Methods to be checked.
-chk.GD                      = false;    % You can check one or more methods at once.
-chk.AGD                     = false;    
-chk.AGDR                    = false;    
-chk.LSGD                    = false;    
+chk.GD                      = true;    % You can check one or more methods at once.
+chk.AGD                     = true;    
+chk.AGDR                    = true;    
+chk.LSGD                    = true;    
 chk.LSAGD                   = false;     
 chk.LSAGDR                  = false;    
 chk.CG                      = false;    
@@ -48,17 +48,17 @@ parameter.maxit             = 1e5;              % to achieve the convergence.
 
 
 if chk.GD
-[x.GD     , info.GD     ]   = GD     (fx, gradf, parameter, xtrue); end
+[x.GD     , info.GD     ]   = GD     (fx, gradf, parameter); end
 if chk.AGD 
-[x.AGD    , info.AGD    ]   = AGD    (fx, gradf, parameter, xtrue); end
+[x.AGD    , info.AGD    ]   = AGD    (fx, gradf, parameter); end
 if chk.AGDR
-[x.AGDR   , info.AGDR   ]   = AGDR   (fx, gradf, parameter, xtrue); end
+[x.AGDR   , info.AGDR   ]   = AGDR   (fx, gradf, parameter); end
 if chk.LSGD
-[x.LSGD   , info.LSGD   ]   = LSGD   (fx, gradf, parameter, xtrue); end
+[x.LSGD   , info.LSGD   ]   = LSGD   (fx, gradf, parameter); end
 if chk.LSAGD
-[x.LSAGD  , info.LSAGD  ]   = LSAGD  (fx, gradf, parameter, xtrue); end
+[x.LSAGD  , info.LSAGD  ]   = LSAGD  (fx, gradf, parameter); end
 if chk.LSAGDR
-[x.LSAGDR , info.LSAGDR ]   = LSAGDR (fx, gradf, parameter, xtrue); end
+[x.LSAGDR , info.LSAGDR ]   = LSAGDR (fx, gradf, parameter); end
 if chk.CG
 [x.CG     , info.CG     ]   = CG     (fx, gradf, parameter, xtrue); end
 

@@ -38,7 +38,9 @@ function [x, info] = AGD(fx, gradf, parameter)
         timestart   = toc(time1);
         
         % Update the next iteration.
-        '???'
+        x_next = y - 1/parameter.Lips * gradf(y);
+        t_next = 0.5* (1 + sqrt(1+ 4* t*t));
+        y = x_next + (t - 1)/t_next*(x_next - x); 
         
         % Check stopping criterion.
         if norm(x_next - x) <= parameter.tolx 

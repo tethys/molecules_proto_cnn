@@ -21,6 +21,7 @@ function [x, info] = LSAGD(fx, gradf, parameter)
     t_next       = 1;
     
     % Main loop.
+    Larray = zeros(parameter.maxit,1);
     for iter = 1:parameter.maxit
                
         x           = x_next;
@@ -38,13 +39,33 @@ function [x, info] = LSAGD(fx, gradf, parameter)
         timestart   = toc(time1);
         
         % Evaluate the function and the gradients.
-        '???'
+        d = -gradf(x);
         % Approximate local Lipschitz constant by line-search.
-        '???'
+        L = parameter.Lips/8;
+        nrm_d2 = d'*d;
+        kappa = 0.01;
+        for j=1:50
+            if fx(x + 1/L*d) <= fx(x) - 0.5*1/L*kappa* nrm_d2;
+                break;
+            end
+            L = 2*L;
+        end
+        % Update the next iteration. local Lipschitz constant.
+        alpha = 1/L;
         % Update the next iteration.
-        '???'
+        x_next = y - alpha * gradf(y);
+        Larray(iter) = L;
+        if (iter >= 3)
+            theta_next = Larray(iter -1 )/ Larray(iter - 2);
+        else
+            theta_next =  (Larray(iter)*8)/parameter.Lips;
+        end
+        t_next = 0.5* (1 + sqrt(1+ 4* theta_next*t*t));
+        y = x_next + (t - 1)/t_next*(x_next - x); 
+        
         % Check stopping criterion.
-        if norm(x_next - x) <= parameter.tolx 
+        if  norm(x_next - x) <= parameter.tolx 
+            fprintf('stopping criteria\n')
             break;
         end
 

@@ -35,9 +35,17 @@ function [x, info] = LSGD(fx, gradf, parameter)
         timestart   = toc(time1);
         
         % Evaluate the gradient vector.
-        '???'
+        d = - gradf(x);
         % Find approximate Lipschitz constant and Update the next iteration.
-        '???'
+        L = parameter.Lips;
+        kappa = 0.1;
+        for j=1:100
+            if fx(x + 2^j/L*d) > fx(x) + kappa* 2^j/L* gradf(x)'*d;
+                break;
+            end
+        end
+        alpha = 2^(j-1)/L;
+        x_next = x + alpha * d;
         
         % Check stopping criterion.
         if norm(x_next - x) <= parameter.tolx 

@@ -35,7 +35,7 @@ function [x, info] = GD(fx, gradf, parameter)
         timestart   = toc(time1);
 
         % Update the next iteration.
-        x_next = '???';
+        x_next = x - 1/parameter.Lips* gradf(x);
         
         % Check stopping criterion.
         if norm(x_next - x)/max(1,norm(x)) <= parameter.tolx 

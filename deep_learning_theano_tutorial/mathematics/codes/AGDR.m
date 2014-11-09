@@ -39,13 +39,20 @@ function [x, info] = AGDR(fx, gradf, parameter)
         timestart   = toc(time1);
         
         % Compute x_{k+1}.
-        '???'
+        x_next = y - 1/parameter.Lips * gradf(y);
         % Save the old value of f(x_k) and evaluate the new falue of f(x_{k+1}).
-        '???'
+        old_f = fx(x);
+        new_f = fx(x_next);
         % Compare the old_f(x) and new_f(x) to decide to restart or not.
-        '???'
+        if old_f < new_f
+            %% restart
+            y = x;
+            t = 1;
+            x_next = y - 1/parameter.Lips * gradf(y);
+        end
         % Update the next iteration.
-        '???'
+        t_next = 0.5* (1 + sqrt(1+ 4* t*t));
+        y = x_next + (t - 1)/t_next*(x_next - x); 
         
         % Check stopping criterion.
         if norm(x_next - x) <= parameter.tolx 

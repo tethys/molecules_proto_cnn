@@ -39,13 +39,21 @@ function [x, info] = LSAGDR(fx, gradf, parameter)
         timestart   = toc(time1);
         
         % Evaluate the gradient vectors.
-        '???'
+        d = -gradf(x);
         % Approximate local Lipschitz constant.
-        '???'
+        kappa = 0.1;
+        for j=1:100
+            if fx(x + 2^j/L*d) > fx(x) + kappa* 2^j/L* gradf(x)'*d;
+                break;
+            end
+        end
         % Update the next iteration.
-        '???'
+        x_next = y - 1/parameter.Lips * gradf(y);
         % Restart the iteration if necessary.
         '???'
+        
+        t_next = 0.5* (1 + sqrt(1+ 4* t*t));
+        y = x_next + (t - 1)/t_next*(x_next - x); 
         
         % Check stopping criterion.
         if norm(x_next - x) <= parameter.tolx 
