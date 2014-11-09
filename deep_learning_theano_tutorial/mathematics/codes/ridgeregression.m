@@ -11,11 +11,11 @@ cfg.strcnvx                 = false;    % false = not strongly convex
                                         % true  = strongly convex with, lambda = 0.01*norm(A'*A)
 
 % Methods to be checked.
-chk.GD                      = true;    % You can check one or more methods at once.
-chk.AGD                     = true;    
-chk.AGDR                    = true;    
-chk.LSGD                    = true;    
-chk.LSAGD                   = false;     
+chk.GD                      = false;    % You can check one or more methods at once.
+chk.AGD                     = false;    
+chk.AGDR                    = false;    
+chk.LSGD                    = false;    
+chk.LSAGD                   = true;     
 chk.LSAGDR                  = false;    
 chk.CG                      = false;    
                

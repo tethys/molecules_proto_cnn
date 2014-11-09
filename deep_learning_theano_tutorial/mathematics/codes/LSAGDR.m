@@ -47,10 +47,10 @@ function [x, info] = LSAGDR(fx, gradf, parameter)
                 break;
             end
         end
+        alpha = 2^(j-1)/L;
         % Update the next iteration.
         x_next = y - 1/parameter.Lips * gradf(y);
         % Restart the iteration if necessary.
-        '???'
         
         t_next = 0.5* (1 + sqrt(1+ 4* t*t));
         y = x_next + (t - 1)/t_next*(x_next - x); 

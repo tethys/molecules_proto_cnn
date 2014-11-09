@@ -39,24 +39,24 @@ function [x, info] = LSAGD(fx, gradf, parameter)
         timestart   = toc(time1);
         
         % Evaluate the function and the gradients.
-        d = -gradf(x);
         % Approximate local Lipschitz constant by line-search.
         L = parameter.Lips/8;
+        d = gradf(y);
         nrm_d2 = d'*d;
-        kappa = 0.01;
         for j=1:50
-            if fx(x + 1/L*d) <= fx(x) - 0.5*1/L*kappa* nrm_d2;
+            if fx(y - 1/L* gradf(y)) <= fx(y) - 0.5/L*nrm_d2;
                 break;
             end
-            L = 2*L;
+            L = L*2;
         end
         % Update the next iteration. local Lipschitz constant.
         alpha = 1/L;
         % Update the next iteration.
+        
         x_next = y - alpha * gradf(y);
         Larray(iter) = L;
-        if (iter >= 3)
-            theta_next = Larray(iter -1 )/ Larray(iter - 2);
+        if (iter >= 2)
+            theta_next = Larray(iter)/ Larray(iter - 1);
         else
             theta_next =  (Larray(iter)*8)/parameter.Lips;
         end
