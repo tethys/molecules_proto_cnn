@@ -13,6 +13,7 @@
 \usepackage{amsopn}
 \usepackage{ifthen}
 \usepackage{natbib}
+\usepackage{dsfont}
 
 \title{Project-I}
 
@@ -194,8 +195,44 @@ entry in v. then $ \sum aik*vi < \sum aij vk = vk <\lambda vk$
 which is a contradiction, so 1 is the largest eigenvalue.
 
 \subsection{Exercise4}
-Gradient of f
-$\frac{\partial f}{\partial x} = $
+Gradient of 
+
+$\nabla f = (M-I)^\top\cdot(M-I)\cdot x + \gamma\cdot (\mathds{1}^\top x - 1)\mathds{1} $
+\\
+
+
+$\nabla f = (M-I)^\top\cdot(M-I)\cdot x + \gamma\cdot (\mathds{1} \mathds{1} ^\top)x -\gamma \mathds{1} $
+\\
+Hessian of f
+$\nabla^2 f = (M-I)^\top\cdot(M-I) + \gamma\cdot \mathds{1}\mathds{1} ^\top$
+
+
+
+Find the Lipshitx constant..
+$\nabla f(x_1) - \nabla f(x_2) =  [ (M-I)^\top\cdot(M-I) + \gamma\cdot (\mathds{1} \mathds{1} ^\top)](x_1 - x_2)$
+
+there is no line here\\
+$\| \nabla f(x_1) - \nabla f(x_2) \|=  \| [ (M-I)^\top\cdot(M-I) + \gamma\cdot (\mathds{1} \mathds{1} ^\top)](x_1 - x_2)\|$
+\\
+$\| \nabla f(x_1) - \nabla f(x_2) \|\leq \| (M-I)^\top\cdot(M-I) + \gamma\cdot (\mathds{1} \mathds{1} ^\top)\| \|x_1 - x_2\| = L \|x_1 - x_2\|$, which 
+implies the Lipschitz constant is\\
+$L =  \| (M-I)^\top\cdot(M-I) + \gamma\cdot (\mathds{1} \mathds{1} ^\top) \|$
+
+
+
+\subsection{Exercise9}
+$f_{\sigma} = 0.5\cdot (Mx-x)^\top\cdot(Mx-x) + \gamma\cdot (\mathds{1}^\top x - 1)^2 + 0.5*\sigma* x^\top*x$ 
+\\
+$\nabla f_{\sigma} = (M-I)^\top\cdot(M-I)\cdot x + \gamma\cdot (\mathds{1}^\top x - 1)\mathds{1} + \sigma\cdot x$ 
+\\
+$\nabla f_{\sigma} = [(M-I)^\top\cdot(M-I) + \gamma \mathds{1}^\top\cdot \mathds{1} + \sigma I] \cdot x - \gamma\mathds{1}$
+\\
+$\nabla f_{\sigma} = \phi_{\sigma} \cdot x - \gamma\mathds{1}$
+
+
+We have $(M-I)^\top\cdot(M-I) $, $\gamma \mathds{1}^\top\cdot \mathds{1}$ and $\sigma I$ are symmetric matrices, which implies
+$\phi_{\sigma}$ is symmetric.
+ 
 
 \subsubsection*{Acknowledgments}
 
