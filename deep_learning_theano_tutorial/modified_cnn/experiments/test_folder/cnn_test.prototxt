@@ -1,19 +1,26 @@
-learning_rate : 1
+learning_rate : 0.1
 n_epochs: 5
 dataset: "mnist.pkl.gz"
 batch_size: 50
 poolsize: 2
 conv_layer {
-	num_filters: 6
-	filter_w: 5
+	num_filters: 7
+	filter_w: 3
+	rank: 4
 }
 conv_layer {
-	num_filters: 12
-	filter_w: 5
+	num_filters: 11
+	filter_w: 3
 }
+conv_layer {
+	num_filters: 15
+	filter_w: 3
+	rank: 6
+}
+
 last_layer {
 	num_outputs: 10
 	activation_function: "tanh"
 }
-cached_weights_file: "cvlab_paper_model"
+cached_weights_file: "weights"
 cost_function: "log_likelihood"

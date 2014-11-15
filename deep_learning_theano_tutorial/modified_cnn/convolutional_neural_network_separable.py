@@ -16,6 +16,7 @@ import os
 import sys
 import time
 
+import scipy as sp
 import numpy
 
 import theano
@@ -121,11 +122,12 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
 
         # Load weights...
         weights = numpy.load(self.cached_weights_file + '.npy')
-
+     #   sp.io.savemat('temporary.mat', {'w',weights})
         cached_weights = []        
         for w in reversed(weights):
-            cached_weights.append(theano.shared(w))
-            
+            cached_weights.append(w)
+            print 'weight array size ', len(w)
+        print 'cached weights size is ', len(cached_weights)
         ######################
         # BUILD ACTUAL MODEL #
         ######################
@@ -141,20 +143,25 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
         for clayer_params in self.convolutional_layers:
             print clayer_params.num_filters
             print clayer_params.filter_w
+            print 'Inside loop '
             if clayer_params.HasField('rank') == False:
+                print 'Iter ', iter
                 layer = LeNetConvPoolLayer(rng, input = layer_input, 
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
                                                      clayer_params.filter_w, clayer_params.filter_w),
                                        poolsize=(self.poolsize, self.poolsize),
-                                        W = cached_weights[iter + 1], b = cached_weights[iter])
+                                        W = theano.shared(cached_weights[iter + 1]), 
+                                        b = theano.shared(cached_weights[iter]))
             else:
-                layer = LeNetSeparableConvPoolLayer(rng, input = layer_input, 
+                print 'Separable ', iter
+                layer = LeNetSeparableConvPoolLayer(rng, input_images = layer_input, 
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
                                                      clayer_params.filter_w, clayer_params.filter_w),
                                        poolsize=(self.poolsize, self.poolsize),
-                                         W = cached_weights[iter + 1], b = cached_weights[iter])
+                                       Pstruct = cached_weights[iter + 1], 
+                                       b = theano.shared(cached_weights[iter]))
             print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
             print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
             clayers.append(layer)
@@ -178,19 +185,22 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
             layer_input = layer.output
             hlayers.append(layer)
             iter += 2
-            
+         
+        print 'nbr inputs ', nbr_input 
         # classify the values of the fully-connected sigmoidal layer
         self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=10, 
-                                               W = cached_weights[iter +1], b = cached_weights[iter])
+                                               W = theano.shared(cached_weights[iter +1]), 
+                                               b = theano.shared(cached_weights[iter]))
 
 
     def test_model(self):
+          print 'Running test'
              # create a function to compute the mistakes that are made by the model
           self.test_model = theano.function([self.index], self.output_layer.errors(self.y),
              givens={
                 self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
-                name='cnn_test_model' )
+                name='cnn_test_model' , on_unused_input='ignore')
             ###############
             # TEST MODEL #
             ###############
@@ -201,6 +211,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
           test_losses = numpy.zeros((self.n_test_batches, 1))
           for i in xrange(self.n_test_batches):
                start = time.time()
+               print 'batch nr', i
                test_losses[i] = self.test_model(i)
                endt = (time.time() - start)*1000/self.batch_size
                print 'image time {0} in ms '.format(endt)
@@ -208,14 +219,3 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
           test_score = numpy.mean(test_losses)
           print ' test error of best ', test_score * 100.
 
-
-
-
-
-        
-    
-        
-    
-    
-    
-    

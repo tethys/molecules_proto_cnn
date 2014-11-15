@@ -12,6 +12,7 @@ import sys
 import convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
 from sktensor import dtensor, cp_als
+import matlab_wrapper
 
 def main():
     sys.path.append('/Users/vivianapetrescu/Documents/theano_tut/convolutional-neural-net/');
@@ -61,6 +62,7 @@ def decompose_layers(settings, cached_weights):
     for layer in settings.conv_layer:
         params.append(cached_weights[N])
         if layer.HasField('rank'):
+             print 'decomposing' 
              P_struct = decompose_tensor(cached_weights[N - 1], layer.rank)
              params.append(P_struct)
         else:
@@ -69,8 +71,8 @@ def decompose_layers(settings, cached_weights):
     for i in range(N, -1, -1):
              params.append(cached_weights[i])
     params.reverse() 
-    for p in params:    
-        print p
+  #  for p in params:    
+  #      print p
     print 'cached weights'
     for w in cached_weights:
         print w.size
@@ -82,23 +84,33 @@ def decompose_tensor(filters, rank):
     """
     # Set logging to DEBUG to see CP-ALS information
     logging.basicConfig(level=logging.INFO)
-    print filters.shape
     filters = np.array(filters)   
-    print filters.shape 
-    print filters.dtype
-    a = np.arange(6)
-    print a.dtype
     nbr_filters = filters.shape[0]
+    nbr_channels = filters.shape[1]
     fwidth = filters.shape[2]
     fheight = filters.shape[3]
     Pstruct = []
-    for chanel in range(filters.shape[1]):
+    
+    matlab = matlab_wrapper.MatlabSession()
+    matlab.eval("""addpath('/Users/vivianapetrescu/Documents/separable_filters')""");
+    matlab.eval("add_cp_library_path")
+    for chanel in range(nbr_channels):
         filter_for_channel = filters[:,chanel,:,:]
         filter_for_channel.reshape(nbr_filters, fwidth, fheight)
-        P, fit, itr, exectimes = cp_als(dtensor(filter_for_channel), rank, init='random')
+        #P, fit, itr, exectimes = cp_als(dtensor(filter_for_channel), rank, init='random')
         ## P.U, P.lmbda
-        print 'P U0,U1,U2, lambda sizes: ', P.U[0].size, P.U[1].size, P.U[2].size, P.lmbda
+        matlab.put('f', filter_for_channel)
+        matlab.put('rank', rank)
+        matlab.eval("""[P, ~, output]= cp_opt(tensor(f), rank)""")
+        matlab.eval("""separable_filters.U1 = P.U{1};
+                    separable_filters.U2 = P.U{2};
+                    separable_filters.U3 = P.U{3};
+                    separable_filters.lmbda  = P.lambda
+                    separable_filters.fit = output.Fit""");
+        P = matlab.get('separable_filters')
+        print 'P U0,U1,U2, lambda sizes: ', P.U1.size, P.U2.size, P.U3.size, P.lmbda
         Pstruct.append(P)
+    
     return Pstruct
 if __name__ == '__main__':
     main()

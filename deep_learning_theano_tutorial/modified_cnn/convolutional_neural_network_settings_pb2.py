@@ -18,7 +18,7 @@ _sym_db = _symbol_database.Default()
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='convolutional_neural_network_settings.proto',
   package='',
-  serialized_pb=_b('\n+convolutional_neural_network_settings.proto\";\n\x12\x43onvolutionalLayer\x12\x13\n\x0bnum_filters\x18\x01 \x02(\x05\x12\x10\n\x08\x66ilter_w\x18\x02 \x02(\x05\"?\n\x0bHiddenLayer\x12\x13\n\x0bnum_outputs\x18\x01 \x02(\x05\x12\x1b\n\x13\x61\x63tivation_function\x18\x02 \x02(\t\"=\n\tLastLayer\x12\x13\n\x0bnum_outputs\x18\x01 \x02(\x05\x12\x1b\n\x13\x61\x63tivation_function\x18\x02 \x02(\t\"\x8e\x02\n\x0b\x43NNSettings\x12\x15\n\rlearning_rate\x18\x01 \x01(\x02\x12\x10\n\x08n_epochs\x18\x02 \x01(\x05\x12\x0f\n\x07\x64\x61taset\x18\x03 \x02(\t\x12\x12\n\nbatch_size\x18\x04 \x01(\x05\x12\x10\n\x08poolsize\x18\x05 \x01(\x05\x12\'\n\nconv_layer\x18\x06 \x03(\x0b\x32\x13.ConvolutionalLayer\x12\"\n\x0chidden_layer\x18\x07 \x03(\x0b\x32\x0c.HiddenLayer\x12\x1e\n\nlast_layer\x18\x08 \x02(\x0b\x32\n.LastLayer\x12\x15\n\rcost_function\x18\t \x02(\t\x12\x1b\n\x13\x63\x61\x63hed_weights_file\x18\n \x02(\t')
+  serialized_pb=_b('\n+convolutional_neural_network_settings.proto\"I\n\x12\x43onvolutionalLayer\x12\x13\n\x0bnum_filters\x18\x01 \x02(\x05\x12\x10\n\x08\x66ilter_w\x18\x02 \x02(\x05\x12\x0c\n\x04rank\x18\x03 \x01(\x05\"?\n\x0bHiddenLayer\x12\x13\n\x0bnum_outputs\x18\x01 \x02(\x05\x12\x1b\n\x13\x61\x63tivation_function\x18\x02 \x02(\t\"=\n\tLastLayer\x12\x13\n\x0bnum_outputs\x18\x01 \x02(\x05\x12\x1b\n\x13\x61\x63tivation_function\x18\x02 \x02(\t\"\x8e\x02\n\x0b\x43NNSettings\x12\x15\n\rlearning_rate\x18\x01 \x01(\x02\x12\x10\n\x08n_epochs\x18\x02 \x01(\x05\x12\x0f\n\x07\x64\x61taset\x18\x03 \x02(\t\x12\x12\n\nbatch_size\x18\x04 \x01(\x05\x12\x10\n\x08poolsize\x18\x05 \x01(\x05\x12\'\n\nconv_layer\x18\x06 \x03(\x0b\x32\x13.ConvolutionalLayer\x12\"\n\x0chidden_layer\x18\x07 \x03(\x0b\x32\x0c.HiddenLayer\x12\x1e\n\nlast_layer\x18\x08 \x02(\x0b\x32\n.LastLayer\x12\x15\n\rcost_function\x18\t \x02(\t\x12\x1b\n\x13\x63\x61\x63hed_weights_file\x18\n \x02(\t')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -46,6 +46,13 @@ _CONVOLUTIONALLAYER = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='rank', full_name='ConvolutionalLayer.rank', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -58,7 +65,7 @@ _CONVOLUTIONALLAYER = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=47,
-  serialized_end=106,
+  serialized_end=120,
 )
 
 
@@ -94,8 +101,8 @@ _HIDDENLAYER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=108,
-  serialized_end=171,
+  serialized_start=122,
+  serialized_end=185,
 )
 
 
@@ -131,8 +138,8 @@ _LASTLAYER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=173,
-  serialized_end=234,
+  serialized_start=187,
+  serialized_end=248,
 )
 
 
@@ -224,8 +231,8 @@ _CNNSETTINGS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=237,
-  serialized_end=507,
+  serialized_start=251,
+  serialized_end=521,
 )
 
 _CNNSETTINGS.fields_by_name['conv_layer'].message_type = _CONVOLUTIONALLAYER

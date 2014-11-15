@@ -57,7 +57,6 @@ class LeNetConvPoolLayer(object):
         """
 
         assert image_shape[1] == filter_shape[1]
-        self.input = input
 
         # there are "num input feature maps * filter height * filter width"
         # inputs to each hidden unit
@@ -85,20 +84,21 @@ class LeNetConvPoolLayer(object):
             self.b = b
 
         print self.W.shape
-        self.run_conv_pool(filter_shape, image_shape, poolsize)
+        self.run_conv_pool(input, filter_shape, image_shape, poolsize)
        # self.run_separable_conv_pool(filter_shape, image_shape, poolsize)
         
         
-    def run_conv_pool(self, filter_shape, image_shape, poolsize):    
+    def run_conv_pool(self, input, filter_shape, image_shape, poolsize):    
         # convolve input feature maps with filters
         start = time.time()
+        print 'W ', self.W.shape
+        print 'filter shape  ', filter_shape[0], filter_shape[1], filter_shape[2], filter_shape[3]
+        print 'image shape ', image_shape[0], image_shape[1], image_shape[2], image_shape[3]  
         conv_out = conv.conv2d(input=input, filters=self.W,
                 filter_shape=filter_shape, image_shape=image_shape)
         
         end = time.time()
         self.convolutional_time = (end - start)*1000/image_shape[0]                
-        
-        # downsample each feature map individually, using maxpooling
         start = time.time()
         pooled_out = downsample.max_pool_2d(input=conv_out,
                                             ds=poolsize, ignore_border=True)
@@ -115,47 +115,3 @@ class LeNetConvPoolLayer(object):
         print 'pooled out shape ', pooled_out.shape
         # store parameters of this layer
         self.params = [self.W, self.b]
-
-    def run_separable_conv_pool(self, filter_shape, image_shape, poolsize):    
-        # convolve input feature maps with filters
-        start = time.time()
-        conv_out = conv.conv2d(input=input, filters=self.W,
-                filter_shape=filter_shape, image_shape=image_shape)
-        
-        end = time.time()
-        self.convolutional_time = (end - start)*1000/image_shape[0]
-        
-
-        pWeights = scipy.io.loadmat('./experiments/setup_theano_tutorial/cnn_separable_model.mat')        
-        val = pWeights['P']
-        av = val[0,0]
-        sep_filters = av[1][2];
-        print sep_filters.shape
-        print sep_filters[0]
-        w_tensors = T.as_tensor_variable(sep_filters[0]);
-        input_4D = w_tensors.reshape((10,1,1,5))
-        print input_4D
-        if filter_shape == (20,1,5,5):
-            conv_outx = conv.conv2d(input=input, filters=input_4D,
-                                    filter_shape=(10,1,1,5), image_shape=image_shape)
-            print 'Running!'
-                
-        
-        # downsample each feature map individually, using maxpooling
-        start = time.time()
-        pooled_out = downsample.max_pool_2d(input=conv_out,
-                                            ds=poolsize, ignore_border=True)
-        end = time.time()
-        self.downsample_time = (end - start)*1000/ image_shape[0]
-        
-        print 'conv {0}, {1} ms'.format(self.convolutional_time, self.downsample_time)
-        # add the bias term. Since the bias is a vector (1D array), we first
-        # reshape it to a tensor of shape (1,n_filters,1,1). Each bias will
-        # thus be broadcasted across mini-batches and feature map
-        # width & height
-        self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
-
-        print 'pooled out shape ', pooled_out.shape
-        # store parameters of this layer
-        self.params = [self.W, self.b]
-

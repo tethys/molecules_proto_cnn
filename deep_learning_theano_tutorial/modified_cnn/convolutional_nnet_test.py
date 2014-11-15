@@ -113,11 +113,13 @@ class ConvolutionalNeuralNetworkTest(object):
                         # [int] labels
 
         # Load weights...
-        weights = numpy.load(self.cached_weights_file + '.npy')
+        weights = numpy.load(self.cached_weights_file)
 
         cached_weights = []        
         for w in reversed(weights):
             cached_weights.append(theano.shared(w))
+            print 'weights size', len(w)
+        print 'w ', len(cached_weights)
             
         ######################
         # BUILD ACTUAL MODEL #

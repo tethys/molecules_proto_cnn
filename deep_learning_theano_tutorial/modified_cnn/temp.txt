@@ -1,0 +1,48 @@
+Number of arguments: 7
+Arguments list: ['generate_separable_weights.py', '-p', 'experiments/test_folder/cnn_test.prototxt', '-w', 'experiments/test_folder/weights.npy', '-s', 'experiments/test_folder/sep_weights_none.npy']
+protofile is experiments/test_folder/cnn_test.prototxt
+weights file is experiments/test_folder/weights.npy
+separable weights file experiments/test_folder/sep_weights_none.npy
+Protofile content:
+learning_rate : 0.1
+n_epochs: 5
+dataset: "mnist.pkl.gz"
+batch_size: 50
+poolsize: 2
+conv_layer {
+	num_filters: 7
+	filter_w: 3
+}
+conv_layer {
+	num_filters: 11
+	filter_w: 3
+}
+conv_layer {
+	num_filters: 15
+	filter_w: 3
+}
+
+last_layer {
+	num_outputs: 10
+	activation_function: "tanh"
+}
+cached_weights_file: "weights"
+cost_function: "log_likelihood"
+
+10
+1485
+1485
+15
+693
+11
+63
+7
+cached weights
+150
+10
+1485
+15
+693
+11
+63
+7

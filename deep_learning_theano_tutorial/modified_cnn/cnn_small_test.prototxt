@@ -1,5 +1,5 @@
 learning_rate : 0.1
-n_epochs: 100
+n_epochs: 1
 dataset: "mnist.pkl.gz"
 batch_size: 50
 poolsize: 2
@@ -19,5 +19,5 @@ last_layer {
 	num_outputs: 10
 	activation_function: "tanh"
 }
-cached_weights_file: "temp_weights"
+cached_weights_file: "cnn_model_original2"
 cost_function: "log_likelihood"
