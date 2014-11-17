@@ -101,14 +101,26 @@ def decompose_tensor(filters, rank):
         ## P.U, P.lmbda
         matlab.put('f', filter_for_channel)
         matlab.put('rank', rank)
-        matlab.eval("""[P, ~, output]= cp_opt(tensor(f), rank)""")
-        matlab.eval("""separable_filters.U1 = P.U{1};
-                    separable_filters.U2 = P.U{2};
-                    separable_filters.U3 = P.U{3};
-                    separable_filters.lmbda  = P.lambda
-                    separable_filters.fit = output.Fit""");
-        P = matlab.get('separable_filters')
-        print 'P U0,U1,U2, lambda sizes: ', P.U1.size, P.U2.size, P.U3.size, P.lmbda
+        matlab.eval("""[P, ~, output]= cp_opt(tensor(f), rank);""")
+        matlab.eval(""" U1 = P.U{1};
+                    U1  = P.U{1};
+                    U2 = P.U{2};
+                    U3 = P.U{3};
+                    separable_filters.lmbda  = P.lambda;
+                    separable_filters.fit = output.Fit;""");
+        separable_filters = matlab.get('separable_filters')
+        U1 = matlab.get('U1')
+        U2 = matlab.get('U2')
+        U3 = matlab.get('U3')
+        P = {}       
+        P['U1'] = U1
+        P['U2'] = U2
+        P['U3'] = U3
+        P['fit'] = separable_filters.fit
+        P['lmbda'] = separable_filters.lmbda
+        print 'shape of U is ', P['U1'].shape, P['U2'].shape, P['U3'].shape
+        print 'P lambda sizes: ', P['lmbda']
+        print 'Fit is ', P['fit']
         Pstruct.append(P)
     
     return Pstruct
