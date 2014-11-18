@@ -57,6 +57,7 @@ def main():
     fig.tight_layout() # Or equivalently,  "plt.tight_layout()"
     origw = original_weights[6]; 
     origw = origw.reshape((20,5,5))
+    plt.set_cmap('gray')
     for i in xrange(20):
          img = origw[i,:,:]
          img = img.reshape((5,5))
