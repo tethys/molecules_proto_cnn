@@ -76,7 +76,7 @@ def main():
     print sep_filters4[0]['U3'].shape      
      
     filters_no = 20
-    rank = 18
+    rank = 15
     coefs = np.zeros((rank, filters_no));
     filters_size = 5
     recomp = np.zeros((filters_size, 
