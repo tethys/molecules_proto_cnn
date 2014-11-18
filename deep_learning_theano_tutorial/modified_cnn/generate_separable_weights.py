@@ -97,8 +97,10 @@ def decompose_tensor(filters, rank):
     for chanel in range(nbr_channels):
         filter_for_channel = filters[:,chanel,:,:]
         filter_for_channel.reshape(nbr_filters, fwidth, fheight)
+        filter_for_channel = np.swapaxes(filter_for_channel, 2, 0)
         #P, fit, itr, exectimes = cp_als(dtensor(filter_for_channel), rank, init='random')
         ## P.U, P.lmbda
+        print 'shape of filter ', filter_for_channel.shape
         matlab.put('f', filter_for_channel)
         matlab.put('rank', rank)
         matlab.eval("""[P, ~, output]= cp_opt(tensor(f), rank);""")
@@ -106,18 +108,26 @@ def decompose_tensor(filters, rank):
                     U1  = P.U{1};
                     U2 = P.U{2};
                     U3 = P.U{3};
-                    separable_filters.lmbda  = P.lambda;
+                    normSep = zeros(rank)
+                    for j = 1 : rank
+                        temp = U1(:,j)*U2(:,j)';
+                        if j == 1
+                            aux = temp;
+                        end
+                        normSep(j) = norm(temp);
+                    end
+                    lmbda  = P.lambda;
                     separable_filters.fit = output.Fit;""");
         separable_filters = matlab.get('separable_filters')
-        U1 = matlab.get('U1')
-        U2 = matlab.get('U2')
-        U3 = matlab.get('U3')
         P = {}       
-        P['U1'] = U1
-        P['U2'] = U2
-        P['U3'] = U3
+        P['U1'] = matlab.get('U1')
+        P['U2'] = matlab.get('U2')
+        P['U3'] = matlab.get('U3')
+        print 'auxiliary ', matlab.get('aux')
+        value_norms = matlab.get('normSep')
+        print 'value norms ', value_norms
         P['fit'] = separable_filters.fit
-        P['lmbda'] = separable_filters.lmbda
+        P['lmbda'] = matlab.get('lmbda')
         print 'shape of U is ', P['U1'].shape, P['U2'].shape, P['U3'].shape
         print 'P lambda sizes: ', P['lmbda']
         print 'Fit is ', P['fit']
