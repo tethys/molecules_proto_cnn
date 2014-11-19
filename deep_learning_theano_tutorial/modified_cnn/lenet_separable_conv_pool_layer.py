@@ -86,11 +86,14 @@ class LeNetSeparableConvPoolLayer(object):
         ## rank*nbr_filters, rank*w_filter,rank*w_filter
         
         ## Pstruct is contains an array of PU,lambda for every channel!
-        ## We look at the composition for the first channel in the beginning        
-        fwidth = Pstruct[0].U[1].size / Pstruct[0].rank
-        fheight = Pstruct[0].U[2].size / Pstruct[0].rank
-        rank = Pstruct[0].rank
-        nbr_filters = Pstruct[0].U[0].size / rank
+        ## We look at the composition for the first channel in the beginning  
+        print Pstruct[0]['U1'].shape
+        print Pstruct[0]['U2'].shape
+        print Pstruct[0]['U3'].shape
+        rank = Pstruct[0]['U1'].shape[1]
+        fwidth = Pstruct[0]['U1'].size / rank
+        fheight = Pstruct[0]['U2'].size / rank
+        nbr_filters = Pstruct[0]['U3'].size / rank
         
         print 'width, height, rank ', fwidth, fheight, rank
      #   rank 4, w,h 3x3, nbr filter 7
@@ -98,7 +101,7 @@ class LeNetSeparableConvPoolLayer(object):
         horizontal_filter_shape = (rank, num_input_feature_maps, fwidth,1)
         horizontal_filters = np.ndarray(horizontal_filter_shape)
         for chanel in range(num_input_feature_maps):
-            horizontal_filters[:, chanel,:, 0] = Pstruct[chanel].U[1].reshape(rank,fwidth);
+            horizontal_filters[:, chanel,:, 0] = Pstruct[chanel]['U1'].reshape(rank,fwidth);
         horizontal_filters = theano.shared(horizontal_filters)
         horizontal_conv_out = conv.conv2d(input = input_images, filters = horizontal_filters,
                                filter_shape = horizontal_filter_shape, image_shape = image_shape,
@@ -108,7 +111,7 @@ class LeNetSeparableConvPoolLayer(object):
         vertical_filter_shape = (rank, num_input_feature_maps, 1, fheight)
         vertical_filters = np.ndarray(vertical_filter_shape)        
         for chanel in range(num_input_feature_maps):
-            vertical_filters[:, chanel,0, :] = Pstruct[chanel].U[2].reshape(rank, fheight);
+            vertical_filters[:, chanel,0, :] = Pstruct[chanel]['U2'].reshape(rank, fheight);
     #    number of filters, num input feature maps,
         vertical_filters = theano.shared(vertical_filters)
         new_image_shape = (image_shape[0], image_shape[1], image_shape[2]-1, image_shape[3])
@@ -126,9 +129,9 @@ class LeNetSeparableConvPoolLayer(object):
         for f in range(nbr_filters):            
             temp = np.zeros((batch_size, n_rows, n_cols))
             for chanel in range(num_input_feature_maps):
-                 alphas = Pstruct[chanel].U[0].reshape(nbr_filters, rank)
+                 alphas = Pstruct[chanel]['U3'].reshape(nbr_filters, rank)
                  for r in range(rank):
-                     out = conv_out[:,r, :,:]* alphas[f, r];   
+                     out = conv_out[:,r, :,:]* alphas[f, r] * Pstruct[chanel]['lmbda'][r];   
                      temp = temp + out
             T.set_subtensor(input4D[:,f,:,:], temp)
              
