@@ -211,10 +211,10 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
           test_losses = numpy.zeros((self.n_test_batches, 1))
           for i in xrange(self.n_test_batches):
                start = time.time()
-               print 'batch nr', i
+           #    print 'batch nr', i
                test_losses[i] = self.test_model(i)
                endt = (time.time() - start)*1000/self.batch_size
-               print 'image time {0} in ms '.format(endt)
+            #   print 'image time {0} in ms '.format(endt)
                
           test_score = numpy.mean(test_losses)
           print ' test error of best ', test_score * 100.

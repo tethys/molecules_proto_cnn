@@ -74,13 +74,6 @@ class LeNetSeparableConvPoolLayer(object):
 #(number of filters, num input feature maps,  filter height,filter width)
 #   10filters, 1, 20, h 1,
 #   10filtrs, 1,20 , 1 ,w
-
-#        pWeights = scipy.io.loadmat('file./experiments/setup_theano_tutorial/cnn_separable_model.mat')        
-#        val = pWeights['P']
-#        av = val[0,0]
-#        sep_filters = av[1][2];
-#        conv_out = conv.conv2d(input=input, filters=sep_filters,
-#                filter_shape=(10,1,5,5), image_shape=image_shape)
         
         ## P is of size  U0, U1, U2
         ## rank*nbr_filters, rank*w_filter,rank*w_filter
@@ -91,33 +84,35 @@ class LeNetSeparableConvPoolLayer(object):
         print Pstruct[0]['U2'].shape
         print Pstruct[0]['U3'].shape
         rank = Pstruct[0]['U1'].shape[1]
-        fwidth = Pstruct[0]['U1'].size / rank
-        fheight = Pstruct[0]['U2'].size / rank
-        nbr_filters = Pstruct[0]['U3'].size / rank
+        fwidth = Pstruct[0]['U1'].shape[0]
+        fheight = Pstruct[0]['U2'].shape[0]
+        nbr_filters = Pstruct[0]['U3'].shape[0]
         
         print 'width, height, rank ', fwidth, fheight, rank
      #   rank 4, w,h 3x3, nbr filter 7
+        print 'num input feaure maps ', filter_shape[1]
         num_input_feature_maps = filter_shape[1]
         horizontal_filter_shape = (rank, num_input_feature_maps, fwidth,1)
         horizontal_filters = np.ndarray(horizontal_filter_shape)
         for chanel in range(num_input_feature_maps):
-            horizontal_filters[:, chanel,:, 0] = Pstruct[chanel]['U1'].reshape(rank,fwidth);
+            horizontal_filters[:, chanel,:, 0] = np.transpose(Pstruct[chanel]['U1']);
+            print Pstruct[chanel]['U1']
+            print np.transpose(Pstruct[chanel]['U1'])
+
         horizontal_filters = theano.shared(horizontal_filters)
         horizontal_conv_out = conv.conv2d(input = input_images, filters = horizontal_filters,
-                               filter_shape = horizontal_filter_shape, image_shape = image_shape,
-                               border_mode = 'valid',subsample=(1,1))
+                               filter_shape = horizontal_filter_shape, image_shape = image_shape)
                 
         
         vertical_filter_shape = (rank, num_input_feature_maps, 1, fheight)
         vertical_filters = np.ndarray(vertical_filter_shape)        
         for chanel in range(num_input_feature_maps):
-            vertical_filters[:, chanel,0, :] = Pstruct[chanel]['U2'].reshape(rank, fheight);
+            vertical_filters[:, chanel,0, :] = np.transpose(Pstruct[chanel]['U2']);
     #    number of filters, num input feature maps,
         vertical_filters = theano.shared(vertical_filters)
         new_image_shape = (image_shape[0], image_shape[1], image_shape[2]-1, image_shape[3])
         conv_out = conv.conv2d(input = horizontal_conv_out, filters = vertical_filters,
-                               filter_shape = vertical_filter_shape, image_shape = new_image_shape,
-                               border_mode = 'valid', subsample=(1,1))
+                               filter_shape = vertical_filter_shape, image_shape = new_image_shape)
 
         ## numberof images, number of filters, image width, image height
         #input4D = np.ndarray((image_shape[0], nbr_filters, image_shape[2], image_shape[3]))
@@ -129,10 +124,13 @@ class LeNetSeparableConvPoolLayer(object):
         for f in range(nbr_filters):            
             temp = np.zeros((batch_size, n_rows, n_cols))
             for chanel in range(num_input_feature_maps):
-                 alphas = Pstruct[chanel]['U3'].reshape(nbr_filters, rank)
+                 alphas = Pstruct[chanel]['U3']
                  for r in range(rank):
                      out = conv_out[:,r, :,:]* alphas[f, r] * Pstruct[chanel]['lmbda'][r];   
                      temp = temp + out
+            if f == 0:
+                print'first map'
+                print temp
             T.set_subtensor(input4D[:,f,:,:], temp)
              
         print 'Image shape ', input4D.shape.eval()
