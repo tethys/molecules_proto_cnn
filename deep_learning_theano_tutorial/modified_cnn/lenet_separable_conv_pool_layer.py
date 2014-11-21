@@ -92,10 +92,10 @@ class LeNetSeparableConvPoolLayer(object):
      #   rank 4, w,h 3x3, nbr filter 7
         print 'num input feaure maps ', filter_shape[1]
         num_input_feature_maps = filter_shape[1]
-        horizontal_filter_shape = (rank, num_input_feature_maps, fwidth,1)
+        horizontal_filter_shape = (rank, num_input_feature_maps, 1, fwidth)
         horizontal_filters = np.ndarray(horizontal_filter_shape)
         for chanel in range(num_input_feature_maps):
-            horizontal_filters[:, chanel,:, 0] = np.transpose(Pstruct[chanel]['U1']);
+            horizontal_filters[:, chanel, 0, :] = np.transpose(Pstruct[chanel]['U1']);
             print Pstruct[chanel]['U1']
             print np.transpose(Pstruct[chanel]['U1'])
 
@@ -104,18 +104,17 @@ class LeNetSeparableConvPoolLayer(object):
                                filter_shape = horizontal_filter_shape, image_shape = image_shape)
                 
         
-        vertical_filter_shape = (rank, num_input_feature_maps, 1, fheight)
+        vertical_filter_shape = (rank, num_input_feature_maps, fheight, 1)
         vertical_filters = np.ndarray(vertical_filter_shape)        
         for chanel in range(num_input_feature_maps):
-            vertical_filters[:, chanel,0, :] = np.transpose(Pstruct[chanel]['U2']);
+            vertical_filters[:, chanel, :, 0] = np.transpose(Pstruct[chanel]['U2']);
     #    number of filters, num input feature maps,
         vertical_filters = theano.shared(vertical_filters)
-        new_image_shape = (image_shape[0], image_shape[1], image_shape[2]-1, image_shape[3])
+        new_image_shape = (image_shape[0], image_shape[1], image_shape[2], image_shape[3] -fwidth + 1)
         conv_out = conv.conv2d(input = horizontal_conv_out, filters = vertical_filters,
                                filter_shape = vertical_filter_shape, image_shape = new_image_shape)
 
         ## numberof images, number of filters, image width, image height
-        #input4D = np.ndarray((image_shape[0], nbr_filters, image_shape[2], image_shape[3]))
         batch_size = image_shape[0]
         n_rows = image_shape[2]- fwidth + 1
         n_cols = image_shape[3] - fheight + 1
@@ -126,7 +125,7 @@ class LeNetSeparableConvPoolLayer(object):
             for chanel in range(num_input_feature_maps):
                  alphas = Pstruct[chanel]['U3']
                  for r in range(rank):
-                     out = conv_out[:,r, :,:]* alphas[f, r] * Pstruct[chanel]['lmbda'][r];   
+                     out = conv_out[r,r, :,:]* alphas[f, r] * Pstruct[chanel]['lmbda'][r];   
                      temp = temp + out
             if f == 0:
                 print'first map'
