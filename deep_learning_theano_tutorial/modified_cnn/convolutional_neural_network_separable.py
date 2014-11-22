@@ -80,7 +80,6 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
                 self.batch_size = settings.batch_size;
         if settings.HasField('poolsize'):
                 self.poolsize = settings.poolsize;
-                
         # TODO this
         self.convolutional_layers = [];
         self.hidden_layers = [];
@@ -113,7 +112,8 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
         # 50000/50 = 1000, 10000/50 = 200
         self.n_test_batches = self.test_set_x.get_value(borrow=True).shape[0]
         self.n_test_batches /= self.batch_size
-
+  
+        
         # allocate symbolic variables for the data
         self.index = T.lscalar()  # index to a [mini]batch
         self.x = T.matrix('x')   # the data is presented as rasterized images
@@ -210,10 +210,10 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
          
           test_losses = numpy.zeros((self.n_test_batches, 1))
           for i in xrange(self.n_test_batches):
-               start = time.time()
+              # start = time.time()
            #    print 'batch nr', i
                test_losses[i] = self.test_model(i)
-               endt = (time.time() - start)*1000/self.batch_size
+              # endt = (time.time() - start)*1000/self.batch_size
             #   print 'image time {0} in ms '.format(endt)
                
           test_score = numpy.mean(test_losses)
