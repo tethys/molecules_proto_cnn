@@ -83,6 +83,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
         # TODO this
         self.convolutional_layers = [];
         self.hidden_layers = [];
+        self.batch_size = 1
         
        # self.nbr_convolutional_layers = settings.conv_layer.size();
        # self.nbr_hidden_layers = settings.hidden_layer.size();
@@ -162,6 +163,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
                                        poolsize=(self.poolsize, self.poolsize),
                                        Pstruct = cached_weights[iter + 1], 
                                        b = theano.shared(cached_weights[iter]))
+              #  print 'LATER OUTPUT', layer.output.eval()     
             print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
             print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
             clayers.append(layer)
@@ -201,6 +203,10 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
                 self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
                 name='cnn_test_model' , on_unused_input='ignore')
+                
+#                    mode=theano.compile.MonitorMode(
+#                        pre_func=inspect_inputs,
+#                        post_func=inspect_outputs)
             ###############
             # TEST MODEL #
             ###############
@@ -209,7 +215,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
           # test it on the test set
          
           test_losses = numpy.zeros((self.n_test_batches, 1))
-          for i in xrange(self.n_test_batches):
+          for i in xrange(10):
               # start = time.time()
            #    print 'batch nr', i
                test_losses[i] = self.test_model(i)
@@ -219,3 +225,8 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
           test_score = numpy.mean(test_losses)
           print ' test error of best ', test_score * 100.
 
+def inspect_inputs(i, node, fn):
+    print i, node, "input(s) value(s):", [input[0] for input in fn.inputs],
+
+def inspect_outputs(i, node, fn):
+    print "output(s) value(s):", [output[0] for output in fn.outputs]

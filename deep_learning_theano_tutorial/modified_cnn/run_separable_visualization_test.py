@@ -5,15 +5,9 @@ Created on Tue Nov 11 14:06:13 2014
 @author: vivianapetrescu
 """
 
-import test_separable_filters
 
-
-import argparse
-import logging
 import numpy as np
 import sys
-import convolutional_neural_network_settings_pb2 as pb_cnn
-from google.protobuf import text_format
 import matplotlib.pyplot as plt
 from scipy import linalg
 
@@ -90,11 +84,8 @@ def main():
         print 'P is ', P['U1'][:,j].shape
         sep[:,:,j] =  np.outer(P['U1'][:,j], P['U2'][:,j]);
         temp = sep[:,:,j];
-        if j == 0:
-            print 'temporary ', temp
         temp.reshape((filters_size, filters_size));
         normSep[j] = linalg.norm(temp, 2)
-        print 'norm should be 1 ', normSep[j]
         sep[:,:,j] = sep[:,:,j]/normSep[j];
         
     # Recompose the tensor
