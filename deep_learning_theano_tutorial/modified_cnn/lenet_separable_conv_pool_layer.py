@@ -47,6 +47,7 @@ class LeNetSeparableConvPoolLayer(object):
         # the bias is a 1D tensor -- one bias per output feature map
         # convolve input feature maps with filters
 
+
         batch_size = image_shape[0]             
         fwidth = Pstruct[0]['U1'].shape[0]
         fheight = Pstruct[0]['U2'].shape[0]
@@ -56,17 +57,15 @@ class LeNetSeparableConvPoolLayer(object):
         n_cols = image_shape[3] - fheight + 1
         input4D = theano.shared(np.zeros((batch_size, nbr_filters, 
                                           n_rows, n_cols)))
-        print 'batch size ', batch_size
+        print 'batch size ', batch_size        
+        one_image_shape = (image_shape[1], image_shape[2], image_shape[3])
+        assert one_image_shape == (1,28,28)
         for image_index in range(batch_size):
-            one_image_shape = (image_shape[1], image_shape[2], image_shape[3])
-            assert one_image_shape == (1,28,28)
-            temporary = input_images[image_index,:,:,:]
-            input4D = self.convolve_one_image(temporary, 
+            input4D = self.convolve_one_image(input4D, input_images[image_index,:,:,:], 
                               one_image_shape,
-                              Pstruct, filter_shape,
-                              input4D, image_index)
-             
-        print 'Image shape ', input4D.shape.eval()
+                              Pstruct, 
+                              filter_shape, 
+                              image_index)   
         # downsample each feature map individually, using maxpooling
         start = time.time()
         pooled_out = downsample.max_pool_2d(input=input4D,
@@ -75,7 +74,6 @@ class LeNetSeparableConvPoolLayer(object):
         end = time.time()
         self.downsample_time = (end - start)*1000/ image_shape[0]
         
-        print 'Image shape ', pooled_out.shape.eval()
                 
         # add the bias term. Since the bias is a vector (1D array), we first
         # reshape it to a tensor of shape (1,n_filters,1,1). Each bias will
@@ -84,8 +82,8 @@ class LeNetSeparableConvPoolLayer(object):
         self.output = T.tanh(pooled_out + b.dimshuffle('x', 0, 'x', 'x'))
     
     """TODO change to have an image such as nbr channels as well"""
-    def convolve_one_image(self, one_image, image_shape, Pstruct, filter_shape,
-                           input4D, image_index):
+    def convolve_one_image(self,input4D, one_image, image_shape, Pstruct, filter_shape,
+                           image_index):
          """
         Convolve one image with separabl filters.
 
@@ -101,6 +99,8 @@ class LeNetSeparableConvPoolLayer(object):
         :type poolsize: tuple or list of length 2
         :param poolsize: the downsampling (pooling) factor (#rows,#cols)
         """                        
+  
+    
         ## We look at the composition for the first channel in the beginning  
          rank = Pstruct[0]['U1'].shape[1]
          fwidth = filter_shape[2]
@@ -112,45 +112,37 @@ class LeNetSeparableConvPoolLayer(object):
          num_input_feature_maps = 1
          for chanel in range(num_input_feature_maps):
             horizontal_filters[:, 0, :] = np.transpose(Pstruct[chanel]['U1']);
-
-         horizontal_filters = theano.shared(horizontal_filters)
+        
         # output is 1 x rank x W x H
          horizontal_conv_out = conv.conv2d(input=one_image, 
                                              filters = horizontal_filters,
                                              filter_shape = horizontal_filter_shape, 
                                              image_shape = image_shape)
-         
-         if image_index ==  0:
-             print 'horzintal', horizontal_conv_out.owner.inputs[0].owner.inputs,  
-             print horizontal_conv_out.owner.inputs[1].owner.inputs
         
+         
          vertical_filter_shape = (rank, fheight, 1)
          vertical_filters = np.ndarray(vertical_filter_shape)        
          for chanel in range(num_input_feature_maps):
             vertical_filters[:,:, 0] = np.transpose(Pstruct[chanel]['U2']);
     #    number of filters, num input feature maps,
-         vertical_filters = theano.shared(vertical_filters)
+     ## TODO fix assignment here!!     
          new_image_shape = (rank, image_shape[1], image_shape[2] -fwidth + 1)
          conv_out = conv.conv2d(input = horizontal_conv_out[0,:,:,:], filters = vertical_filters,
                                filter_shape = vertical_filter_shape, image_shape = new_image_shape)
-         if image_index ==  0:
-             print 'vertical', conv_out[0,0,0:5,0:5]   
+
          nbr_filters = Pstruct[0]['U3'].shape[0]
          # Final number of rows and columns        
          n_rows = image_shape[1]- fwidth + 1
          n_cols = image_shape[2] - fheight + 1                   
          ## numberof images, number of filters, image width, image height
          for f in range(nbr_filters):            
-            temp = np.zeros((n_rows, n_cols))
+            temp = theano.shared(np.zeros((n_rows, n_cols)))
             for chanel in range(num_input_feature_maps):
                  alphas = Pstruct[chanel]['U3']
                  for r in range(rank):
                      out = conv_out[r,r, :,:]* alphas[f, r] * Pstruct[chanel]['lmbda'][r];   
                      temp = temp + out
-            T.set_subtensor(input4D[image_index,f,:,:], temp)
-            #print input4D[image_index,f,0:5,0:5].eval()
-            #print 'f ', f
-            if f == 0 and image_index == 0:
-                np.save('result_separable0', input4D[image_index,f,:,:].eval())
-         #print input4D.get_value()
-         return input4D
+            input4D =T.set_subtensor(input4D[image_index,f,:,:], temp)
+         return input4D   
+
+

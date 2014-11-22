@@ -83,7 +83,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
         # TODO this
         self.convolutional_layers = [];
         self.hidden_layers = [];
-        self.batch_size = 1
+        self.batch_size = 10
         
        # self.nbr_convolutional_layers = settings.conv_layer.size();
        # self.nbr_hidden_layers = settings.hidden_layer.size();
@@ -198,15 +198,11 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
     def test_model(self):
           print 'Running test'
              # create a function to compute the mistakes that are made by the model
-          self.test_model = theano.function([self.index], self.output_layer.errors(self.y),
+          test_model_result = theano.function([self.index], self.output_layer.errors(self.y),
              givens={
                 self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
-                name='cnn_test_model' , on_unused_input='ignore')
-                
-#                    mode=theano.compile.MonitorMode(
-#                        pre_func=inspect_inputs,
-#                        post_func=inspect_outputs)
+                name='cnn_test_model' , on_unused_input='ignore', mode='FAST_RUN')
             ###############
             # TEST MODEL #
             ###############
@@ -215,12 +211,12 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
           # test it on the test set
          
           test_losses = numpy.zeros((self.n_test_batches, 1))
-          for i in xrange(10):
-              # start = time.time()
-           #    print 'batch nr', i
-               test_losses[i] = self.test_model(i)
-              # endt = (time.time() - start)*1000/self.batch_size
-            #   print 'image time {0} in ms '.format(endt)
+          for i in xrange(self.n_test_batches):
+               start = time.time()
+               print 'batch nr', i
+               test_losses[i] = test_model_result(i)
+               endt = (time.time() - start)*1000/self.batch_size
+               print 'image time {0} in ms '.format(endt)
                
           test_score = numpy.mean(test_losses)
           print ' test error of best ', test_score * 100.
