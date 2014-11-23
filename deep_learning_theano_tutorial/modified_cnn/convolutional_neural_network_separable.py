@@ -83,7 +83,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
         # TODO this
         self.convolutional_layers = [];
         self.hidden_layers = [];
-        self.batch_size = 10
+        self.batch_size = 1
         
        # self.nbr_convolutional_layers = settings.conv_layer.size();
        # self.nbr_hidden_layers = settings.hidden_layer.size();

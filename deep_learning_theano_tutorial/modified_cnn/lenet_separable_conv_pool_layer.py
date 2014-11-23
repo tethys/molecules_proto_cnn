@@ -127,20 +127,27 @@ class LeNetSeparableConvPoolLayer(object):
     #    number of filters, num input feature maps,
      ## TODO fix assignment here!!     
          new_image_shape = (rank, image_shape[1], image_shape[2] -fwidth + 1)
-         conv_out = conv.conv2d(input = horizontal_conv_out[0,:,:,:], filters = vertical_filters,
-                               filter_shape = vertical_filter_shape, image_shape = new_image_shape)
-
+         n_rows = image_shape[1]- fwidth + 1
+         n_cols = image_shape[2] - fheight + 1 
+         conv_out = theano.shared(np.zeros((rank, n_rows, n_cols)))
+         for r in range(rank):
+             # temp is 1x1x imageW x imageH
+             A = conv.conv2d(input = horizontal_conv_out[:,r,:,:], 
+                                filters = vertical_filters[r,:,:],
+                                filter_shape = (1, fheight, 1), 
+                                image_shape = (1, image_shape[1], image_shape[2] -fwidth + 1))
+             conv_out = T.set_subtensor(conv_out[r,:,:], A[0,:,:])
+  
          nbr_filters = Pstruct[0]['U3'].shape[0]
          # Final number of rows and columns        
-         n_rows = image_shape[1]- fwidth + 1
-         n_cols = image_shape[2] - fheight + 1                   
+                  
          ## numberof images, number of filters, image width, image height
          for f in range(nbr_filters):            
             temp = theano.shared(np.zeros((n_rows, n_cols)))
             for chanel in range(num_input_feature_maps):
                  alphas = Pstruct[chanel]['U3']
                  for r in range(rank):
-                     out = conv_out[r,r, :,:]* alphas[f, r] * Pstruct[chanel]['lmbda'][r];   
+                     out = conv_out[r, :,:]* alphas[f, r] * Pstruct[chanel]['lmbda'][r];   
                      temp = temp + out
             input4D =T.set_subtensor(input4D[image_index,f,:,:], temp)
          return input4D   
