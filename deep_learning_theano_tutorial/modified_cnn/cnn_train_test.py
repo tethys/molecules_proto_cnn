@@ -8,6 +8,7 @@ Created on Tue Oct 21 16:19:55 2014
 
 import argparse
 import sys
+from convolutional_nnet_non_symbolic import ConvolutionalNeuralNetworkNonSymbolic;
 from convolutional_nnet_train import ConvolutionalNeuralNetworkTrain;
 from convolutional_nnet_test import ConvolutionalNeuralNetworkTest;
 from convolutional_neural_network_separable import ConvolutionalNeuralNetworkSeparableTest;
@@ -35,6 +36,9 @@ def main():
     	cnn = ConvolutionalNeuralNetworkSeparableTest(results.prototxt_file, results.cached_weights_file);
     	cnn.build_model()
     	cnn.test_model()
+    if results.mode == 3:
+      cnn = ConvolutionalNeuralNetworkNonSymbolic(results.prototxt_file, results.cached_weights_file)
+      cnn.compute_test_error()
 
 if __name__ == '__main__':
     main()

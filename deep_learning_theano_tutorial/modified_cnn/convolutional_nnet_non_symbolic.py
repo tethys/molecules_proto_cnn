@@ -6,14 +6,18 @@ Created on Mon Nov 24 14:39:22 2014
 """
 import time
 
+import theano
 import convolutional_neural_network_settings_pb2 as pb_cnn
 import numpy as np
 
 from load_data import load_mnist_data
 from google.protobuf import text_format
 
-
-from conv_pool_separable_layer_non-symbolic import LeNetSeparableConvPoolLayerNonSymbolic
+from conv_pool_layer_non_symbolic import LeNetConvPoolLayerNonSymbolic
+from conv_pool_separable_layer_non_symbolic import LeNetSeparableConvPoolLayerNonSymbolic
+import theano.tensor as T
+from logistic_sgd import LogisticRegression
+from mlp import HiddenLayer
 
 class ConvolutionalNeuralNetworkNonSymbolic:
     def __init__(self, cnn_settings_protofile, cached_weights_file):
@@ -71,9 +75,16 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         self.cost_function = settings.cost_function;
         self.input_shape = (28,28); # this is the size of MNIST images
     
+
+        ## Create Layers    
+        self.rng = np.random.RandomState(23455)
+        self.layer_separable_convolutional = LeNetSeparableConvPoolLayerNonSymbolic(self.rng)
+        self.layer_convolutional = LeNetConvPoolLayerNonSymbolic(self.rng)
+   #     self.hidden_layer = HiddenLayer(rng)
+    
     def load_weights(self):
         # Load weights...
-        weights = numpy.load(self.cached_weights_file)
+        weights = np.load(self.cached_weights_file)
         #   sp.io.savemat('temporary.mat', {'w',weights})
         self.cached_weights = []        
         for w in reversed(weights):
@@ -92,8 +103,8 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         test_set_x, test_set_y = datasets[2]
         # shape of test_set_x is 10000x784
         #shape of test_set_y is 10000x784
-        self.test_set_x = test_set_x.get_value(borrow=True)
-        self.test_set_y = test_set_y.eval()
+        self.test_set_x = test_set_x.get_value()
+        self.test_set_y = test_set_y
 
         # compute number of minibatches for training, validation and testing
         # 50000/50 = 1000, 10000/50 = 200
@@ -104,6 +115,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
 
         
         print 'Running test'
+        self.n_test_batches = 10
         test_losses = np.zeros((self.n_test_batches, 1))
         for batch_index in xrange(self.n_test_batches):
                start = time.time()
@@ -117,7 +129,6 @@ class ConvolutionalNeuralNetworkNonSymbolic:
 
     def process_batch(self, batch_index):
         """ Process one single batch"""
-        rng = np.random.RandomState(23455)
         
         self.x = self.test_set_x[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
         self.y = self.test_set_y[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
@@ -126,61 +137,65 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         pooled_W = self.input_shape[0];
         pooled_H = self.input_shape[1];
         nbr_feature_maps = 1
-        clayers = []
         iter = 0
         for clayer_params in self.convolutional_layers:
            print clayer_params.num_filters
            print clayer_params.filter_w
            print 'Inside loop '           
            if clayer_params.HasField('rank') == False:
-#                print 'Iter ', iter
-#                layer = LeNetConvPoolLayer(rng, input = layer_input, 
-#                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
-#                                       filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
-#                                                     clayer_params.filter_w, clayer_params.filter_w),
-#                                       poolsize=(self.poolsize, self.poolsize),
-#                                        W = cached_weights[iter + 1], 
-#                                        b = theano.shared(cached_weights[iter]))
-            else:
-                print 'Separable ', iter
-                layer = LeNetSeparableConvPoolLayerNonSymbolic(rng, input_images = layer_input, 
+                print 'Iter ', iter
+                layer_output = self.layer_convolutional.run_batch(layer_input, 
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
                                                      clayer_params.filter_w, clayer_params.filter_w),
-                                       poolsize=(self.poolsize, self.poolsize),
-                                       Pstruct = cached_weights[iter + 1], 
-                                       b = theano.shared(cached_weights[iter]))
+                                        W = self.cached_weights[iter + 1], 
+                                        b = self.cached_weights[iter],
+                                        poolsize=(self.poolsize, self.poolsize)).eval()
+              #  print 'LAYER OUTPUT IS'
+              #  print layer_output                   
+           else:
+                print 'Separable ', iter
+                layer_output = self.layer_separable_convolutional.run_batch(
+                                                    layer_input, 
+                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
+                                       filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
+                                                     clayer_params.filter_w, clayer_params.filter_w),
+                                       W = self.cached_weights[iter + 1], 
+                                       b = self.cached_weights[iter],
+                                       poolsize=(self.poolsize, self.poolsize))
 #              #  print 'LATER OUTPUT', layer.output.eval()     
-#            print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
-#            print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
-#            clayers.append(layer)
-#            pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize;
-#            pooled_H = (pooled_H - clayer_params.filter_w + 1) / self.poolsize;
-#            layer_input = layer.output;
-#            nbr_feature_maps = clayer_params.num_filters;
-#            iter += 2
+           print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
+           print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
+           pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize;
+           pooled_H = (pooled_H - clayer_params.filter_w + 1) / self.poolsize;
+           layer_input = layer_output;
+           nbr_feature_maps = clayer_params.num_filters;
+           iter += 2
+           
+
 #        
 #        
 #        # construct a fully-connected sigmoidal layer
-#        layer_input = layer_input.flatten(2);
-#        nbr_input = nbr_feature_maps * pooled_W * pooled_H ## Why is this SO??
-#        hlayers = []
-#        for hlayer_params in self.hidden_layers:
-#            print hlayer_params.num_outputs
-#            layer = HiddenLayer(rng, input=layer_input, n_in=nbr_input,
-#                         n_out = hlayer_params.num_outputs, activation=T.tanh,
-#                         W = cached_weights[iter +1], b = cached_weights[iter])
-#            nbr_input = hlayer_params.num_outputs;
-#            layer_input = layer.output
-#            hlayers.append(layer)
-#            iter += 2
+        layer_input = layer_input.flatten(2);
+        nbr_input = nbr_feature_maps * pooled_W * pooled_H ## Why is this SO??
+        hlayers = []
+        for hlayer_params in self.hidden_layers:
+            print hlayer_params.num_outputs
+            layer = HiddenLayer(self.rng, input=layer_input, n_in=nbr_input,
+                         n_out = hlayer_params.num_outputs, activation= T.tanh,
+                         W = self.cached_weights[iter +1], b = self.cached_weights[iter])
+            nbr_input = hlayer_params.num_outputs;
+            layer_input = layer.output
+            hlayers.append(layer)
+            iter += 2
 #         
-#        print 'nbr inputs ', nbr_input 
+        print 'nbr inputs ', nbr_input 
 #        # classify the values of the fully-connected sigmoidal layer
-#        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=10, 
-#                                               W = cached_weights[iter +1], 
-#                                               b = cached_weights[iter])
-# 
- 
- 
-        pass
+        output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=10, 
+                                               W = self.cached_weights[iter +1], 
+                                               b = self.cached_weights[iter])
+
+
+        result =  output_layer.errors(self.y)
+        print 'result is ', result.eval()
+        return result.eval()

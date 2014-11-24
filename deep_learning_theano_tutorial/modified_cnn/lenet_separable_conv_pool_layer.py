@@ -62,16 +62,18 @@ class LeNetSeparableConvPoolLayer(object):
         input4D = theano.shared(np.zeros((batch_size, nbr_filters, 
                                           final_n_rows, final_n_cols)))
         print 'batch size ', batch_size        
-        one_image_shape = (nbr_channels, initial_n_rows, initial_n_cols)
-        assert one_image_shape == (1,28,28)
+        one_image_shape = (1, initial_n_rows, initial_n_cols)
+       # assert one_image_shape == (1,28,28)
         for image_index in range(batch_size):
-            # Convolve image with index image_index in the batch
-            input4D = self.convolve_one_image(input4D, 
-                              input_images[image_index,:,:,:],
+            for channel_index in range(nbr_channels):
+                # Convolve image with index image_index in the batch
+                input4D = self.convolve_one_image(input4D, 
+                              input_images[image_index,channel_index,:,:].reshape((1, initial_n_rows, initial_n_cols)),
                               one_image_shape,
                               Pstruct, 
                               filter_shape, 
-                              image_index)   
+                              image_index,
+                              channel_index)   
         # downsample each feature map individually, using maxpooling
         start = time.time()
         pooled_out = downsample.max_pool_2d(input=input4D,
@@ -90,7 +92,8 @@ class LeNetSeparableConvPoolLayer(object):
     """TODO change to have an image such as nbr channels as well"""
     def convolve_one_image(self,input4D, one_image, image_shape, 
                            Pstruct, filter_shape,
-                           image_index):
+                           image_index,
+                           channel_index):
          """
         Convolve one image with separabl filters.
 
@@ -112,15 +115,13 @@ class LeNetSeparableConvPoolLayer(object):
          rank = Pstruct[0]['U1'].shape[1]
          fwidth = filter_shape[2]
          fheight = filter_shape[3]
-         num_input_feature_maps = image_shape[0]   
          
          
          # Construct horizontal filters
          #TODO save the filters in the correct shape
          horizontal_filter_shape = (rank, 1, fwidth)
          horizontal_filters = np.ndarray(horizontal_filter_shape)
-         for chanel in range(num_input_feature_maps):
-            horizontal_filters[:, 0, :] = np.transpose(Pstruct[chanel]['U1']);
+         horizontal_filters[:, 0, :] = np.transpose(Pstruct[channel_index]['U1']);
         
          # Output is 1 x rank x W x H
          horizontal_conv_out = conv.conv2d(input=one_image, 
@@ -131,8 +132,7 @@ class LeNetSeparableConvPoolLayer(object):
          # Construct vertical filters
          vertical_filter_shape = (rank, fheight, 1)
          vertical_filters = np.ndarray(vertical_filter_shape)        
-         for chanel in range(num_input_feature_maps):
-            vertical_filters[:,:, 0] = np.transpose(Pstruct[chanel]['U2']);
+         vertical_filters[:,:, 0] = np.transpose(Pstruct[channel_index]['U2']);
 
          initial_n_rows = image_shape[1]
          final_n_rows = initial_n_rows- fwidth + 1
@@ -149,12 +149,11 @@ class LeNetSeparableConvPoolLayer(object):
          nbr_filters = Pstruct[0]['U3'].shape[0]
          # Final number of rows and columns                        
          ## numberof images, number of filters, image width, image height
-         alphas = Pstruct[chanel]['U3']  
+         alphas = Pstruct[channel_index]['U3']  
          for f in range(nbr_filters):            
-            for chanel in range(num_input_feature_maps):
-                 temp = theano.shared(np.zeros((final_n_rows, final_n_cols)))
-                 for r in range(rank):
-                     temp = temp + conv_out[r, :,:]* alphas[f, r] * Pstruct[chanel]['lmbda'][r]; 
+            temp = theano.shared(np.zeros((final_n_rows, final_n_cols)))
+            for r in range(rank):
+                temp = temp + conv_out[r, :,:]* alphas[f, r] * Pstruct[channel_index]['lmbda'][r]; 
             input4D =T.set_subtensor(input4D[image_index,f,:,:], temp)
          return input4D   
 
