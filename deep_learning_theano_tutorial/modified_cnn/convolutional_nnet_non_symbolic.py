@@ -163,7 +163,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                                        W = self.cached_weights[iter + 1], 
                                        b = self.cached_weights[iter],
                                        poolsize=(self.poolsize, self.poolsize))
-#              #  print 'LATER OUTPUT', layer.output.eval()     
+           print 'LATER finished'
            print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
            print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
            pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize;

@@ -152,7 +152,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
                                                      clayer_params.filter_w, clayer_params.filter_w),
                                        poolsize=(self.poolsize, self.poolsize),
-                                        W = theano.shared(cached_weights[iter + 1]), 
+                                        W = cached_weights[iter + 1], 
                                         b = theano.shared(cached_weights[iter]))
             else:
                 print 'Separable ', iter
@@ -191,8 +191,8 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
         print 'nbr inputs ', nbr_input 
         # classify the values of the fully-connected sigmoidal layer
         self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=10, 
-                                               W = theano.shared(cached_weights[iter +1]), 
-                                               b = theano.shared(cached_weights[iter]))
+                                               W = cached_weights[iter +1], 
+                                               b = cached_weights[iter])
 
 
     def test_model(self):
@@ -202,16 +202,16 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
              givens={
                 self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
-                name='cnn_test_model' , on_unused_input='ignore', mode='FAST_RUN')
+                name='cnn_test_model' , on_unused_input='ignore')
             ###############
             # TEST MODEL #
             ###############
           print '... testing'
  
           # test it on the test set
-         
-          test_losses = numpy.zeros((self.n_test_batches, 1))
-          for i in xrange(self.n_test_batches):
+          
+          test_losses = numpy.zeros((10, 1))
+          for i in xrange(10):
                start = time.time()
                print 'batch nr', i
                test_losses[i] = test_model_result(i)
