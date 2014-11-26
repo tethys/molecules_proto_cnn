@@ -8,15 +8,16 @@ import numpy as np
 import theano
 import time
 
+import scipy
 import theano.tensor as T
 from theano.tensor.signal import downsample
 from theano.tensor.nnet import conv
 
-class LeNetConvPoolLayerNonSymbolic:
+class LeNetLayerConvPoolNonSymbolic:
     def __init__(self, rng):
         self.rng = rng
     
-    def run_batch(self, input, filter_shape, image_shape, W=None, b=None, poolsize=(2, 2)):
+    def run_batch(self, images, filter_shape, image_shape, W=None, b=None, poolsize=(2, 2)):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
 
@@ -65,19 +66,38 @@ class LeNetConvPoolLayerNonSymbolic:
         else:
             self.b = b
 
-        print self.W.shape
-        return self.run_conv_pool(input, filter_shape, image_shape, poolsize)
+        return self.run_conv_pool(images, filter_shape, image_shape, poolsize)
         
         
-    def run_conv_pool(self, input, filter_shape, image_shape, poolsize):    
+    def run_conv_pool(self, images, filter_shape, image_shape, poolsize):    
         # convolve input feature maps with filters
         start = time.time()
-        print 'W ', self.W.shape
+        # W is 50, 20, 5, 5 (nbr_filters, nbr_channels, fwidht, fheight)
         print 'filter shape  ', filter_shape[0], filter_shape[1], filter_shape[2], filter_shape[3]
         print 'image shape ', image_shape[0], image_shape[1], image_shape[2], image_shape[3]  
-        conv_out = conv.conv2d(input=input, filters=self.W,
-                filter_shape=filter_shape, image_shape=image_shape)
-        
+
+#        Pstruct = W
+        batch_size = image_shape[0]             
+        fwidth = self.W.shape[2]
+        fheight = self.W.shape[3]
+        nbr_channels = self.W.shape[1]
+        nbr_filters = self.W.shape[0]
+        initial_n_rows = image_shape[2]
+        initial_n_cols = image_shape[3]
+       
+#        # Final number of rows and columns        
+        final_n_rows = initial_n_rows - fwidth + 1
+        final_n_cols = initial_n_cols - fheight + 1
+ #       conv_out = conv.conv2d(input=images, filters=self.W,
+ #               filter_shape=filter_shape, image_shape=image_shape)
+        conv_out = np.zeros((batch_size, nbr_filters, final_n_rows, final_n_cols))
+        for b in range(batch_size):         
+            for f in range(nbr_filters):
+                temp = np.zeros((final_n_rows, final_n_cols))
+                for c in range(nbr_channels):
+                    temp += scipy.signal.convolve2d(images[b,c,:,:], self.W[f,c,:,:], mode='valid')
+                conv_out[b,f,:,:] = temp
+                
         end = time.time()
         self.convolutional_time = (end - start)*1000/image_shape[0]                
         start = time.time()

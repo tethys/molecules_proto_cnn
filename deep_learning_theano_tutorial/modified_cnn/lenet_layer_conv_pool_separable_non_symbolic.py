@@ -13,7 +13,7 @@ import theano.tensor as T
 from theano.tensor.signal import downsample
 from theano.tensor.signal import conv
 
-class LeNetSeparableConvPoolLayerNonSymbolic:
+class LeNetLayerConvPoolSeparableNonSymbolic:
     def __init__(self, rng):
         self.rng = rng
     def run_batch(self, input_images, image_shape, filter_shape,  W, b, poolsize):
@@ -35,13 +35,13 @@ class LeNetSeparableConvPoolLayerNonSymbolic:
         # The convolved input images
         self.input4D = np.zeros((batch_size, nbr_filters, final_n_rows, final_n_cols))
         print 'batch size ', batch_size        
-        one_image_shape = (1, initial_n_rows, initial_n_cols)
+        one_image_shape = (initial_n_rows, initial_n_cols)
        # assert one_image_shape == (1,28,28)
         for image_index in range(batch_size):
             for channel_index in range(nbr_channels):
                 # Convolve image with index image_index in the batch
                 print 'convolution start'
-                self.input4D = self.convolve_one_image(input_images[image_index,channel_index,:,:].reshape((1, initial_n_rows, initial_n_cols)),
+                self.input4D = self.convolve_one_image(input_images[image_index,channel_index,:,:],
                               one_image_shape,
                               Pstruct, 
                               filter_shape, 
@@ -100,15 +100,15 @@ class LeNetSeparableConvPoolLayerNonSymbolic:
          horizontal_filter_shape = (rank, 1, fwidth)
          horizontal_filters = np.ndarray(horizontal_filter_shape)
          horizontal_filters[:, 0, :] = np.transpose(Pstruct[channel_index]['U1']);
-         initial_n_rows = image_shape[1]
+         initial_n_rows = image_shape[0]
          final_n_rows = initial_n_rows- fwidth + 1
-         final_n_cols = image_shape[2] - fheight + 1 
+         final_n_cols = image_shape[1] - fheight + 1 
          
          # Output is 1 x rank x W x H
          start = time.time()
          horizontal_conv_out = np.zeros((rank, initial_n_rows, final_n_cols))
          for r in range(rank):
-             horizontal_conv_out[r,:,:] = scipy.signal.convolve2d(one_image[0,:,:], 
+             horizontal_conv_out[r,:,:] = scipy.signal.convolve2d(one_image, 
                                                horizontal_filters[r,:,:], mode='valid')
                                            
          end = time.time()

@@ -163,7 +163,6 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
                                        poolsize=(self.poolsize, self.poolsize),
                                        Pstruct = cached_weights[iter + 1], 
                                        b = theano.shared(cached_weights[iter]))
-              #  print 'LATER OUTPUT', layer.output.eval()     
             print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
             print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
             clayers.append(layer)

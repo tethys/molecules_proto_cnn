@@ -13,8 +13,8 @@ import numpy as np
 from load_data import load_mnist_data
 from google.protobuf import text_format
 
-from conv_pool_layer_non_symbolic import LeNetConvPoolLayerNonSymbolic
-from conv_pool_separable_layer_non_symbolic import LeNetSeparableConvPoolLayerNonSymbolic
+from conv_pool_layer_non_symbolic import LeNetLayerConvPoolNonSymbolic
+from lenet_layer_conv_pool_separable_non_symbolic import LeNetLayerConvPoolSeparableNonSymbolic
 import theano.tensor as T
 from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
@@ -78,8 +78,8 @@ class ConvolutionalNeuralNetworkNonSymbolic:
 
         ## Create Layers    
         self.rng = np.random.RandomState(23455)
-        self.layer_separable_convolutional = LeNetSeparableConvPoolLayerNonSymbolic(self.rng)
-        self.layer_convolutional = LeNetConvPoolLayerNonSymbolic(self.rng)
+        self.layer_separable_convolutional = LeNetLayerConvPoolNonSymbolic(self.rng)
+        self.layer_convolutional = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
    #     self.hidden_layer = HiddenLayer(rng)
     
     def load_weights(self):
@@ -115,12 +115,12 @@ class ConvolutionalNeuralNetworkNonSymbolic:
 
         
         print 'Running test'
-        self.n_test_batches = 10
+        self.n_test_batches = 1
         test_losses = np.zeros((self.n_test_batches, 1))
         for batch_index in xrange(self.n_test_batches):
                start = time.time()
                print 'batch nr', batch_index
-               test_losses[batch_index] = self.process_batch(batch_index)
+               test_losses[batch_index] = self.process_batch(batch_index + 1)
                endt = (time.time() - start)*1000/self.batch_size
                print 'image time {0} in ms '.format(endt)
                
@@ -152,7 +152,8 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                                         b = self.cached_weights[iter],
                                         poolsize=(self.poolsize, self.poolsize)).eval()
               #  print 'LAYER OUTPUT IS'
-              #  print layer_output                   
+              #  print layer_output    
+                                        
            else:
                 print 'Separable ', iter
                 layer_output = self.layer_separable_convolutional.run_batch(
@@ -163,7 +164,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                                        W = self.cached_weights[iter + 1], 
                                        b = self.cached_weights[iter],
                                        poolsize=(self.poolsize, self.poolsize))
-           print 'LATER finished'
+              #  print 'LATER finished ', layer_output
            print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
            print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
            pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize;

@@ -65,6 +65,17 @@ class LeNetSeparableConvPoolLayer(object):
         one_image_shape = (batch_size, initial_n_rows, initial_n_cols)
        # assert one_image_shape == (1,28,28)
         self.Pstruct = Pstruct
+        
+        fU1 = np.zeros((nbr_channels, Pstruct[0]['U1'].shape[0],Pstruct[0]['U1'].shape[1]))
+        fU2 = np.zeros((nbr_channels, Pstruct[0]['U2'].shape[0],Pstruct[0]['U2'].shape[1]))
+        fU3 = np.zeros((nbr_channels, Pstruct[0]['U3'].shape[0],Pstruct[0]['U3'].shape[1]))
+        flmda = np.zeros((nbr_channels, self.Pstruct[0]['lmbda'].shape[0]))
+        for i in xrange(nbr_channels):
+            fU1[i,:,:] = self.Pstruct[i]['U1']
+            fU2[i,:,:] = self.Pstruct[i]['U2']
+            fU3[i,:,:] = self.Pstruct[i]['U3']
+            flmda[i,:] = self.Pstruct[i]['lmbda']
+        
         for channel_index in range(nbr_channels):
                 # Convolve image with index image_index in the batch
               #  input4D = self.convolve_one_image(channel_index, 
@@ -72,20 +83,31 @@ class LeNetSeparableConvPoolLayer(object):
               #                input_images,
               #                one_image_shape,
               #                filter_shape)
-                input4D = self.convolve_special_image(channel_index, 
+                input4D = convolve_special_image(channel_index, 
                               input4D, 
                               input_images,
-                              one_image_shape,
-                              filter_shape,
-                              self.Pstruct[channel_index]['U1'],
-                              self.Pstruct[channel_index]['U2'],
-                              self.Pstruct[channel_index]['U3'],
-                              self.Pstruct[channel_index]['lmbda'])    
-     #   result, updates = theano.scan(fn=self.convolve_one_image,
-     #                                 sequences= theano.tensor.arange(nbr_channels),
-     #                                 non_sequences= [input4D, input_images, image_shape, 
-     #                                 filter_shape])   
-                                      
+                              fU1, fU2, fU3, flmda,
+                              batch_size, initial_n_rows, initial_n_cols)
+#
+#        t_nbr_channels = T.iscalar()
+#        t_input4D = T.tensor4
+#        t_input_images = T.tensor4
+#        t_fU1 = T.tensor3()
+#        t_fU2 = T.tensor3
+#        t_fU3 = T.tensor3
+#        t_flmda = T.matrix
+#        t_batch_size = T.scalar() 
+#        t_initial_n_rows = T.scalar()
+#        t_initial_n_cols = T.scalar()
+#        result, updates = theano.scan(fn=convolve_special_image,
+#                                      outputs_info=None,                                      
+#                                      sequences= [theano.tensor.arange(t_nbr_channels)],
+#                                      non_sequences= [t_input4D, t_input_images, t_fU1, t_fU2, t_fU3, 
+#                                                      t_flmda,
+#                                                      t_batch_size,
+#                                                      t_initial_n_rows, 
+#                                                      t_initial_n_cols])   
+#                                      
                        
 #        k = T.iscalar("k")
 #A = T.vector("A")
@@ -189,11 +211,10 @@ class LeNetSeparableConvPoolLayer(object):
             input4D =T.set_subtensor(input4D[:,f,:,:], temp)
          return input4D   
          
-    def convolve_special_image(self, channel_index,
+def convolve_special_image(channel_index,
                                input4D, 
-                               input_images, 
-                               image_shape, 
-                               filter_shape, U1, U2, U3,  lmda):
+                               input_images, fU1, fU2, fU3,  flmda,
+                               ib, iw, ih):
          """
         Convolve one image with separabl filters.
 
@@ -209,9 +230,15 @@ class LeNetSeparableConvPoolLayer(object):
         :type poolsize: tuple or list of length 2
         :param poolsize: the downsampling (pooling) factor (#rows,#cols)
         """                        
-     
+         U1 = fU1[channel_index,:,:]
+         U2 = fU2[channel_index,:,:]
+         U3 = fU3[channel_index,:,:]
+         lmda = flmda[channel_index,:]
          one_chanel_images = input_images[:,channel_index,:,:];
         ## We look at the composition for the first channel in the beginning  
+         
+         image_shape = (ib, iw, ih)
+         filter_shape = (U3.shape[0], input_images[1],U2.shape[0],U1.shape[0])
          rank = U1.shape[1]
          fwidth = filter_shape[2]
          fheight = filter_shape[3]
@@ -246,6 +273,8 @@ class LeNetSeparableConvPoolLayer(object):
                              filter_shape = (1, fheight, 1), 
                              image_shape = (batch_size, initial_n_rows, final_n_cols))
              conv_out = T.set_subtensor(conv_out[:,r,:,:], A[:,:,:])
+
+  
   
          nbr_filters = U3.shape[0]
          # Final number of rows and columns                        
@@ -257,4 +286,5 @@ class LeNetSeparableConvPoolLayer(object):
                 temp = temp + conv_out[:,r, :,:]* alphas[f, r] * lmda[r]; 
             input4D =T.set_subtensor(input4D[:,f,:,:], temp)
          return input4D   
+
 
