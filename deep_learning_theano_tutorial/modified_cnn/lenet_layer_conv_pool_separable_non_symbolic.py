@@ -24,7 +24,7 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         batch_size = image_shape[0]             
         fwidth = Pstruct[0]['U1'].shape[0]
         fheight = Pstruct[0]['U2'].shape[0]
-        nbr_channels = image_shape[1]
+        self.nbr_channels = image_shape[1]
         nbr_filters = Pstruct[0]['U3'].shape[0]
         initial_n_rows = image_shape[2]
         initial_n_cols = image_shape[3]
@@ -35,18 +35,16 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         # The convolved input images
         self.input4D = np.zeros((batch_size, nbr_filters, final_n_rows, final_n_cols))
         print 'batch size ', batch_size        
-        one_image_shape = (initial_n_rows, initial_n_cols)
+        one_image_shape = (self.nbr_channels, initial_n_rows, initial_n_cols)
        # assert one_image_shape == (1,28,28)
         for image_index in range(batch_size):
-            for channel_index in range(nbr_channels):
                 # Convolve image with index image_index in the batch
                 print 'convolution start'
-                self.input4D = self.convolve_one_image(input_images[image_index,channel_index,:,:],
+                self.input4D = self.convolve_one_image(input_images[image_index,:,:,:],
                               one_image_shape,
                               Pstruct, 
                               filter_shape, 
-                              image_index,
-                              channel_index)   
+                              image_index)   
                 print 'convolution end'
     
    #     print 'before downsample', self.input4D
@@ -68,92 +66,51 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         return self.output.eval()
     
     """TODO change to have an image such as nbr channels as well"""
-    def convolve_one_image(self, one_image, image_shape, 
+    def convolve_one_image(self, one_image, img_shape, 
                            Pstruct, filter_shape,
-                           image_index,
-                           channel_index):
-         """
-        Convolve one image with separabl filters.
-
-        :type input: theano.tensor.dtensor3
-        :param input: symbolic image tensor, of shape image_shape
-
-        :type image_shape: tuple or list of length 3
-        :param image_shape: ( nbr channels, image height, image width)
-        
-        :type filter_shape: tuple or list of length 4
-        :param filter_shape: (number of filters,nbrmaps, filter height,filter width)
-
-        :type poolsize: tuple or list of length 2
-        :param poolsize: the downsampling (pooling) factor (#rows,#cols)
-        """                        
-  
-    
-        ## We look at the composition for the first channel in the beginning  
-         rank = Pstruct[0]['U1'].shape[1]
-         fwidth = filter_shape[2]
-         fheight = filter_shape[3]
+                           image_index):
+   
+        print Pstruct[0]['U1'].shape
+        print Pstruct[0]['U2'].shape
+        print Pstruct[0]['U3'].shape
+        rank = Pstruct[0]['U1'].shape[1]
+        fwidth = Pstruct[0]['U1'].shape[0]
+        fheight = Pstruct[0]['U2'].shape[0]
+        #
+        #    #   rank 4, w,h 3x3, nbr filter 7
+        num_input_feature_maps = img_shape[0]
+            
+        n_rows = img_shape[1] - fwidth + 1
+        n_cols = img_shape[2] - fheight + 1
+        horizontal_conv_out = np.zeros((rank, num_input_feature_maps, img_shape[1], n_cols))
+        vertical_conv_out = np.zeros((rank, num_input_feature_maps, n_rows, n_cols))
+        for chanel in range(num_input_feature_maps):        
+                horizontal_filter_shape = (rank, 1, fwidth)
+                horizontal_filters = np.ndarray(horizontal_filter_shape)
+                horizontal_filters[:, 0, :] = np.transpose(Pstruct[chanel]['U1']);
+                for r in range(rank):
+                      horizontal_conv_out[r,chanel,:,:] = scipy.signal.convolve2d(one_image[chanel,:,:], 
+                                                              horizontal_filters[r,:,:], mode='valid')
+    #    
+                vertical_filter_shape = (rank, fheight,1)
+                vertical_filters = np.ndarray(vertical_filter_shape)        
+                vertical_filters[:,:, 0] = np.transpose(Pstruct[chanel]['U2']);
+                for r in range(rank):            
+                  vertical_conv_out[r,chanel,:,:] = scipy.signal.convolve2d(horizontal_conv_out[r,chanel,:,:], 
+                                                    vertical_filters[r,:,:], mode='valid')
+    ##        ## numberof images, number of filters, image width, image height
+        nbr_filters = Pstruct[0]['U3'].shape[0]
+        for filter_index in range(nbr_filters):            
+            output_image = np.zeros((num_input_feature_maps,n_rows, n_cols))
+            for chanel in range(num_input_feature_maps):
+                temp = np.zeros((n_rows, n_cols))
+                alphas = Pstruct[chanel]['U3']
+                f = filter_index
+                for r in range(rank):
+                         out = vertical_conv_out[r,chanel, :,:]* alphas[f, r] * Pstruct[chanel]['lmbda'][r]; 
+                         temp = temp + out
+                output_image[chanel, :, :] = temp
+            output_image = np.sum(output_image, axis=0)
+            self.input4D[image_index,filter_index,:,:] =  output_image
          
-         
-         # Construct horizontal filters
-         #TODO save the filters in the correct shape
-         horizontal_filter_shape = (rank, 1, fwidth)
-         horizontal_filters = np.ndarray(horizontal_filter_shape)
-         horizontal_filters[:, 0, :] = np.transpose(Pstruct[channel_index]['U1']);
-         initial_n_rows = image_shape[0]
-         final_n_rows = initial_n_rows- fwidth + 1
-         final_n_cols = image_shape[1] - fheight + 1 
-         
-         # Output is 1 x rank x W x H
-         start = time.time()
-         horizontal_conv_out = np.zeros((rank, initial_n_rows, final_n_cols))
-         for r in range(rank):
-             horizontal_conv_out[r,:,:] = scipy.signal.convolve2d(one_image, 
-                                               horizontal_filters[r,:,:], mode='valid')
-                                           
-         end = time.time()
-         downsample_time = (end - start)*1000
-         print 'horizontal conv ', downsample_time
-     #    print 'horinzontal ', horizontal_conv_out.eval()
-     #    print 'input ', one_image
-         
-         # Construct vertical filters
-         vertical_filter_shape = (rank, fheight, 1)
-         vertical_filters = np.ndarray(vertical_filter_shape)        
-         vertical_filters[:,:, 0] = np.transpose(Pstruct[channel_index]['U2']);
-
-
-         conv_out = np.zeros((rank, final_n_rows, final_n_cols))
-         start = time.time()
-         for r in range(rank):
-             # temp is 1x1x imageW x imageH
-#             conv_out[r,:,:] = conv.conv2d(input = horizontal_conv_out[:,r,:,:], 
-#                             filters = vertical_filters[r,:,:],
-#                             filter_shape = (1, fheight, 1), 
-#                             image_shape = (1, initial_n_rows, final_n_cols)).eval()[0,:,:]
-            # conv_out[r,:,:] = A[0,:,:]
-            conv_out[r,:,:] = scipy.signal.convolve2d(horizontal_conv_out[r,:,:], 
-                                                     vertical_filters[r,:,:], mode='valid')
-              
-         end = time.time()
-         downsample_time = (end - start)*1000
-         print 'vertical conv ', downsample_time
-   #      print 'before combinig'
-   #      print conv_out
-         
-         nbr_filters = Pstruct[0]['U3'].shape[0]
-         # Final number of rows and columns                        
-         ## numberof images, number of filters, image width, image height
-         alphas = Pstruct[channel_index]['U3']  
-         start = time.time()
-         for f in range(nbr_filters):            
-            temp = np.zeros((final_n_rows, final_n_cols))
-            for r in range(rank):
-                temp = temp + conv_out[r, :,:]* alphas[f, r] * Pstruct[channel_index]['lmbda'][r]; 
-            #input4D =T.set_subtensor(input4D[image_index,f,:,:], temp)
-            self.input4D[image_index,f,:,:] = temp  
-         end = time.time()
-         
-         downsample_time = (end - start)*1000
-         print 'final time ', downsample_time
-         return self.input4D
+        return self.input4D
