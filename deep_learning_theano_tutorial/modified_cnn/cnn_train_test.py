@@ -8,7 +8,7 @@ Created on Tue Oct 21 16:19:55 2014
 
 import argparse
 import sys
-from convolutional_nnet_non_symbolic import ConvolutionalNeuralNetworkNonSymbolic;
+from cnn_separable_non_symbolic import ConvolutionalNeuralNetworkNonSymbolic;
 from convolutional_nnet_train import ConvolutionalNeuralNetworkTrain;
 from convolutional_nnet_test import ConvolutionalNeuralNetworkTest;
 from convolutional_neural_network_separable import ConvolutionalNeuralNetworkSeparableTest;

@@ -147,6 +147,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
             print 'Inside loop '
             if clayer_params.HasField('rank') == False:
                 print 'Iter ', iter
+                print cached_weights[iter+1]
                 layer = LeNetConvPoolLayer(rng, input = layer_input, 
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps, 

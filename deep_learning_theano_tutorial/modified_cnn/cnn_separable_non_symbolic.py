@@ -13,11 +13,12 @@ import numpy as np
 from load_data import load_mnist_data
 from google.protobuf import text_format
 
-from conv_pool_layer_non_symbolic import LeNetLayerConvPoolNonSymbolic
+from lenet_layer_conv_pool_non_symbolic import LeNetLayerConvPoolNonSymbolic
 from lenet_layer_conv_pool_separable_non_symbolic import LeNetLayerConvPoolSeparableNonSymbolic
 import theano.tensor as T
 from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
+from lenet_conv_pool_layer import LeNetConvPoolLayer
 
 class ConvolutionalNeuralNetworkNonSymbolic:
     def __init__(self, cnn_settings_protofile, cached_weights_file):
@@ -78,8 +79,8 @@ class ConvolutionalNeuralNetworkNonSymbolic:
 
         ## Create Layers    
         self.rng = np.random.RandomState(23455)
-        self.layer_separable_convolutional = LeNetLayerConvPoolNonSymbolic(self.rng)
-        self.layer_convolutional = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
+        self.layer_convolutional = LeNetLayerConvPoolNonSymbolic(self.rng)
+        self.layer_separable_convolutional = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
    #     self.hidden_layer = HiddenLayer(rng)
     
     def load_weights(self):
@@ -115,7 +116,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
 
         
         print 'Running test'
-        self.n_test_batches = 1
+        self.n_test_batches = 10
         test_losses = np.zeros((self.n_test_batches, 1))
         for batch_index in xrange(self.n_test_batches):
                start = time.time()
@@ -144,13 +145,20 @@ class ConvolutionalNeuralNetworkNonSymbolic:
            print 'Inside loop '           
            if clayer_params.HasField('rank') == False:
                 print 'Iter ', iter
-                layer_output = self.layer_convolutional.run_batch(layer_input, 
+#                layer_output = self.layer_convolutional.run_batch(layer_input, 
+#                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
+#                                       filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
+#                                                     clayer_params.filter_w, clayer_params.filter_w),
+#                                        W = self.cached_weights[iter + 1], 
+#                                        b = self.cached_weights[iter],
+#                                        poolsize=(self.poolsize, self.poolsize)).eval()
+                layer_output = LeNetConvPoolLayer(self.rng, input = layer_input, 
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
                                                      clayer_params.filter_w, clayer_params.filter_w),
+                                       poolsize=(self.poolsize, self.poolsize),
                                         W = self.cached_weights[iter + 1], 
-                                        b = self.cached_weights[iter],
-                                        poolsize=(self.poolsize, self.poolsize)).eval()
+                                        b = theano.shared(self.cached_weights[iter]))
               #  print 'LAYER OUTPUT IS'
               #  print layer_output    
                                         
@@ -177,7 +185,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
 #        
 #        
 #        # construct a fully-connected sigmoidal layer
-        layer_input = layer_input.flatten(2);
+        layer_input = layer_input.output.flatten(2);
         nbr_input = nbr_feature_maps * pooled_W * pooled_H ## Why is this SO??
         hlayers = []
         for hlayer_params in self.hidden_layers:

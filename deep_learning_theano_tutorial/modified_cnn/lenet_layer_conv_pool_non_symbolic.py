@@ -76,7 +76,6 @@ class LeNetLayerConvPoolNonSymbolic:
         print 'filter shape  ', filter_shape[0], filter_shape[1], filter_shape[2], filter_shape[3]
         print 'image shape ', image_shape[0], image_shape[1], image_shape[2], image_shape[3]  
 
-#        Pstruct = W
         batch_size = image_shape[0]             
         fwidth = self.W.shape[2]
         fheight = self.W.shape[3]
