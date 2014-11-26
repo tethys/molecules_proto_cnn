@@ -16,11 +16,10 @@ from theano.tensor.signal import conv
 class LeNetLayerConvPoolSeparableNonSymbolic:
     def __init__(self, rng):
         self.rng = rng
-    def run_batch(self, input_images, image_shape, filter_shape,  W, b, poolsize):
+    def run_batch(self, input_images, image_shape, filter_shape,  Pstruct, b, poolsize):
         assert image_shape[1] == filter_shape[1]
         # the bias is a 1D tensor -- one bias per output feature map
         # convolve input feature maps with filters
-        Pstruct = W
         batch_size = image_shape[0]             
         fwidth = Pstruct[0]['U1'].shape[0]
         fheight = Pstruct[0]['U2'].shape[0]
@@ -39,13 +38,11 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
        # assert one_image_shape == (1,28,28)
         for image_index in range(batch_size):
                 # Convolve image with index image_index in the batch
-                print 'convolution start'
                 self.input4D = self.convolve_one_image(input_images[image_index,:,:,:],
                               one_image_shape,
                               Pstruct, 
                               filter_shape, 
                               image_index)   
-                print 'convolution end'
     
    #     print 'before downsample', self.input4D
         # downsample each feature map individually, using maxpooling
@@ -55,7 +52,6 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
                                             ignore_border=True)
         end = time.time()
         self.downsample_time = (end - start)*1000/ image_shape[0]
-        print 'after downsampling'
                 
         # add the bias term. Since the bias is a vector (1D array), we first
         # reshape it to a tensor of shape (1,n_filters,1,1). Each bias will
@@ -70,9 +66,9 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
                            Pstruct, filter_shape,
                            image_index):
    
-        print Pstruct[0]['U1'].shape
-        print Pstruct[0]['U2'].shape
-        print Pstruct[0]['U3'].shape
+  #      print Pstruct[0]['U1'].shape
+  #      print Pstruct[0]['U2'].shape
+  #      print Pstruct[0]['U3'].shape
         rank = Pstruct[0]['U1'].shape[1]
         fwidth = Pstruct[0]['U1'].shape[0]
         fheight = Pstruct[0]['U2'].shape[0]

@@ -59,7 +59,6 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         # TODO this
         self.convolutional_layers = [];
         self.hidden_layers = [];
-        self.batch_size = 1
         
        # self.nbr_convolutional_layers = settings.conv_layer.size();
        # self.nbr_hidden_layers = settings.hidden_layer.size();
@@ -116,12 +115,12 @@ class ConvolutionalNeuralNetworkNonSymbolic:
 
         
         print 'Running test'
-        self.n_test_batches = 1
+       # self.n_test_batches = 1
         test_losses = np.zeros((self.n_test_batches, 1))
         for batch_index in xrange(self.n_test_batches):
                start = time.time()
                print 'batch nr', batch_index
-               test_losses[batch_index] = self.process_batch(batch_index + 1)
+               test_losses[batch_index] = self.process_batch(batch_index)
                endt = (time.time() - start)*1000/self.batch_size
                print 'image time {0} in ms '.format(endt)
                
@@ -140,11 +139,11 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         nbr_feature_maps = 1
         iter = 0
         for clayer_params in self.convolutional_layers:
-           print clayer_params.num_filters
-           print clayer_params.filter_w
-           print 'Inside loop '           
+          # print clayer_params.num_filters
+          # print clayer_params.filter_w
+          # print 'Inside loop '           
            if clayer_params.HasField('rank') == False:
-                print 'Iter ', iter
+           #     print 'Iter ', iter
 #                layer_output = self.layer_convolutional.run_batch(layer_input, 
 #                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
 #                                       filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
@@ -163,30 +162,31 @@ class ConvolutionalNeuralNetworkNonSymbolic:
               #  print layer_output    
                                         
            else:
-                print 'Separable ', iter
+         #       print 'Separable ', iter
                 layer_output = self.layer_separable_convolutional.run_batch(
                                                     layer_input, 
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
                                                      clayer_params.filter_w, clayer_params.filter_w),
-                                       W = self.cached_weights[iter + 1], 
+                                       Pstruct = self.cached_weights[iter + 1], 
                                        b = self.cached_weights[iter],
                                        poolsize=(self.poolsize, self.poolsize))
-              #  print 'LATER finished ', layer_output
-           print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
-           print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
+        #   print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
+        #   print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
            pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize;
            pooled_H = (pooled_H - clayer_params.filter_w + 1) / self.poolsize;
            layer_input = layer_output;
            nbr_feature_maps = clayer_params.num_filters;
            iter += 2
-           
 
 #        
 #        
 #        # construct a fully-connected sigmoidal layer
-        layer_input = layer_input.flatten(2);
-        nbr_input = nbr_feature_maps * pooled_W * pooled_H ## Why is this SO??
+       # layer_input = layer_input.flatten('C');
+        nbr_input = nbr_feature_maps * pooled_W * pooled_H ## Why is this SO??        
+        layer_input = layer_input.reshape((self.batch_size, nbr_input))
+        print 'layer input ',layer_input.shape
+        print nbr_input
         hlayers = []
         for hlayer_params in self.hidden_layers:
             print hlayer_params.num_outputs

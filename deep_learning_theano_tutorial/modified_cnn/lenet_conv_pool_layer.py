@@ -97,6 +97,7 @@ class LeNetConvPoolLayer(object):
         conv_out = conv.conv2d(input=input, filters=self.W,
                 filter_shape=filter_shape, image_shape=image_shape)
         
+        print 'input4D before etc ',conv_out.eval()
         end = time.time()
         self.convolutional_time = (end - start)*1000/image_shape[0]                
         start = time.time()
@@ -112,6 +113,6 @@ class LeNetConvPoolLayer(object):
         # width & height
         self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
-        print 'pooled out shape ', pooled_out.shape
+        print 'self output', self.output.eval()
         # store parameters of this layer
         self.params = [self.W, self.b]
