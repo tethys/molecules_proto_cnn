@@ -116,7 +116,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
 
         
         print 'Running test'
-        self.n_test_batches = 10
+        self.n_test_batches = 1
         test_losses = np.zeros((self.n_test_batches, 1))
         for batch_index in xrange(self.n_test_batches):
                start = time.time()
@@ -185,7 +185,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
 #        
 #        
 #        # construct a fully-connected sigmoidal layer
-        layer_input = layer_input.output.flatten(2);
+        layer_input = layer_input.flatten(2);
         nbr_input = nbr_feature_maps * pooled_W * pooled_H ## Why is this SO??
         hlayers = []
         for hlayer_params in self.hidden_layers:
