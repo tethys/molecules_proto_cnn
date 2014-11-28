@@ -4,21 +4,25 @@ Created on Mon Nov 24 14:39:22 2014
 
 @author: vivianapetrescu
 """
-import time
 
-import theano
 import convolutional_neural_network_settings_pb2 as pb_cnn
 import numpy as np
+import logging
+import datetime
+import os
+import time
+import theano.tensor as T
+import theano
 
 from load_data import load_mnist_data
 from google.protobuf import text_format
 
+
+from lenet_conv_pool_layer import LeNetConvPoolLayer
 from lenet_layer_conv_pool_non_symbolic import LeNetLayerConvPoolNonSymbolic
 from lenet_layer_conv_pool_separable_non_symbolic import LeNetLayerConvPoolSeparableNonSymbolic
-import theano.tensor as T
 from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
-from lenet_conv_pool_layer import LeNetConvPoolLayer
 
 class ConvolutionalNeuralNetworkNonSymbolic:
     def __init__(self, cnn_settings_protofile, cached_weights_file):
@@ -32,6 +36,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
            print data
            text_format.Merge(data, settings);
            self.create_layers_from_settings(settings);
+           self.initialize_logger()
            f.close();
         except IOError:
            print "Could not open file " + cnn_settings_protofile;
@@ -81,6 +86,19 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         self.layer_separable_convolutional = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
    #     self.hidden_layer = HiddenLayer(rng)
     
+    def initialize_logger(self):
+        (file_path, extension) = os.path.splitext(self.cached_weights_file)
+        logger_filename = file_path
+        d = datetime.datetime.now()
+        # add calendar day information
+        logger_filename += '_' + str(d.day) + '_' + str(d.month) + '_' + str(d.year);
+        # add hour information
+        logger_filename += '_' + str(d.hour) + '_' + str(d.minute) + '_' + str(d.second);
+        # add extension
+        logger_filename += '.log'        
+        logging.basicConfig(filename=logger_filename, level=logging.DEBUG)
+            
+        
     def load_weights(self):
         # Load weights...
         weights = np.load(self.cached_weights_file)
@@ -112,7 +130,6 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         print 'nbr batches, batch size ', self.n_test_batches, self.batch_size
         print self.test_set_y
 
-         
         print 'Running test'
        # self.n_test_batches = 1
         test_losses = np.zeros((self.n_test_batches, 1))
@@ -125,9 +142,12 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                endt = (time.time() - start)*1000/(self.batch_size)
                cnn_time.t_total = endt
                print cnn_time.to_string()
+               logging.debug(cnn_time.to_string())
                
         test_score = np.mean(test_losses)
-        print ' test error of best ', test_score * 100.
+        test_score *= 100
+        print ' test error of best ', test_score
+        logging.debug('test error: ' + str(test_score))
 
     def process_batch(self, batch_index, cnn_time):
         """ Process one single batch"""
@@ -140,9 +160,6 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         nbr_feature_maps = 1
         iter = 0
         for clayer_params in self.convolutional_layers:
-          # print clayer_params.num_filters
-          # print clayer_params.filter_w
-          # print 'Inside loop '           
            if clayer_params.HasField('rank') == False:
            #     print 'Iter ', iter
 #                layer_output = self.layer_convolutional.run_batch(layer_input, 
@@ -219,7 +236,7 @@ class CNNTime:
         self.t_non_conv_layers = 0
         self.t_total = 0
     def to_string(self):
-        return "<Time :%s :%s %5.2f %5.2f>" % (str(self.t_convolution), 
+        return "Time :%s :%s %5.2f %5.2f" % (str(self.t_convolution), 
                                          str(self.t_downsample_activation),
                                          self.t_non_conv_layers, 
                                          self.t_total)
