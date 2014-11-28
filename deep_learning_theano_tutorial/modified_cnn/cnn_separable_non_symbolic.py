@@ -131,7 +131,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         print self.test_set_y
 
         print 'Running test'
-       # self.n_test_batches = 1
+        timings = []
         test_losses = np.zeros((self.n_test_batches, 1))
         for batch_index in xrange(self.n_test_batches):
                print 'batch nr', batch_index
@@ -140,15 +140,49 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                start = time.time()
                test_losses[batch_index] = self.process_batch(batch_index, cnn_time)
                endt = (time.time() - start)*1000/(self.batch_size)
-               cnn_time.t_total = endt
+               cnn_time.t_total = round(endt, 2)
                print cnn_time.to_string()
                logging.debug(cnn_time.to_string())
+               timings.append(cnn_time)
                
+        self.log_cnn_time_summary(timings) 
+        
+        
         test_score = np.mean(test_losses)
-        test_score *= 100
-        print ' test error of best ', test_score
-        logging.debug('test error: ' + str(test_score))
-
+        test_score *= 100        
+        print ' Test error of best ', test_score
+        logging.debug('Test error: ' + str(test_score))
+        
+        
+    def log_cnn_time_summary(self, timings):
+        t_convolution = []
+        t_downsample_activation = []
+        t_non_conv_layers = 0
+        t_total = 0
+        N = len(timings[0].t_convolution)
+        t_convolution = np.zeros((N, 1))
+        t_downsample_activation = np.zeros((N, 1))
+        for cnn_time in timings:
+            t_total += cnn_time.t_total
+            t_non_conv_layers += cnn_time.t_non_conv_layers
+            for i in range(N):
+                t_convolution[i] += cnn_time.t_convolution[i]            
+                t_downsample_activation[i] += cnn_time.t_downsample_activation[i]
+                
+                
+        for i in range(N):
+                t_convolution[i] /= self.n_test_batches         
+                t_downsample_activation[i] /= self.n_test_batches       
+        t_total /= self.n_test_batches
+        t_non_conv_layers /= self.n_test_batches
+        logging.debug('Final average results')
+        for i in range(N):         
+               logging.debug(' convolution '+ str(i) + ' : ' + str(t_convolution[i])) 
+               logging.debug(' downs + activ '+ str(i) + ' : ' + str(t_downsample_activation[i])) 
+        logging.debug(' non conv layers : ' + str(t_non_conv_layers))         
+        logging.debug(' total avg image time : ' + str(t_total)) 
+        
+                
     def process_batch(self, batch_index, cnn_time):
         """ Process one single batch"""
         self.x = self.test_set_x[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
@@ -206,7 +240,6 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         layer_input = layer_input.reshape((self.batch_size, nbr_input))
         hlayers = []
         for hlayer_params in self.hidden_layers:
-            print hlayer_params.num_outputs
             layer = HiddenLayer(self.rng, input=layer_input, n_in=nbr_input,
                          n_out = hlayer_params.num_outputs, activation= T.tanh,
                          W = self.cached_weights[iter +1], b = self.cached_weights[iter])
@@ -220,6 +253,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                                                W = self.cached_weights[iter +1], 
                                                b = self.cached_weights[iter])
         cnn_time.t_non_conv_layers = (time.time() - start)*1000 / self.batch_size
+        cnn_time.t_non_conv_layers = round(cnn_time.t_non_conv_layers, 2)
         print 'last layers image time final {0} in ms '.format(cnn_time.t_non_conv_layers)
         
         result =  output_layer.errors(self.y)
