@@ -59,6 +59,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         # TODO this
         self.convolutional_layers = [];
         self.hidden_layers = [];
+        self.batch_size = 100
         
        # self.nbr_convolutional_layers = settings.conv_layer.size();
        # self.nbr_hidden_layers = settings.hidden_layer.size();
@@ -182,7 +183,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
 #        
 #        
 #        # construct a fully-connected sigmoidal layer
-       # layer_input = layer_input.flatten('C');
+        t_start_hidden = time.time()
         nbr_input = nbr_feature_maps * pooled_W * pooled_H ## Why is this SO??        
         layer_input = layer_input.reshape((self.batch_size, nbr_input))
         print 'layer input ',layer_input.shape
@@ -203,8 +204,10 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=10, 
                                                W = self.cached_weights[iter +1], 
                                                b = self.cached_weights[iter])
-
-
+        t_end_hidden = time.time()
+        t_total = (t_end_hidden - t_start_hidden)*1000/self.batch_size
+        print 'last layers image time final {0} in ms '.format(t_total)
+        
         result =  output_layer.errors(self.y)
         print 'result is ', result.eval()
         return result.eval()
