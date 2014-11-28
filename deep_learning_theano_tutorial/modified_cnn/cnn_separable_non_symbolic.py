@@ -31,8 +31,6 @@ class ConvolutionalNeuralNetworkNonSymbolic:
            data=f.read()
            print data
            text_format.Merge(data, settings);
-           print "Network settings are "
-           print  settings.__str__
            self.create_layers_from_settings(settings);
            f.close();
         except IOError:
@@ -114,23 +112,24 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         print 'nbr batches, batch size ', self.n_test_batches, self.batch_size
         print self.test_set_y
 
-        
+         
         print 'Running test'
        # self.n_test_batches = 1
         test_losses = np.zeros((self.n_test_batches, 1))
         for batch_index in xrange(self.n_test_batches):
-               start = time.time()
                print 'batch nr', batch_index
-               test_losses[batch_index] = self.process_batch(batch_index)
-               endt = (time.time() - start)*1000/self.batch_size
-               print 'image time {0} in ms '.format(endt)
+               # Create tine object
+               cnn_time = CNNTime()   
+               start = time.time()
+               test_losses[batch_index] = self.process_batch(batch_index, cnn_time)
+               endt = (time.time() - start)*1000/(self.batch_size)
+               cnn_time.t_total = endt
                
         test_score = np.mean(test_losses)
         print ' test error of best ', test_score * 100.
 
-    def process_batch(self, batch_index):
+    def process_batch(self, batch_index, cnn_time):
         """ Process one single batch"""
-        
         self.x = self.test_set_x[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
         self.y = self.test_set_y[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
  
@@ -172,6 +171,8 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                                        Pstruct = self.cached_weights[iter + 1], 
                                        b = self.cached_weights[iter],
                                        poolsize=(self.poolsize, self.poolsize))
+                cnn_time.t_convolution.append(self.layer_separable_convolutional.t_conv)
+                cnn_time.t_downsample_activation.append(self.layer_separable_convolutional.t_downsample_activ)
         #   print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
         #   print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
            pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize;
@@ -180,14 +181,11 @@ class ConvolutionalNeuralNetworkNonSymbolic:
            nbr_feature_maps = clayer_params.num_filters;
            iter += 2
 
-#        
-#        
+     
 #        # construct a fully-connected sigmoidal layer
-        t_start_hidden = time.time()
+        start = time.time()
         nbr_input = nbr_feature_maps * pooled_W * pooled_H ## Why is this SO??        
         layer_input = layer_input.reshape((self.batch_size, nbr_input))
-        print 'layer input ',layer_input.shape
-        print nbr_input
         hlayers = []
         for hlayer_params in self.hidden_layers:
             print hlayer_params.num_outputs
@@ -199,15 +197,24 @@ class ConvolutionalNeuralNetworkNonSymbolic:
             hlayers.append(layer)
             iter += 2
 #         
-        print 'nbr inputs ', nbr_input 
 #        # classify the values of the fully-connected sigmoidal layer
         output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=10, 
                                                W = self.cached_weights[iter +1], 
                                                b = self.cached_weights[iter])
-        t_end_hidden = time.time()
-        t_total = (t_end_hidden - t_start_hidden)*1000/self.batch_size
-        print 'last layers image time final {0} in ms '.format(t_total)
+        cnn_time.t_non_conv_layers = (time.time() - start)*1000 / self.batch_size
+        print 'last layers image time final {0} in ms '.format(cnn_time.t_non_conv_layers)
         
         result =  output_layer.errors(self.y)
         print 'result is ', result.eval()
         return result.eval()
+
+## Store average timing per batch
+class CNNTime:
+    def __init__(self):
+        ## Convolution time per layer
+        self.t_convolution = []
+        ## Downsampling time per layer
+        self.t_downsample_activation = []
+        self.t_non_conv_layers = 0
+        self.t_total = 0
+    
