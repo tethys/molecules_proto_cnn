@@ -124,6 +124,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                test_losses[batch_index] = self.process_batch(batch_index, cnn_time)
                endt = (time.time() - start)*1000/(self.batch_size)
                cnn_time.t_total = endt
+               print cnn_time.to_string()
                
         test_score = np.mean(test_losses)
         print ' test error of best ', test_score * 100.
@@ -171,8 +172,8 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                                        Pstruct = self.cached_weights[iter + 1], 
                                        b = self.cached_weights[iter],
                                        poolsize=(self.poolsize, self.poolsize))
-                cnn_time.t_convolution.append(self.layer_separable_convolutional.t_conv)
-                cnn_time.t_downsample_activation.append(self.layer_separable_convolutional.t_downsample_activ)
+                cnn_time.t_convolution.append(round(self.layer_separable_convolutional.t_conv,2))
+                cnn_time.t_downsample_activation.append(round(self.layer_separable_convolutional.t_downsample_activ,2))
         #   print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
         #   print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
            pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize;
@@ -217,4 +218,9 @@ class CNNTime:
         self.t_downsample_activation = []
         self.t_non_conv_layers = 0
         self.t_total = 0
+    def to_string(self):
+        return "<Time :%s :%s %5.2f %5.2f>" % (str(self.t_convolution), 
+                                         str(self.t_downsample_activation),
+                                         self.t_non_conv_layers, 
+                                         self.t_total)
     
