@@ -131,6 +131,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         print self.test_set_y
 
         print 'Running test'
+        self.n_test_batches = 5
         timings = []
         test_losses = np.zeros((self.n_test_batches, 1))
         for batch_index in xrange(self.n_test_batches):
@@ -146,7 +147,6 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                timings.append(cnn_time)
                
         self.log_cnn_time_summary(timings) 
-        
         
         test_score = np.mean(test_losses)
         test_score *= 100        
@@ -196,22 +196,24 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         for clayer_params in self.convolutional_layers:
            if clayer_params.HasField('rank') == False:
            #     print 'Iter ', iter
-#                layer_output = self.layer_convolutional.run_batch(layer_input, 
-#                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
-#                                       filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
-#                                                     clayer_params.filter_w, clayer_params.filter_w),
-#                                        W = self.cached_weights[iter + 1], 
-#                                        b = self.cached_weights[iter],
-#                                        poolsize=(self.poolsize, self.poolsize)).eval()
-                layer_output = LeNetConvPoolLayer(self.rng, input = layer_input, 
+                layer_output = self.layer_convolutional.run_batch(layer_input, 
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
                                                      clayer_params.filter_w, clayer_params.filter_w),
-                                       poolsize=(self.poolsize, self.poolsize),
                                         W = self.cached_weights[iter + 1], 
-                                        b = theano.shared(self.cached_weights[iter]))
+                                        b = self.cached_weights[iter],
+                                        poolsize=(self.poolsize, self.poolsize)).eval()
+#                layer_output = LeNetConvPoolLayer(self.rng, input = layer_input, 
+#                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
+#                                       filter_shape=(clayer_params.num_filters, nbr_feature_maps, 
+#                                                     clayer_params.filter_w, clayer_params.filter_w),
+#                                       poolsize=(self.poolsize, self.poolsize),
+#                                        W = self.cached_weights[iter + 1], 
+#                                        b = theano.shared(self.cached_weights[iter]))
               #  print 'LAYER OUTPUT IS'
               #  print layer_output    
+                cnn_time.t_convolution.append(round(self.layer_convolutional.convolutional_time,2))
+                cnn_time.t_downsample_activation.append(round(self.layer_convolutional.downsample_time,2))
                                         
            else:
          #       print 'Separable ', iter

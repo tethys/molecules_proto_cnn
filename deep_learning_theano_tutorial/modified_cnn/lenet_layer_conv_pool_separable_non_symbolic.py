@@ -24,7 +24,7 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         fwidth = Pstruct[0]['U1'].shape[0]
         fheight = Pstruct[0]['U2'].shape[0]
         self.nbr_channels = image_shape[1]
-        nbr_filters = Pstruct[0]['U3'].shape[0]
+        self.nbr_filters = Pstruct[0]['U3'].shape[0]
         initial_n_rows = image_shape[2]
         initial_n_cols = image_shape[3]
         
@@ -32,15 +32,22 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         final_n_rows = initial_n_rows - fwidth + 1
         final_n_cols = initial_n_cols - fheight + 1
         # The convolved input images
-        self.input4D = np.zeros((batch_size, nbr_filters, final_n_rows, final_n_cols))
+        self.input4D = np.zeros((batch_size, self.nbr_filters, final_n_rows, final_n_cols))
         one_image_shape = (self.nbr_channels, initial_n_rows, initial_n_cols)
        # assert one_image_shape == (1,28,28)
+        nbr_filters = Pstruct[0]['U3'].shape[0]
+        rank = Pstruct[0]['U1'].shape[1]
+        pcoef = np.ndarray((nbr_filters, self.nbr_channels, rank))
+        for filter_index in xrange(nbr_filters):
+            for chanel in xrange(self.nbr_channels):
+                    pcoef[filter_index,chanel, :] = Pstruct[chanel]['U3'][filter_index, :] * Pstruct[chanel]['lmbda'][:]; 
+
         start = time.time()
         for image_index in range(batch_size):
                 # Convolve image with index image_index in the batch
                 self.convolve_one_image(input_images[image_index,:,:,:],
                               one_image_shape,
-                              Pstruct, 
+                              Pstruct, pcoef,
                               filter_shape, 
                               image_index)   
         end = time.time()
@@ -67,7 +74,7 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
     
     """TODO change to have an image such as nbr channels as well"""
     def convolve_one_image(self, one_image, img_shape, 
-                           Pstruct, filter_shape,
+                           Pstruct, pcoef, filter_shape,
                            image_index):
    
         rank = Pstruct[0]['U1'].shape[1]
@@ -83,8 +90,8 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
            U2[chanel,:,:, 0] = np.transpose(Pstruct[chanel]['U2']);
         n_rows = img_shape[1] - fwidth + 1
         n_cols = img_shape[2] - fheight + 1
-        horizontal_conv_out = np.zeros((rank, num_input_feature_maps, img_shape[1], n_cols))
-        vertical_conv_out = np.zeros((num_input_feature_maps, n_rows, n_cols, rank))
+       # horizontal_conv_out = np.ndarray((img_shape[1], n_cols))
+        vertical_conv_out = np.ndarray(( n_rows, n_cols,num_input_feature_maps, rank))
         start = time.time()
       #  vertical_filter_shape = (rank, fheight,1)
       #  vertical_filters = np.ndarray(vertical_filter_shape)      
@@ -92,27 +99,23 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
       #  horizontal_filters = np.ndarray(horizontal_filter_shape)
         for chanel in xrange(num_input_feature_maps):        
                 for r in xrange(rank):
-                      horizontal_conv_out[r,chanel,:,:] = scipy.signal.convolve2d(one_image[chanel,:,:], 
-                                                              U1[chanel,r,:,:], mode='valid')
-                      vertical_conv_out[chanel,:,:, r] = scipy.signal.convolve2d(horizontal_conv_out[r,chanel,:,:], 
+                   #   horizontal_conv_out = scipy.signal.convolve2d(one_image[chanel,:,:], 
+                   #                                           U1[chanel,r,:,:], mode='valid')
+                      vertical_conv_out[:,:, chanel,r] = scipy.signal.convolve2d(scipy.signal.convolve2d(one_image[chanel,:,:], 
+                                                              U1[chanel,r,:,:], mode='valid'), 
                                                     U2[chanel, r,:,:], mode='valid')
-        
         end = (time.time() - start)*1000
         print 'part 1 ', end
        
        
-        nbr_filters = Pstruct[0]['U3'].shape[0]
-        pcoef = np.ndarray((nbr_filters, num_input_feature_maps, rank))
-        for filter_index in xrange(nbr_filters):
-            for chanel in xrange(num_input_feature_maps):
-                    pcoef[filter_index,chanel, :] = Pstruct[chanel]['U3'][filter_index, :] * Pstruct[chanel]['lmbda'][:]; 
         start = time.time()       
         output_image = np.zeros((num_input_feature_maps,n_rows, n_cols))
-        for filter_index in xrange(nbr_filters):            
-            for chanel in xrange(num_input_feature_maps):
-                temp = vertical_conv_out[chanel,:,:,:]*pcoef[filter_index, chanel,:]
-                output_image[chanel, :, :] = np.sum(temp, axis=2)                
-            self.input4D[image_index,filter_index,:,:] =  np.sum(output_image, axis=0)
+        for filter_index in xrange(self.nbr_filters):            
+         #   for chanel in xrange(num_input_feature_maps):
+         #       temp = vertical_conv_out[chanel,:,:,:]*pcoef[filter_index, chanel,:]
+         #       output_image[chanel, :, :] = np.sum(temp, axis=2)
+            output_image = vertical_conv_out[:,:,:,:]*pcoef[filter_index,:,:]                
+            self.input4D[image_index,filter_index,:,:] =  np.sum(output_image, axis=(3, 2))
         
         end = (time.time() - start)*1000;
         print 'part2 ', end
