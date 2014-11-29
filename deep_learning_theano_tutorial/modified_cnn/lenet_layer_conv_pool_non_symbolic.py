@@ -71,10 +71,9 @@ class LeNetLayerConvPoolNonSymbolic:
         
     def run_conv_pool(self, images, filter_shape, image_shape, poolsize):    
         # convolve input feature maps with filters
-        start = time.time()
         # W is 50, 20, 5, 5 (nbr_filters, nbr_channels, fwidht, fheight)
-        print 'filter shape  ', filter_shape[0], filter_shape[1], filter_shape[2], filter_shape[3]
-        print 'image shape ', image_shape[0], image_shape[1], image_shape[2], image_shape[3]  
+       # print 'filter shape  ', filter_shape[0], filter_shape[1], filter_shape[2], filter_shape[3]
+       # print 'image shape ', image_shape[0], image_shape[1], image_shape[2], image_shape[3]  
 
         batch_size = image_shape[0]             
         fwidth = self.W.shape[2]
@@ -89,6 +88,7 @@ class LeNetLayerConvPoolNonSymbolic:
         final_n_cols = initial_n_cols - fheight + 1
  #       conv_out = conv.conv2d(input=images, filters=self.W,
  #               filter_shape=filter_shape, image_shape=image_shape)
+        start = time.time()
         conv_out = np.zeros((batch_size, nbr_filters, final_n_rows, final_n_cols))
         for b in range(batch_size):         
             for f in range(nbr_filters):
@@ -103,7 +103,7 @@ class LeNetLayerConvPoolNonSymbolic:
         pooled_out = downsample.max_pool_2d(input=conv_out,
                                             ds=poolsize, ignore_border=True)
         end = time.time()
-        self.downsample_time = (end - start)*1000/ image_shape[0]
+        self.downsample_time = (end - start)*1000/ batch_size
         
         print 'conv {0}, {1} ms'.format(self.convolutional_time, self.downsample_time)
         # add the bias term. Since the bias is a vector (1D array), we first

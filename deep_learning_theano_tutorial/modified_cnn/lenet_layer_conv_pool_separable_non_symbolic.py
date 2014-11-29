@@ -85,7 +85,7 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         n_cols = img_shape[2] - fheight + 1
         horizontal_conv_out = np.zeros((rank, num_input_feature_maps, img_shape[1], n_cols))
         vertical_conv_out = np.zeros((num_input_feature_maps, n_rows, n_cols, rank))
-#        start = time.time()
+        start = time.time()
       #  vertical_filter_shape = (rank, fheight,1)
       #  vertical_filters = np.ndarray(vertical_filter_shape)      
       #  horizontal_filter_shape = (rank, 1, fwidth)
@@ -97,19 +97,22 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
                       vertical_conv_out[chanel,:,:, r] = scipy.signal.convolve2d(horizontal_conv_out[r,chanel,:,:], 
                                                     U2[chanel, r,:,:], mode='valid')
         
-#        end = (time.time() - start)*1000
-#        print 'part 1 ', end
-#        start = time.time()
-        nbr_filters = Pstruct[0]['U3'].shape[0]        
+        end = (time.time() - start)*1000
+        print 'part 1 ', end
+       
+       
+        nbr_filters = Pstruct[0]['U3'].shape[0]
+        pcoef = np.ndarray((nbr_filters, num_input_feature_maps, rank))
+        for filter_index in xrange(nbr_filters):
+            for chanel in xrange(num_input_feature_maps):
+                    pcoef[filter_index,chanel, :] = Pstruct[chanel]['U3'][filter_index, :] * Pstruct[chanel]['lmbda'][:]; 
+        start = time.time()       
         output_image = np.zeros((num_input_feature_maps,n_rows, n_cols))
         for filter_index in xrange(nbr_filters):            
             for chanel in xrange(num_input_feature_maps):
-                temp = np.zeros((n_rows, n_cols))
-                f = filter_index                
-                coef = Pstruct[chanel]['U3'][f, :] * Pstruct[chanel]['lmbda'][:]; 
-                temp = vertical_conv_out[chanel,:,:,:]*np.swapaxes(coef,0,1);
+                temp = vertical_conv_out[chanel,:,:,:]*pcoef[filter_index, chanel,:]
                 output_image[chanel, :, :] = np.sum(temp, axis=2)                
             self.input4D[image_index,filter_index,:,:] =  np.sum(output_image, axis=0)
         
- #       end = (time.time() - start)*1000;
- #       print 'part2 ', end
+        end = (time.time() - start)*1000;
+        print 'part2 ', end
