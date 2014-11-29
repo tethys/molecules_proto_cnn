@@ -80,7 +80,7 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         n_rows = img_shape[1] - fwidth + 1
         n_cols = img_shape[2] - fheight + 1
         horizontal_conv_out = np.zeros((rank, num_input_feature_maps, img_shape[1], n_cols))
-        vertical_conv_out = np.zeros((rank, num_input_feature_maps, n_rows, n_cols))
+        vertical_conv_out = np.zeros((num_input_feature_maps, n_rows, n_cols, rank))
      #   start = time.time()
         vertical_filter_shape = (rank, fheight,1)
         vertical_filters = np.ndarray(vertical_filter_shape)      
@@ -93,7 +93,7 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
                                                               horizontal_filters[r,:,:], mode='valid')
                 vertical_filters[:,:, 0] = np.transpose(Pstruct[chanel]['U2']);
                 for r in range(rank):            
-                      vertical_conv_out[r,chanel,:,:] = scipy.signal.convolve2d(horizontal_conv_out[r,chanel,:,:], 
+                      vertical_conv_out[chanel,:,:, r] = scipy.signal.convolve2d(horizontal_conv_out[r,chanel,:,:], 
                                                     vertical_filters[r,:,:], mode='valid')
         
         nbr_filters = Pstruct[0]['U3'].shape[0]        
@@ -101,12 +101,14 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         for filter_index in range(nbr_filters):            
             for chanel in range(num_input_feature_maps):
                 temp = np.zeros((n_rows, n_cols))
-                alphas = Pstruct[chanel]['U3']
-                f = filter_index
-                for r in range(rank):
-                         coef = alphas[f, r] * Pstruct[chanel]['lmbda'][r]; 
-                         temp += vertical_conv_out[r,chanel, :,:]*coef; 
-                output_image[chanel, :, :] = temp
+                #alphas = Pstruct[chanel]['U3']
+                f = filter_index                
+                coef = Pstruct[chanel]['U3'][f, :] * Pstruct[chanel]['lmbda'][:]; 
+               # for r in range(rank):
+               #          temp += vertical_conv_out[r,chanel, :,:]*coef[r];                 
+                # output_image[chanel, :, :] = tempa
+                temp = vertical_conv_out[chanel,:,:,:]*np.swapaxes(coef,0,1);
+                output_image[chanel, :, :] = np.sum(temp, axis=2)                
             self.input4D[image_index,filter_index,:,:] =  np.sum(output_image, axis=0)
         
       #  end = (time.time() - start)*1000;
