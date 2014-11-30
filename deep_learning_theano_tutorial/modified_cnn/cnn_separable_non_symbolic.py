@@ -131,7 +131,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         print self.test_set_y
 
         print 'Running test'
-        self.n_test_batches = 5
+#        self.n_test_batches = 5
         timings = []
         test_losses = np.zeros((self.n_test_batches, 1))
         for batch_index in xrange(self.n_test_batches):

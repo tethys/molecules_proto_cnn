@@ -9,7 +9,7 @@ import convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
 
 def main():
-   for r in xrange(10,12,2):
+   for r in xrange(10,44,2):
    # for r in xrange(12,45,2):
         # generate folder test_l1_x_l2_y if it does not exist
         test_folder = './experiments/test_l1_20_l2_{0}'.format(r)
