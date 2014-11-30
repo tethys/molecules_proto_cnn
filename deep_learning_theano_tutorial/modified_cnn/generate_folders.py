@@ -53,7 +53,7 @@ def main():
         
         print "Command is ", command
         # run command generate test result
-        #os.system(command)
+        os.system(command)
         
         test_command = "python cnn_train_test.py -p "
         test_command+= updated_prototxtfile
