@@ -9,7 +9,7 @@ import convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
 
 def main():
-   for r in xrange(10,44,2):
+   for r in xrange(38,44,2):
    # for r in xrange(12,45,2):
         # generate folder test_l1_x_l2_y if it does not exist
         test_folder = './experiments/test_l1_20_l2_{0}'.format(r)
@@ -53,14 +53,14 @@ def main():
         
         print "Command is ", command
         # run command generate test result
-        #os.system(command)
+        os.system(command)
         
         test_command = "python cnn_train_test.py -p "
         test_command+= updated_prototxtfile
         test_command+= " -w " + test_folder + '/cnn_separable_model_original.npy'
         test_command+= " -r=3"
         print "Test command is ", test_command
-        os.system(test_command)        
+      #  os.system(test_command)        
         
 
 if __name__ == main():
