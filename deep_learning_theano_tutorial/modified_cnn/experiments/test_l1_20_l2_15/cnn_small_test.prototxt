@@ -5,12 +5,12 @@ batch_size: 50
 poolsize: 2
 conv_layer {
 	num_filters: 20
-	rank: 15
+	rank: 20
 	filter_w: 5
 }
 conv_layer {
 	num_filters: 50
-	rank: 45
+	rank: 15
 	filter_w: 5
 }
 hidden_layer {

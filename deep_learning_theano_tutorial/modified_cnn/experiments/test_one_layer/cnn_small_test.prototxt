@@ -10,7 +10,6 @@ conv_layer {
 }
 conv_layer {
 	num_filters: 50
-	rank: 45
 	filter_w: 5
 }
 hidden_layer {
