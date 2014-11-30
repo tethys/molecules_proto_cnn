@@ -11,7 +11,6 @@ import numpy as np
 import sys
 import convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
-from sktensor import dtensor, cp_als
 import matlab_wrapper
 
 def main():
