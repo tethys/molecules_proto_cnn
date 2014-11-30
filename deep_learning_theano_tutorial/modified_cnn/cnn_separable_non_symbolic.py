@@ -164,10 +164,11 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                N = len(Pstruct)
                fitarray = np.zeros((N,1))
                for chanel in xrange(N):
+                   print Pstruct[chanel]['fit']
                    fitarray[chanel] = Pstruct[chanel]['fit']     
                logging.debug('Fit mean {0}, std {1}'.format(np.mean(fitarray),
                                                          np.std(fitarray)))
-        iter += 2
+           iter += 2
            
     def log_cnn_time_summary(self, timings):
         t_convolution = []

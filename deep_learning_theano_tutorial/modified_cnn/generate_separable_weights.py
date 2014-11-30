@@ -123,8 +123,8 @@ def decompose_tensor(filters, rank):
         P['U2'] = matlab.get('U2')
         P['U3'] = matlab.get('U3')
         print 'auxiliary ', matlab.get('aux')
-        value_norms = matlab.get('normSep')
-        print 'value norms ', value_norms
+ #       value_norms = matlab.get('normSep')
+#        print 'value norms ', value_norms
         P['fit'] = separable_filters.fit
         P['lmbda'] = matlab.get('lmbda')
         print 'shape of U is ', P['U1'].shape, P['U2'].shape, P['U3'].shape
