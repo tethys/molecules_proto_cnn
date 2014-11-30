@@ -105,7 +105,7 @@ class LeNetLayerConvPoolNonSymbolic:
         end = time.time()
         self.downsample_time = (end - start)*1000/ batch_size
         
-        print 'conv {0}, {1} ms'.format(self.convolutional_time, self.downsample_time)
+     #   print 'conv {0}, {1} ms'.format(self.convolutional_time, self.downsample_time)
         # add the bias term. Since the bias is a vector (1D array), we first
         # reshape it to a tensor of shape (1,n_filters,1,1). Each bias will
         # thus be broadcasted across mini-batches and feature map

@@ -147,13 +147,28 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                timings.append(cnn_time)
                
         self.log_cnn_time_summary(timings) 
-        
+        self.log_fit_info()
         test_score = np.mean(test_losses)
         test_score *= 100        
         print ' Test error of best ', test_score
         logging.debug('Test error: ' + str(test_score))
         
-        
+    def log_fit_info(self):
+        iter = 0
+        for clayer_params in self.convolutional_layers:
+           if clayer_params.HasField('rank') == False:
+               logging.debug('-')
+           else:
+               ## log mean and std of fit per chanel
+               Pstruct = self.cached_weights[iter + 1]
+               N = len(Pstruct)
+               fitarray = np.zeros((N,1))
+               for chanel in xrange(N):
+                   fitarray[chanel] = Pstruct[chanel]['fit']     
+               logging.debug('Fit mean {0}, std {1}'.format(np.mean(fitarray),
+                                                         np.std(fitarray)))
+        iter += 2
+           
     def log_cnn_time_summary(self, timings):
         t_convolution = []
         t_downsample_activation = []
@@ -256,7 +271,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
                                                b = self.cached_weights[iter])
         cnn_time.t_non_conv_layers = (time.time() - start)*1000 / self.batch_size
         cnn_time.t_non_conv_layers = round(cnn_time.t_non_conv_layers, 2)
-        print 'last layers image time final {0} in ms '.format(cnn_time.t_non_conv_layers)
+  #      print 'last layers image time final {0} in ms '.format(cnn_time.t_non_conv_layers)
         
         result =  output_layer.errors(self.y)
         print 'result is ', result.eval()

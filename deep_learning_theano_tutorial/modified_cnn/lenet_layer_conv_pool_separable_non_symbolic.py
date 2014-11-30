@@ -41,19 +41,23 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         for filter_index in xrange(nbr_filters):
             for chanel in xrange(self.nbr_channels):
                     pcoef[filter_index,chanel, :] = Pstruct[chanel]['U3'][filter_index, :] * Pstruct[chanel]['lmbda'][:]; 
-
+        U1 = np.ndarray((self.nbr_channels, rank ,1, fwidth))
+        U2 = np.ndarray((self.nbr_channels, rank, fheight, 1))
+        for chanel in range(self.nbr_channels):
+            U1[chanel,:,0, :] =  np.transpose(Pstruct[chanel]['U1']);  
+            U2[chanel,:,:, 0] = np.transpose(Pstruct[chanel]['U2']);
         start = time.time()
         for image_index in range(batch_size):
                 # Convolve image with index image_index in the batch
                 self.convolve_one_image(input_images[image_index,:,:,:],
                               one_image_shape,
-                              Pstruct, pcoef,
+                              Pstruct, pcoef, U1, U2,
                               filter_shape, 
                               image_index)   
         end = time.time()
        
         self.t_conv = (end - start)*1000/ batch_size 
-        print 'convolution time of batch image {0}'.format(self.t_conv)
+   #     print 'convolution time of batch image {0}'.format(self.t_conv)
    #     print 'before downsample', self.input4D
         # downsample each feature map individually, using maxpooling
         start = time.time()
@@ -69,12 +73,12 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         self.output = T.tanh(pooled_out + sb.dimshuffle('x', 0, 'x', 'x'))
         end = time.time()
         self.t_downsample_activ = (end - start)*1000/ image_shape[0] 
-        print 'pool+tanh time of batch image {0}'.format(self.t_downsample_activ)        
+    #    print 'pool+tanh time of batch image {0}'.format(self.t_downsample_activ)        
         return self.output.eval()
     
     """TODO change to have an image such as nbr channels as well"""
     def convolve_one_image(self, one_image, img_shape, 
-                           Pstruct, pcoef, filter_shape,
+                           Pstruct, pcoef, U1, U2, filter_shape,
                            image_index):
    
         rank = Pstruct[0]['U1'].shape[1]
@@ -83,11 +87,7 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         #
      
         num_input_feature_maps = img_shape[0]
-        U1 = np.ndarray((num_input_feature_maps, rank ,1, fwidth))
-        U2 = np.ndarray((num_input_feature_maps, rank, fheight, 1))
-        for chanel in range(num_input_feature_maps):
-           U1[chanel,:,0, :] =  np.transpose(Pstruct[chanel]['U1']);  
-           U2[chanel,:,:, 0] = np.transpose(Pstruct[chanel]['U2']);
+ 
         n_rows = img_shape[1] - fwidth + 1
         n_cols = img_shape[2] - fheight + 1
        # horizontal_conv_out = np.ndarray((img_shape[1], n_cols))
@@ -105,7 +105,7 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
                                                               U1[chanel,r,:,:], mode='valid'), 
                                                     U2[chanel, r,:,:], mode='valid')
         end = (time.time() - start)*1000
-        print 'part 1 ', end
+  #      print 'part 1 ', end
        
        
         start = time.time()       
@@ -118,4 +118,4 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
             self.input4D[image_index,filter_index,:,:] =  np.sum(output_image, axis=(3, 2))
         
         end = (time.time() - start)*1000;
-        print 'part2 ', end
+   #     print 'part2 ', end
