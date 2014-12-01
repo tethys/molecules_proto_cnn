@@ -1,0 +1,2 @@
+INFO:theano.gof.compilelock:Waiting for existing lock by process '11509' (I am process '13372')
+INFO:theano.gof.compilelock:To manually release the lock, delete /home/vpetresc/.theano/compiledir_Linux-3.2.0-40-generic-x86_64-with-Ubuntu-12.04-precise-x86_64-2.7.3-64/lock_dir
