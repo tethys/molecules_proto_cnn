@@ -6,11 +6,11 @@ poolsize: 2
 conv_layer {
   num_filters: 20
   filter_w: 5
+  rank: 10
 }
 conv_layer {
   num_filters: 50
   filter_w: 5
-  rank: 10
 }
 hidden_layer {
   num_outputs: 500
