@@ -9,31 +9,30 @@ import convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
 
 def main():
-   for r in xrange(38,44,2):
-   # for r in xrange(12,45,2):
+   for r in xrange(14,20,2):
         # generate folder test_l1_x_l2_y if it does not exist
-        test_folder = './experiments/test_l1_20_l2_{0}'.format(r)
+        test_folder = './experiments_cnn_paper/test_f6_k9_f12_k9_r{0}'.format(r)
         if os.path.exists(test_folder) == False:
             os.makedirs(test_folder)
         # copy cnn_model original
-        command = 'cp ./experiments/cnn_model_original.npy {0}'.format(test_folder)
+        command = 'cp ./experiments_cnn_paper/cnn_test.prototxt {0}'.format(test_folder)
         os.system(command)    
     
         """Load settings"""        
         settings = pb_cnn.CNNSettings();        
         try:        
-           f = open('./experiments/cnn_model_original.prototxt', "r")
+           f = open('./experiments_cnn_paper/cnn_test.prototxt', "r")
            data=f.read()
            print 'Protofile content:'
            print data
            text_format.Merge(data, settings);
            f.close();
         except IOError:
-           print "Could not open file ./experiments/cnn_model_original.prototxt";
+           print "Could not open file ./experiments/cnn_test.prototxt";
         settings.conv_layer[1].rank = r
 
         try: 
-            updated_prototxtfile = './experiments/test_l1_20_l2_{0}/cnn_model_separable.prototxt'.format(r)
+            updated_prototxtfile = test_folder +'/cnn_model_separable.prototxt'
             f = open(updated_prototxtfile, "w")
             f.write(text_format.MessageToString(settings))
             f.close()
@@ -41,14 +40,14 @@ def main():
             print "Could not write protofile back"
         # copy prototxt file, update it
             
-        command = 'cp ./experiments/cnn_model_original.prototxt {0}'.format(test_folder)
+        command = 'cp ./experiments_cnn_paper/paper_cvlab_50batches.npy {0}'.format(test_folder)
         os.system(command)    
         
         
         # run command generate separable filters
         command = "python generate_separable_weights.py -p "
         command+=  updated_prototxtfile 
-        command+= " -w " + test_folder + "/cnn_model_original.npy"
+        command+= " -w " + test_folder + "/paper_cvlab_50batches.npy"
         command+= " -s " + test_folder + '/cnn_separable_model_original.npy'
         
         print "Command is ", command
