@@ -11,6 +11,7 @@ import numpy
 import theano
 import theano.tensor as T
 
+from load_data_rescaled import load_mnist_data_rescaled
 from load_data import load_mnist_data
 from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
@@ -59,11 +60,11 @@ class ConvolutionalNeuralNetworkTrain(object):
         
     def create_layers_from_settings(self, settings):  
         # Default values for optionl parameters       
-        self.learning_rate = 0.9;
+        self.learning_rate = 1;
         self.n_epochs = 5;
         # This fields are required
         self.dataset = 'mnist.pkl.gz' #settings.dataset;
-        self.batch_size = 100;
+        self.batch_size = 50;
         self.poolsize = 2;
         
         if settings.HasField('learning_rate'):
@@ -74,7 +75,14 @@ class ConvolutionalNeuralNetworkTrain(object):
                 self.batch_size = settings.batch_size;
         if settings.HasField('poolsize'):
                 self.poolsize = settings.poolsize;
-                
+        
+        self.learning_rate = 1;
+        self.n_epochs = 5;
+        # This fields are required
+        self.dataset = 'mnist.pkl.gz' #settings.dataset;
+        self.batch_size = 50;
+        self.poolsize = 2;
+             
         # TODO this
         self.convolutional_layers = [];
         self.hidden_layers = [];
@@ -99,7 +107,7 @@ class ConvolutionalNeuralNetworkTrain(object):
     def build_model(self):
         rng = numpy.random.RandomState(23455)
 
-        datasets = load_mnist_data(self.dataset)
+        datasets = load_mnist_data_rescaled(self.dataset)
 
         # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784
         self.train_set_x, self.train_set_y = datasets[0]
