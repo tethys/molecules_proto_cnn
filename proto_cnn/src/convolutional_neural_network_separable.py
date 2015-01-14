@@ -22,6 +22,7 @@ import numpy
 import theano
 import theano.tensor as T
 
+from load_mitocondria import load_mitocondria
 from load_data import load_mnist_data
 from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
@@ -98,17 +99,18 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
 
         # required parameter
         self.cost_function = settings.cost_function;
-        self.input_shape = (28,28); # this is the size of MNIST images
-
 
     def build_model(self):
         rng = numpy.random.RandomState(23455)
 
-        datasets = load_mnist_data(self.dataset)
+        datasets = load_mitocondria()
 
         # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784
         self.test_set_x, self.test_set_y = datasets[2]
 
+        img_width_size = numpy.sqrt(self.test_set_x.shape[1].eval()).astype(int)
+        print "Image shape ", img_width_size
+        self.input_shape = (img_width_size, img_width_size); # this is the size of MNIST images
         # compute number of minibatches for training, validation and testing
         # 50000/50 = 1000, 10000/50 = 200
         self.n_test_batches = self.test_set_x.get_value(borrow=True).shape[0]
@@ -218,8 +220,9 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
                endt = (time.time() - start)*1000/self.batch_size
                print 'image time {0} in ms '.format(endt)
                
-          test_score = numpy.mean(test_losses)
-          print ' test error of best ', test_score * 100.
+          test_score = sp.stats.nanmean(test_losses)
+          print test_losses
+	  print ' test error of best non nan ', test_score * 100.
 
 def inspect_inputs(i, node, fn):
     print i, node, "input(s) value(s):", [input[0] for input in fn.inputs],
