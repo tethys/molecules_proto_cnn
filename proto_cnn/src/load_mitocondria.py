@@ -13,12 +13,13 @@ def load_mitocondria():
      print "Loading data..."
 
      # Load datasets
-     train_set_x = np.load('train_set_x_1000000_51.npy')
-     train_set_y = np.load('train_set_y_1000000_51.npy')
-     valid_set_x = np.load('valid_set_x_20000_51.npy')
-     valid_set_y = np.load('valid_set_y_20000_51.npy')
-     test_set_x = np.load('test_set_x_fr1_51.npy')
-     test_set_y = np.load('test_set_y_fr1_51.npy')
+     path_to_data = '../../marquez_DNN/'
+     train_set_x = np.load(path_to_data + 'train_set_x_100000_51.npy')
+     train_set_y = np.load(path_to_data + 'train_set_y_100000_51.npy')
+     valid_set_x = np.load(path_to_data + 'valid_set_x_200000_51.npy')
+     valid_set_y = np.load(path_to_data +'valid_set_y_200000_51.npy')
+     test_set_x = np.load(path_to_data +'test_set_x_fr1_51.npy')
+     test_set_y = np.load(path_to_data +'test_set_y_fr1_51.npy')
 
      def shared_dataset(data_xy, borrow=True):
         """ Function that loads the dataset into shared variables

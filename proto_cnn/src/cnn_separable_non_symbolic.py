@@ -14,6 +14,7 @@ import time
 import theano.tensor as T
 import theano
 
+from load_mitocondria import load_mitocondria
 from load_data_rescaled import load_mnist_data_rescaled
 from load_data import load_mnist_data
 from google.protobuf import text_format
@@ -110,7 +111,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         """Loop through the batches and run process_batch"""
 
         # Load the data
-        datasets = load_mnist_data_rescaled(self.dataset)
+        datasets = load_mitocondria()
 
         # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784
         test_set_x, test_set_y = datasets[2]
@@ -119,7 +120,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
         self.test_set_x = test_set_x.get_value()
         self.test_set_y = test_set_y
 
-        image_width_size = np.sqrt(test_set_y.shape[1].eval()).astype(int);
+        image_width_size = np.sqrt(test_set_x.shape[1].eval()).astype(int);
         self.input_shape = (image_width_size, image_width_size);
 
         # compute number of minibatches for training, validation and testing
