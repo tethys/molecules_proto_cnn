@@ -7,10 +7,15 @@ Created on Tue Oct 21 15:27:51 2014
 
 import time
 import numpy
+import os
 
+import datetime
+import logging
+import scipy
 import theano
 import theano.tensor as T
 
+from load_mitocondria import load_mitocondria
 from load_data_rescaled import load_mnist_data_rescaled
 from load_data import load_mnist_data
 from logistic_sgd import LogisticRegression
@@ -19,21 +24,6 @@ from lenet_conv_pool_layer import LeNetConvPoolLayer
 
 import convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
-# Parameters: make this a protocol buffer
-#  learning_rate=0.1,
-#  n_epochs=2,
-#  dataset='mnist.pkl.gz',
-#  batch_size=50
-#  poolsize 2 x 2
-#  Layer1 conv
-#     20, 5x5
-#  Layer2 conv
-#     50, 5x5
-#  Layer3 full
-#     500 tanh
-#  Layer4 full - last
-#     10
-# Cost negative log likelihood
 
 # Make the network read this and setup
 class ConvolutionalNeuralNetworkTrain(object):
@@ -49,12 +39,13 @@ class ConvolutionalNeuralNetworkTrain(object):
            data = f.read()
            text_format.Merge(data, settings);
            print "Network settings are \n"
-           print settings.__str__
+           print data
            print "\n"
 
            # Build up the ConvolutionalNeuralNetworkTrain model
            self.create_layers_from_settings(settings);
-           f.close();
+           self.initialize_logger()
+	   f.close();
         except IOError:
            print "Could not open file " + cnn_settings_protofile;
 
@@ -66,7 +57,8 @@ class ConvolutionalNeuralNetworkTrain(object):
         self.dataset = 'mnist.pkl.gz' #settings.dataset;
         self.batch_size = 50;
         self.poolsize = 2;
-
+        
+        ##TODO add warning if default value is used
         if settings.HasField('learning_rate'):
                 self.learning_rate = settings.learning_rate;
         if settings.HasField('n_epochs'):
@@ -96,10 +88,23 @@ class ConvolutionalNeuralNetworkTrain(object):
         self.cost_function = settings.cost_function;
 
 
+    def initialize_logger(self):
+        (file_path, extension) = os.path.splitext(self.cached_weights_file)
+        logger_filename = file_path
+        d = datetime.datetime.now()
+        # add calendar day information
+        logger_filename += '_' + str(d.day) + '_' + str(d.month) + '_' + str(d.year);
+        # add hour information
+        logger_filename += '_' + str(d.hour) + '_' + str(d.minute) + '_' + str(d.second);
+        # add extension
+        logger_filename += '.log'
+        logging.basicConfig(filename=logger_filename, level=logging.INFO)
+
+
     def build_model(self):
         rng = numpy.random.RandomState(23455)
 
-        datasets = load_mnist_data(self.dataset)
+        datasets = load_mitocondria()
 
         # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784
         self.train_set_x, self.train_set_y = datasets[0]
@@ -170,7 +175,7 @@ class ConvolutionalNeuralNetworkTrain(object):
             hlayers.append(layer)
 
         # classify the values of the fully-connected sigmoidal layer
-        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=10)
+        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=2)
 
         # the cost we minimize during training is the NLL of the model
         self.cost = self.output_layer.negative_log_likelihood(self.y)
@@ -197,19 +202,19 @@ class ConvolutionalNeuralNetworkTrain(object):
           for param_i, grad_i in zip(self.params, self.grads):
               updates.append((param_i, param_i - self.learning_rate * grad_i))
 
-          train_model = theano.function([self.index], self.cost, updates=updates,
+          train_model = theano.function([self.index], [self.cost, self.output_layer.VOC_values(self.y)], updates=updates,
               givens={
                 self.x: self.train_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.train_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
                 name = 'train_model')
 
              # create a function to compute the mistakes that are made by the model
-          self.test_model = theano.function([self.index], self.output_layer.errors(self.y),
+          self.test_model = theano.function([self.index], self.output_layer.VOC_values(self.y),
              givens={
                 self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
                 name = 'test_model')
-          self.validate_model = theano.function([self.index], self.output_layer.errors(self.y),
+          self.validate_model = theano.function([self.index], self.output_layer.VOC_values(self.y),
             givens={
                 self.x: self.valid_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.valid_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
@@ -248,18 +253,18 @@ class ConvolutionalNeuralNetworkTrain(object):
                   if iter % 100 == 0:
                       print 'training @ iter = ', iter
                   start = time.time()
-                  train_model(minibatch_index)
+                  [train_cost, train_voc_values] = train_model(minibatch_index)
                   end = time.time()
                   mean_training_time += end - start
                   cnt_times += 1
+		  logging.info('cost %f, VOC %f' % (train_cost, train_voc_values))
 
-
-                  if (iter + 1) % validation_frequency == 0:
+                  if (iter + 1) % 1000 == 0: #validation_frequency == 0:
 
                     # compute zero-one loss on validation set
                     validation_losses = [self.validate_model(i) for i in xrange(self.n_valid_batches)]
-                    this_validation_loss = numpy.mean(validation_losses)
-                    print('epoch %i, minibatch %i/%i, validation error %f %%' % \
+                    this_validation_loss = scipy.stats.nanmean(validation_losses)
+                    logging.info('epoch %i, minibatch %i/%i, validation error %f %%' % \
                       (epoch, minibatch_index + 1, self.n_train_batches, \
                        this_validation_loss * 100.))
 
@@ -276,8 +281,8 @@ class ConvolutionalNeuralNetworkTrain(object):
 
                           # test it on the test set
                           test_losses = [self.test_model(i) for i in xrange(self.n_test_batches)]
-                          test_score = numpy.mean(test_losses)
-                          print(('     epoch %i, minibatch %i/%i, test error of best '
+                          test_score = scipy.stats.nanmean(test_losses)
+                          logging.info(('     epoch %i, minibatch %i/%i, test error of best '
                              'model %f %%') %
                              (epoch, minibatch_index + 1, self.n_train_batches,
                              test_score * 100.))
@@ -288,8 +293,8 @@ class ConvolutionalNeuralNetworkTrain(object):
           print 'Saving best parameters'
           self.save_parameters()
           mean_training_time /= cnt_times
-          print 'running_times %3.3f', mean_training_time
-
+          print 'running_times %f', mean_training_time
+	  logging.info(('running time %f' % (mean_training_time)))
     def save_parameters(self):
             weights = [i.get_value(borrow=True) for i in self.best_params]
             numpy.save(self.cached_weights_file, weights)
