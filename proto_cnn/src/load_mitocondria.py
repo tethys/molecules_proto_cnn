@@ -13,11 +13,11 @@ def load_mitocondria():
      print "Loading data..."
 
      # Load datasets
-     path_to_data = '../../marquez_DNN/'
+     path_to_data = '../data/'
      train_set_x = np.load(path_to_data + 'train_set_x_100000_51.npy')
      train_set_y = np.load(path_to_data + 'train_set_y_100000_51.npy')
-     valid_set_x = np.load(path_to_data + 'valid_set_x_200000_51.npy')
-     valid_set_y = np.load(path_to_data +'valid_set_y_200000_51.npy')
+     valid_set_x = np.load(path_to_data + 'valid_set_x_20000_51.npy')
+     valid_set_y = np.load(path_to_data +'valid_set_y_20000_51.npy')
      test_set_x = np.load(path_to_data +'test_set_x_fr1_51.npy')
      test_set_y = np.load(path_to_data +'test_set_y_fr1_51.npy')
 
