@@ -91,6 +91,7 @@ class ConvolutionalNeuralNetworkTrain(object):
 
 
     def initialize_logger(self):
+	# The log file is saved in the same folder of the cached weights file
         (file_path, extension) = os.path.splitext(self.cached_weights_file)
         logger_filename = file_path
         d = datetime.datetime.now()
@@ -104,22 +105,24 @@ class ConvolutionalNeuralNetworkTrain(object):
 
 
     def build_model(self):
+	# Fixed rng, make the results repeatable
         rng = numpy.random.RandomState(23455)
 
         datasets = load_mitocondria()
 
-        # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784
+	# Train, Validation, Test 100000, 20000, 26... fot Mitocondria set
+        # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784 for MNIST dataset
         self.train_set_x, self.train_set_y = datasets[0]
         self.valid_set_x, self.valid_set_y = datasets[1]
         self.test_set_x, self.test_set_y = datasets[2]
 
         # assumes the width equals the height
         img_width_size = numpy.sqrt(self.test_set_x.shape[1].eval()).astype(int)
-        print "Image shape ", img_width_size
-        self.input_shape = (img_width_size, img_width_size); # this is the size of MNIST images
+        print "Image shape %s x %s" % (img_width_size, img_width_size)
+        self.input_shape = (img_width_size, img_width_size)
 
-        # compute number of minibatches for training, validation and testing
-        # 50000/50 = 1000, 10000/50 = 200
+        # Compute number of minibatches for training, validation and testing
+        # Divide the total number of elements in the set by the batch size
         self.n_train_batches = self.train_set_x.get_value(borrow=True).shape[0]
         self.n_valid_batches = self.valid_set_x.get_value(borrow=True).shape[0]
         self.n_test_batches = self.test_set_x.get_value(borrow=True).shape[0]
@@ -127,31 +130,30 @@ class ConvolutionalNeuralNetworkTrain(object):
         self.n_valid_batches /= self.batch_size
         self.n_test_batches /= self.batch_size
 
-        print('Size train ',self.train_set_x.shape.eval() , ', valid ' , self.valid_set_x.shape.eval(), ', test ' , self.test_set_x.shape.eval())
-        print('Size train_batches %d, n_valid_batches %d, n_test_batches %d' %(self.n_train_batches, self.n_valid_batches, self.n_test_batches))
+        #print('Size train %d, valid %d, test %d' % (self.train_set_x.shape.eval(), self.valid_set_x.shape.eval(), self.test_set_x.shape.eval())
+        #print('Size train_batches %d, n_valid_batches %d, n_test_batches %d' % (self.n_train_batches, self.n_valid_batches, self.n_test_batches))
 
         # allocate symbolic variables for the data
         self.index = T.lscalar()  # index to a [mini]batch
         self.x = T.matrix('x')   # the data is presented as rasterized images
         self.y = T.ivector('y')  # the labels are presented as 1D vector of
-                        # [int] labels
+              		         # [int] labels
 
         ######################
         # BUILD ACTUAL MODEL #
         ######################
         print 'Building the model ...'
-        for layer in self.convolutional_layers:
-            print layer.num_filters
-            print layer.filter_w
 
-        layer_input = self.x.reshape((self.batch_size, 1, self.input_shape[0], self.input_shape[1]))
+        # The input is an 4D array of size, number of images in the batch size, number of channels
+	# (or number of feature maps), image width and height.
+	nbr_feature_maps = 1
+	layer_input = self.x.reshape((self.batch_size, nbr_feature_maps, self.input_shape[0], self.input_shape[1]))
         pooled_W = self.input_shape[0];
         pooled_H = self.input_shape[1];
-        nbr_feature_maps = 1
+	# Add convolutional layers followed by pooling
         clayers = []
         for clayer_params in self.convolutional_layers:
-            print clayer_params.num_filters
-            print clayer_params.filter_w
+            print 'Adding conv layer nbr filter %d, Ksize %d' % (clayer_params.num_filters, clayer_params.filter_w)
             layer = LeNetConvPoolLayer(rng, input = layer_input,
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps,
@@ -164,12 +166,13 @@ class ConvolutionalNeuralNetworkTrain(object):
             nbr_feature_maps = clayer_params.num_filters;
 
 
-        # construct a fully-connected sigmoidal layer
+        # Flatten the output of the previous layers and add
+        # fully connected sigmoidal layers	
         layer_input = layer_input.flatten(2);
-        nbr_input = nbr_feature_maps * pooled_W * pooled_H ## Why is this SO??
+        nbr_input = nbr_feature_maps * pooled_W * pooled_H
         hlayers = []
         for hlayer_params in self.hidden_layers:
-            print hlayer_params.num_outputs
+            print 'Adding hidden layer fully connected %d' % (hlayer_params.num_outputs)
             layer = HiddenLayer(rng, input=layer_input, n_in=nbr_input,
                          n_out = hlayer_params.num_outputs, activation=T.tanh)
             nbr_input = hlayer_params.num_outputs;
@@ -226,7 +229,7 @@ class ConvolutionalNeuralNetworkTrain(object):
             ###############
           print '... training'
            # early-stopping parameters
-          patience = 10000  # look as this many examples regardless
+          patience = 1000000 # look as this many examples regardless
           patience_increase = 2  # wait this much longer when a new best is
                            # found
           improvement_threshold = 0.995  # a relative improvement of this much is
