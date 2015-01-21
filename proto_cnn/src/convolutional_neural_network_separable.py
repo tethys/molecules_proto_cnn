@@ -178,7 +178,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
     def test_model(self):
           print 'Running test'
              # create a function to compute the mistakes that are made by the model
-          test_model_result = theano.function([self.index], self.output_layer.VOC_values(self.y),
+          self.test_model_result = theano.function([self.index], [self.output_layer.y_pred, self.output_layer.VOC_values(self.y)],
              givens={
                 self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
@@ -189,19 +189,30 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
           print '... testing'
  
           # test it on the test set
-          
-          test_losses = numpy.zeros((100, 1))
-          for i in xrange(100):
-               start = time.time()
-               print 'batch nr', i
-               test_losses[i] = test_model_result(i)
-               endt = (time.time() - start)*1000/self.batch_size
-               print 'image time {0} in ms '.format(endt)
-               
-          test_score = sp.stats.nanmean(test_losses)
-          print test_losses
+          test_score = self.compute_test_VOC_loss() 
+	 
 	  print ' test error of best non nan ', test_score * 100.
 
+    def compute_test_VOC_loss(self):
+	  # works for 0-1 loss
+          all_y_pred = numpy.empty([])
+	  for i in xrange(self.n_test_batches):
+		[y_pred, test_loss] = self.test_model_result(i)
+		if i==0:
+		    all_y_pred = y_pred
+		else:
+         	    all_y_pred = numpy.concatenate((all_y_pred, y_pred))
+          print all_y_pred
+	  print all_y_pred.shape
+	  F = T.sum(T.neq(self.test_set_y, all_y_pred))
+          TP = T.sum(T.and_(T.eq(self.test_set_y, 1), T.eq(all_y_pred, 1)))
+	  result =  TP/T.cast(TP+F, theano.config.floatX)
+          print 'Print result is ', result.eval()
+	  return result.eval() 
+
+    def save_parameters(self):
+          weights = [i.get_value(borrow=True) for i in self.best_params]
+          numpy.save(self.cached_weights_file, weights)
 def inspect_inputs(i, node, fn):
     print i, node, "input(s) value(s):", [input[0] for input in fn.inputs],
 
