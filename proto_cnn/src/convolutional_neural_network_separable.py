@@ -5,12 +5,6 @@ Created on Tue Nov  4 00:30:04 2014
 @author: vivianapetrescu
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Oct 21 15:27:51 2014
-
-@author: vivianapetrescu
-"""
 
 import os
 import sys
@@ -30,23 +24,7 @@ from lenet_conv_pool_layer import LeNetConvPoolLayer
 from lenet_separable_conv_pool_layer import LeNetSeparableConvPoolLayer
 import convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
-# Parameters: make this a protocol buffer
-#  learning_rate=0.1, 
-#  n_epochs=2,
-#  dataset='mnist.pkl.gz',
-#  batch_size=50
-#  poolsize 2 x 2
-#  Layer1 conv
-#     20, 5x5
-#  Layer2 conv
-#     50, 5x5
-#  Layer3 full
-#     500 tanh
-#  Layer4 full - last
-#     10 
-# Cost negative log likelihood
 
-# Make the network read this and setup
 class ConvolutionalNeuralNetworkSeparableTest(object):
     def __init__(self, cnn_settings_protofile, cached_weights_file):
         settings = pb_cnn.CNNSettings();        
@@ -95,7 +73,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
               self.hidden_layers.append(layer)      
 
         # required at least one layer
-        self.output_layer = settings.last_layer;
+        self.last_layer = settings.last_layer;
 
         # required parameter
         self.cost_function = settings.cost_function;
@@ -124,7 +102,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
                         # [int] labels
 
         # Load weights...
-        weights = numpy.load(self.cached_weights_file + '.npy')
+        weights = numpy.load(self.cached_weights_file)
      #   sp.io.savemat('temporary.mat', {'w',weights})
         cached_weights = []        
         for w in reversed(weights):
@@ -192,7 +170,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
          
         print 'nbr inputs ', nbr_input 
         # classify the values of the fully-connected sigmoidal layer
-        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=10, 
+        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out= self.last_layer.num_outputs, 
                                                W = cached_weights[iter +1], 
                                                b = cached_weights[iter])
 
@@ -200,7 +178,7 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
     def test_model(self):
           print 'Running test'
              # create a function to compute the mistakes that are made by the model
-          test_model_result = theano.function([self.index], self.output_layer.errors(self.y),
+          test_model_result = theano.function([self.index], self.output_layer.VOC_values(self.y),
              givens={
                 self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
@@ -212,8 +190,8 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
  
           # test it on the test set
           
-          test_losses = numpy.zeros((10, 1))
-          for i in xrange(10):
+          test_losses = numpy.zeros((100, 1))
+          for i in xrange(100):
                start = time.time()
                print 'batch nr', i
                test_losses[i] = test_model_result(i)
