@@ -17,6 +17,7 @@ import time
 import theano
 import theano.tensor as T
 
+from base_cnn import CNNBase
 import convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
 from lenet_conv_pool_layer import LeNetConvPoolLayer
@@ -33,7 +34,7 @@ class CNNTrain(CNNBase):
 	# Fixed rng, make the results repeatable
         rng = numpy.random.RandomState(23455)
 
-        datasets = load_samples()
+        datasets = self.load_samples()
 
 	# Train, Validation, Test 100000, 20000, 26... fot Mitocondria set
         # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784 for MNIST dataset
@@ -122,6 +123,4 @@ class CNNTrain(CNNBase):
         self.grads = T.grad(self.cost, self.params)
 
     def train_model(self):
-	raise NotImplementedError()
-    def load_samples(self):
 	raise NotImplementedError()

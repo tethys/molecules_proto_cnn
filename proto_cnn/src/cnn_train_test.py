@@ -8,6 +8,7 @@ Created on Tue Oct 21 16:19:55 2014
 
 import argparse
 import sys
+from mitocondria_train_cnn import CNNTrainVOCMitocondria
 from cnn_separable_non_symbolic import ConvolutionalNeuralNetworkNonSymbolic;
 from convolutional_nnet_train import ConvolutionalNeuralNetworkTrain;
 from convolutional_nnet_test import ConvolutionalNeuralNetworkTest;
@@ -29,11 +30,12 @@ def main():
     print 'run mode', results.mode
 
     if results.mode == 0 or results.mode == 2: # train model
-    	cnn = ConvolutionalNeuralNetworkTrain(results.prototxt_file, results.cached_weights_file);
+	small_model = False
+    	cnn = CNNTrainVOCMitocondria(results.prototxt_file, results.cached_weights_file, small_model)
     	cnn.build_model()
     	cnn.train_model()
     if results.mode == 1 or results.mode == 2: # test model
-    	cnn = ConvolutionalNeuralNetworkSeparableTest(results.prototxt_file, results.cached_weights_file);
+    	cnn = ConvolutionalNeuralNetworkSeparableTest(results.prototxt_file, results.cached_weights_file)
     	cnn.build_model()
     	cnn.test_model()
     if results.mode == 3:

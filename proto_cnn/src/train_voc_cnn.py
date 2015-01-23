@@ -14,6 +14,7 @@ import time
 import theano
 import theano.tensor as T
 
+from train_cnn import CNNTrain
 import convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
 from lenet_conv_pool_layer import LeNetConvPoolLayer
