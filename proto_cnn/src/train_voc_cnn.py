@@ -109,7 +109,6 @@ class CNNTrainVOC(CNNTrain):
                     if this_validation_loss > best_validation_loss:
 
                       #improve patience if loss improvement is good enough
-                      if this_validation_loss > best_validation_loss:
                           patience = max(patience, iter * patience_increase)
 
                           # save best validation score and iteration number
