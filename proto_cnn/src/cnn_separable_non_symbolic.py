@@ -71,7 +71,7 @@ class ConvolutionalNeuralNetworkNonSymbolic:
               self.hidden_layers.append(layer)
 
         # required at least one layer
-        self.output_layer = settings.last_layer;
+        self.last_layer = settings.last_layer;
 
         # required parameter
         self.cost_function = settings.cost_function;
@@ -235,14 +235,14 @@ class ConvolutionalNeuralNetworkNonSymbolic:
             iter += 2
 #
 #        # classify the values of the fully-connected sigmoidal layer
-        output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=10,
+        output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=self.last_layer.num_outputs,
                                                W = self.cached_weights[iter +1],
                                                b = self.cached_weights[iter])
         cnn_time.t_non_conv_layers = (time.time() - start)*1000 / self.batch_size
         cnn_time.t_non_conv_layers = round(cnn_time.t_non_conv_layers, 2)
   #      print 'last layers image time final {0} in ms '.format(cnn_time.t_non_conv_layers)
 
-        result =  output_layer.errors(self.y)
+        result =  output_layer.VOC_values(self.y)
         print 'result is ', result.eval()
         return result.eval()
     def log_fit_info(self):
