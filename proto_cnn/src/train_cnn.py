@@ -105,7 +105,7 @@ class CNNTrain(CNNBase):
             hlayers.append(layer)
 
         # classify the values of the fully-connected sigmoidal layer
-        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out = self.output_layer.num_outputs)
+        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out = self.last_layer.num_outputs)
 
         # the cost we minimize during training is the NLL of the model
         self.cost = self.output_layer.negative_log_likelihood(self.y)

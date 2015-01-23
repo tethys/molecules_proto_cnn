@@ -47,7 +47,7 @@ class CNNBase(object):
 	   f.close();
         except IOError:
            print "Could not open file " + cnn_settings_protofile;
-        self.rng = numpy.random.RandomState(23455)
+        self.rng = np.random.RandomState(23455)
     
     def create_layers_from_settings(self, settings):
         # Default values for optional parameters
@@ -85,7 +85,7 @@ class CNNBase(object):
               self.hidden_layers.append(layer)
 
         # required at least one layer
-        self.output_layer = settings.last_layer;
+        self.last_layer = settings.last_layer;
 
 	# Required parameters TODO still needed?
         self.dataset = settings.dataset

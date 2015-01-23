@@ -14,12 +14,9 @@ import time
 import theano.tensor as T
 import theano
 
-from load_mitocondria import load_mitocondria
-from load_data_rescaled import load_mnist_data_rescaled
-from load_data import load_mnist_data
 from google.protobuf import text_format
 
-
+from base_cnn import CNNBase
 from lenet_conv_pool_layer import LeNetConvPoolLayer
 from lenet_layer_conv_pool_non_symbolic import LeNetLayerConvPoolNonSymbolic
 from lenet_layer_conv_pool_separable_non_symbolic import LeNetLayerConvPoolSeparableNonSymbolic
@@ -55,7 +52,7 @@ class CNNTest(CNNBase):
         datasets = self.load_samples()
 
         # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784
-        test_set_x, test_set_y = datasets[2]
+        test_set_x, test_set_y = datasets
         # shape of test_set_x is 10000x784
         #shape of test_set_y is 10000x784
         self.test_set_x = test_set_x.get_value()

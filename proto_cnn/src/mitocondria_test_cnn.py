@@ -14,12 +14,9 @@ import time
 import theano.tensor as T
 import theano
 
-from load_mitocondria import load_mitocondria
-from load_data_rescaled import load_mnist_data_rescaled
-from load_data import load_mnist_data
 from google.protobuf import text_format
 
-
+from test_cnn import CNNTest
 from lenet_conv_pool_layer import LeNetConvPoolLayer
 from lenet_layer_conv_pool_non_symbolic import LeNetLayerConvPoolNonSymbolic
 from lenet_layer_conv_pool_separable_non_symbolic import LeNetLayerConvPoolSeparableNonSymbolic
@@ -28,11 +25,13 @@ from mlp import HiddenLayer
 
 class CNNTestVOCMitocondria(CNNTest):
 	def error_measure(self):
-		pass
-     	def load_samples(self, frame = None):
-	    if frame != None:
-    	 	Vtest = (misc.tiffread('../data/Volume_test.tif')/255.0)
-    		Gtest = (misc.tiffread('../data/Ground_truth_test.tif'))
+            result =  self.output_layer.VOC_values(self.y)
+     	    return result
+	def load_samples(self, frame = None):
+	     path_to_data = '../data/' 
+             if frame != None:
+    	 	Vtest = (misc.tiffread(path_to_data + 'Volume_test.tif')/255.0)
+    		Gtest = (misc.tiffread(path_to_data + 'Ground_truth_test.tif'))
     	 	Gtest[Gtest==255] = 1
          	areasize = 51
          	gap = (areasize -1)/2
@@ -42,7 +41,9 @@ class CNNTestVOCMitocondria(CNNTest):
          	test_set_x = patches.get_many_patches(Vtest[frame,:,:], (areasize,areasize), centers, flat=True)
          	test_set_y = Gtest[frame][centers[:,0], centers[:,1]]
          	print 'Test set shape ', test_set_x.shape
-	    else:
+	     else:
      	 	test_set_x = np.load(path_to_data +'test_set_x_fr1_51.npy')
      	 	test_set_y = np.load(path_to_data +'test_set_y_fr1_51.npy')
-     	    return test_set_x, test_set_y
+     	     
+             test_set_x, test_set_y = self.shared_dataset((test_set_x, test_set_y))
+	     return test_set_x, test_set_y
