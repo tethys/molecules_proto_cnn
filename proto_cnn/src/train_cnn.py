@@ -32,7 +32,6 @@ class CNNTrain(CNNBase):
 
     def build_model(self):
 	# Fixed rng, make the results repeatable
-        rng = numpy.random.RandomState(23455)
 
         datasets = self.load_samples()
 
@@ -80,7 +79,7 @@ class CNNTrain(CNNBase):
         clayers = []
         for clayer_params in self.convolutional_layers:
             print 'Adding conv layer nbr filter %d, Ksize %d' % (clayer_params.num_filters, clayer_params.filter_w)
-            layer = LeNetConvPoolLayer(rng, input = layer_input,
+            layer = LeNetConvPoolLayer(self.rng, input = layer_input,
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                      clayer_params.filter_w, clayer_params.filter_w),
@@ -99,7 +98,7 @@ class CNNTrain(CNNBase):
         hlayers = []
         for hlayer_params in self.hidden_layers:
             print 'Adding hidden layer fully connected %d' % (hlayer_params.num_outputs)
-            layer = HiddenLayer(rng, input=layer_input, n_in=nbr_input,
+            layer = HiddenLayer(self.rng, input=layer_input, n_in=nbr_input,
                          n_out = hlayer_params.num_outputs, activation=T.tanh)
             nbr_input = hlayer_params.num_outputs;
             layer_input = layer.output

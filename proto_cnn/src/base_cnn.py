@@ -47,7 +47,8 @@ class CNNBase(object):
 	   f.close();
         except IOError:
            print "Could not open file " + cnn_settings_protofile;
-
+        self.rng = numpy.random.RandomState(23455)
+    
     def create_layers_from_settings(self, settings):
         # Default values for optional parameters
         self.learning_rate = 0.1;
