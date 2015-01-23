@@ -78,10 +78,10 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
         # required parameter
         self.cost_function = settings.cost_function;
 
-    def build_model(self):
+    def build_model(self, frame):
         rng = numpy.random.RandomState(23455)
 
-        datasets = load_mitocondria()
+        datasets = load_mitocondria(frame)
 
         # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784
         self.test_set_x, self.test_set_y = datasets[2]
@@ -208,7 +208,12 @@ class ConvolutionalNeuralNetworkSeparableTest(object):
           TP = T.sum(T.and_(T.eq(self.test_set_y, 1), T.eq(all_y_pred, 1)))
 	  result =  TP/T.cast(TP+F, theano.config.floatX)
           print 'Print result is ', result.eval()
+	  # open file and write array to file
+	  f = open(self.cached_weights_file + "_results.txt","a")
+	  numpy.savetxt(f, all_y_pred)
+          f.close()
 	  return result.eval() 
+
 
     def save_parameters(self):
           weights = [i.get_value(borrow=True) for i in self.best_params]

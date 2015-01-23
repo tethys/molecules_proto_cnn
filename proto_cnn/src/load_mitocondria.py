@@ -4,23 +4,42 @@ Created on Wed Dec 17 18:17:44 2014
 
 @author: vivianapetrescu
 """
-
+import misc
+import patches
 import numpy as np
 import theano
 import theano.tensor as T
 
-def load_mitocondria():
-     print "Loading data..."
+def load_mitocondria(frame = None):
+     print "Loading data for frame ... ", frame
 
      # Load datasets
      path_to_data = '../data/'
-     train_set_x = np.load(path_to_data + 'train_set_x_100000_51.npy')
-     train_set_y = np.load(path_to_data + 'train_set_y_100000_51.npy')
-     valid_set_x = np.load(path_to_data + 'valid_set_x_20000_51.npy')
-     valid_set_y = np.load(path_to_data +'valid_set_y_20000_51.npy')
-     test_set_x = np.load(path_to_data +'test_set_x_fr1_51.npy')
-     test_set_y = np.load(path_to_data +'test_set_y_fr1_51.npy')
+     if frame == None:
+     	 train_set_x = np.load(path_to_data + 'train_set_x_1000000_51.npy')
+     	 train_set_y = np.load(path_to_data + 'train_set_y_1000000_51.npy')
+     	 valid_set_x = np.load(path_to_data + 'valid_set_x_200000_51.npy')
+     	 valid_set_y = np.load(path_to_data +'valid_set_y_200000_51.npy')
+     	 test_set_x = np.load(path_to_data +'test_set_x_fr1_51.npy')
+     	 test_set_y = np.load(path_to_data +'test_set_y_fr1_51.npy')
+     else:
+     	 train_set_x = np.load(path_to_data + 'train_set_x_100000_51.npy')
+     	 train_set_y = np.load(path_to_data + 'train_set_y_100000_51.npy')
+     	 valid_set_x = np.load(path_to_data + 'valid_set_x_20000_51.npy')
+     	 valid_set_y = np.load(path_to_data +'valid_set_y_20000_51.npy')
+    	 Vtest = (misc.tiffread('../data/Volume_test.tif')/255.0)
+    	 Gtest = (misc.tiffread('../data/Ground_truth_test.tif'))
+    	 Gtest[Gtest==255] = 1
+         areasize = 51
+         gap = (areasize -1)/2
 
+        # Extract all 51x51 patches from testing data
+       	 centers = patches.grid_patches_centers(Vtest[frame,:,:].shape, (areasize,areasize))
+         test_set_x = patches.get_many_patches(Vtest[frame,:,:], (areasize,areasize), centers, flat=True)
+         test_set_y = Gtest[frame][centers[:,0], centers[:,1]]
+         print test_set_x.shape
+         print test_set_y.shape
+     
      def shared_dataset(data_xy, borrow=True):
         """ Function that loads the dataset into shared variables
 

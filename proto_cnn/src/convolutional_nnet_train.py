@@ -41,6 +41,7 @@ class ConvolutionalNeuralNetworkTrain(object):
            print "Network settings are \n"
            print data
            print "\n"
+	   logging.info(data)
            # Build up the ConvolutionalNeuralNetworkTrain model from the layers description
            self.create_layers_from_settings(settings)
 	   f.close();
@@ -131,7 +132,7 @@ class ConvolutionalNeuralNetworkTrain(object):
         self.n_test_batches /= self.batch_size
 
         #print('Size train %d, valid %d, test %d' % (self.train_set_x.shape.eval(), self.valid_set_x.shape.eval(), self.test_set_x.shape.eval())
-        #print('Size train_batches %d, n_valid_batches %d, n_test_batches %d' % (self.n_train_batches, self.n_valid_batches, self.n_test_batches))
+        print('Size train_batches %d, n_valid_batches %d, n_test_batches %d' % (self.n_train_batches, self.n_valid_batches, self.n_test_batches))
 
         # allocate symbolic variables for the data
         self.index = T.lscalar()  # index to a [mini]batch
@@ -214,12 +215,12 @@ class ConvolutionalNeuralNetworkTrain(object):
                 name = 'train_model')
 
              # create a function to compute the mistakes that are made by the model
-          self.test_model = theano.function([self.index], self.output_layer.VOC_values(self.y),
+          self.test_model = theano.function([self.index], [self.output_layer.y_pred, self.output_layer.VOC_values(self.y)],
              givens={
                 self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
                 name = 'test_model')
-          self.validate_model = theano.function([self.index], self.output_layer.VOC_values(self.y),
+          self.validate_model = theano.function([self.index], [self.output_layer.y_pred, self.output_layer.VOC_values(self.y)],
             givens={
                 self.x: self.valid_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                 self.y: self.valid_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
@@ -241,7 +242,7 @@ class ConvolutionalNeuralNetworkTrain(object):
                                   # check every epoch
 
           self.best_params = None
-          best_validation_loss = numpy.inf
+          best_validation_loss = 0#numpy.inf
           test_score = 0.
 
           epoch = 0
@@ -252,7 +253,7 @@ class ConvolutionalNeuralNetworkTrain(object):
           while (epoch < self.n_epochs) and (not done_looping):
               epoch = epoch + 1
               for minibatch_index in xrange(self.n_train_batches):
-
+		  # The model will process the iter batch
                   iter = (epoch - 1) * self.n_train_batches + minibatch_index
 
                   if iter % 100 == 0:
@@ -267,17 +268,16 @@ class ConvolutionalNeuralNetworkTrain(object):
                   if (iter + 1) % 1000 == 0: #validation_frequency == 0:
 
                     # compute zero-one loss on validation set
-                    validation_losses = [self.validate_model(i) for i in xrange(self.n_valid_batches)]
-                    this_validation_loss = scipy.stats.nanmean(validation_losses)
+                    this_validation_loss = self.compute_validation_VOC_loss() 
                     logging.info('epoch %i, minibatch %i/%i, validation error %f %%' % \
                       (epoch, minibatch_index + 1, self.n_train_batches, \
                        this_validation_loss * 100.))
 
                     # if we got the best validation score until now
-                    if this_validation_loss < best_validation_loss:
+                    if this_validation_loss > best_validation_loss:
 
                       #improve patience if loss improvement is good enough
-                      if this_validation_loss < best_validation_loss * improvement_threshold:
+                      if this_validation_loss > best_validation_loss:
                           patience = max(patience, iter * patience_increase)
 
                           # save best validation score and iteration number
@@ -285,8 +285,7 @@ class ConvolutionalNeuralNetworkTrain(object):
                           self.best_params = self.params
 
                           # test it on the test set
-                          test_losses = [self.test_model(i) for i in xrange(self.n_test_batches)]
-                          test_score = scipy.stats.nanmean(test_losses)
+                          test_score = self.compute_test_VOC_loss()
                           logging.info(('     epoch %i, minibatch %i/%i, test error of best '
                              'model %f %%') %
                              (epoch, minibatch_index + 1, self.n_train_batches,
@@ -300,8 +299,42 @@ class ConvolutionalNeuralNetworkTrain(object):
           mean_training_time /= cnt_times
           print 'running_times %f', mean_training_time
 	  logging.info(('running time %f' % (mean_training_time)))
+    def compute_validation_VOC_loss(self):
+	  # works for 0-1 loss
+	  all_y_pred = numpy.empty([])
+	  for i in xrange(self.n_valid_batches):
+		[y_pred, validation_loss] = self.validate_model(i)
+		if i == 0:
+			all_y_pred = y_pred
+		else:
+         	        all_y_pred = numpy.concatenate((all_y_pred, y_pred))
+	  print all_y_pred
+
+          F = T.sum(T.neq(self.valid_set_y, all_y_pred))
+          TP = T.sum(T.and_(T.eq(self.valid_set_y, 1), T.eq(all_y_pred, 1)))
+	  result =  TP/T.cast(TP+F, theano.config.floatX)
+          print 'Print result is ', result.eval()
+	  return result.eval() 
+
+    def compute_test_VOC_loss(self):
+	  # works for 0-1 loss
+          all_y_pred = numpy.empty([])
+	  for i in xrange(self.n_test_batches):
+		[y_pred, test_loss] = self.test_model(i)
+		if i==0:
+		    all_y_pred = y_pred
+		else:
+         	    all_y_pred = numpy.concatenate((all_y_pred, y_pred))
+          print all_y_pred
+	  print all_y_pred.shape
+	  F = T.sum(T.neq(self.test_set_y, all_y_pred))
+          TP = T.sum(T.and_(T.eq(self.test_set_y, 1), T.eq(all_y_pred, 1)))
+	  result =  TP/T.cast(TP+F, theano.config.floatX)
+          print 'Print result is ', result.eval()
+	  return result.eval() 
+
     def save_parameters(self):
-            weights = [i.get_value(borrow=True) for i in self.best_params]
-            numpy.save(self.cached_weights_file, weights)
+          weights = [i.get_value(borrow=True) for i in self.best_params]
+          numpy.save(self.cached_weights_file, weights)
 
 
