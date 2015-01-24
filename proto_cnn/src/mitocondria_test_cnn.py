@@ -16,17 +16,14 @@ import theano
 
 from google.protobuf import text_format
 
-from test_cnn import CNNTest
+from test_voc_cnn import CNNTestVOC
 from lenet_conv_pool_layer import LeNetConvPoolLayer
 from lenet_layer_conv_pool_non_symbolic import LeNetLayerConvPoolNonSymbolic
 from lenet_layer_conv_pool_separable_non_symbolic import LeNetLayerConvPoolSeparableNonSymbolic
 from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
 
-class CNNTestVOCMitocondria(CNNTest):
-	def error_measure(self):
-            result =  self.output_layer.VOC_values(self.y)
-     	    return result
+class CNNTestVOCMitocondria(CNNTestVOC):
 	def load_samples(self, frame = None):
 	     path_to_data = '../data/' 
              if frame != None:

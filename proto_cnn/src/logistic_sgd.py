@@ -175,4 +175,75 @@ class LogisticRegression(object):
             return result
         else:
             raise NotImplementedError()
+    def result_count_dictionary(self, y):
+	result = {}
+	result['TP'] = self.true_positives_count(y).eval()
+	result['TN'] = self.true_negatives_count(y).eval()
+	result['FP'] = self.false_positives_count(y).eval()
+	result['FN'] = self.false_negatives_count(y).eval()
+        return result
+    def true_negatives_count(self, y):
+        if y.ndim != self.y_pred.ndim:
+            raise TypeError('y should have the same shape as self.y_pred',
+                ('y', target.type, 'y_pred', self.y_pred.type))
+        # check if y is of the correct datatype
+        if y.dtype.startswith('int'):
+            # the T.neq operator returns a vector of 0s and 1s, where 1
+            # represents a mistake in prediction
+            TP = T.sum(T.and_(T.eq(self.y_pred, 0), T.eq(y, 0)))
+	    return TP
+        else:
+            raise NotImplementedError()
+    def true_positives_count(self, y):
+        if y.ndim != self.y_pred.ndim:
+            raise TypeError('y should have the same shape as self.y_pred',
+                ('y', target.type, 'y_pred', self.y_pred.type))
+        # check if y is of the correct datatype
+        if y.dtype.startswith('int'):
+            # the T.neq operator returns a vector of 0s and 1s, where 1
+            # represents a mistake in prediction
+            TP = T.sum(T.and_(T.eq(self.y_pred, 1), T.eq(y, 1)))
+	    return TP
+        else:
+            raise NotImplementedError()
+
+    def false_positives_count(self, y):
+        if y.ndim != self.y_pred.ndim:
+            raise TypeError('y should have the same shape as self.y_pred',
+                ('y', target.type, 'y_pred', self.y_pred.type))
+        # check if y is of the correct datatype
+        if y.dtype.startswith('int'):
+            # the T.neq operator returns a vector of 0s and 1s, where 1
+            # represents a mistake in prediction
+            FP = T.sum(T.and_(T.eq(y,0), T.neq(self.y_pred, y)))
+	    return FP
+        else:
+	    raise NotImplementedError()
+
+    def false_negatives_count(self, y):
+        if y.ndim != self.y_pred.ndim:
+            raise TypeError('y should have the same shape as self.y_pred',
+                ('y', target.type, 'y_pred', self.y_pred.type))
+        # check if y is of the correct datatype
+        if y.dtype.startswith('int'):
+            # the T.neq operator returns a vector of 0s and 1s, where 1
+            # represents a mistake in prediction
+            FN = T.sum(T.and_(T.eq(y,1), T.neq(self.y_pred, y)))
+	    return FN
+        else:
+	    raise NotImplementedError()
+
+    def false_result_count(self, y):
+        if y.ndim != self.y_pred.ndim:
+            raise TypeError('y should have the same shape as self.y_pred',
+                ('y', target.type, 'y_pred', self.y_pred.type))
+        # check if y is of the correct datatype
+        if y.dtype.startswith('int'):
+            # the T.neq operator returns a vector of 0s and 1s, where 1
+            # represents a mistake in prediction
+            F = T.sum(T.neq(self.y_pred, y))
+	    return F
+        else:
+	    raise NotImplementedError()
+
 

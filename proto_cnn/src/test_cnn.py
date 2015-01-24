@@ -32,12 +32,10 @@ class CNNTest(CNNBase):
         ## Create Layers
         self.layer_convolutional = LeNetLayerConvPoolNonSymbolic(self.rng)
         self.layer_separable_convolutional = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
-   #     self.hidden_layer = HiddenLayer(rng)
 
     def load_weights(self):
         # Load weights...
         weights = np.load(self.cached_weights_file)
-        #   sp.io.savemat('temporary.mat', {'w',weights})
         self.cached_weights = []
         for w in reversed(weights):
             self.cached_weights.append(w)
@@ -53,11 +51,10 @@ class CNNTest(CNNBase):
 
         # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784
         test_set_x, test_set_y = datasets
-        # shape of test_set_x is 10000x784
-        #shape of test_set_y is 10000x784
         self.test_set_x = test_set_x.get_value()
         self.test_set_y = test_set_y
 
+        "Image width is the square root of the x dimenstion of the test x data"
         image_width_size = np.sqrt(test_set_x.shape[1].eval()).astype(int);
         self.input_shape = (image_width_size, image_width_size);
 
@@ -65,28 +62,33 @@ class CNNTest(CNNBase):
         # 50000/50 = 1000, 10000/50 = 200
         self.n_test_batches = self.test_set_x.shape[0]
         self.n_test_batches /= self.batch_size
-        print 'nbr batches, batch size ', self.n_test_batches, self.batch_size
+        logging.debug('nbr batches %d, batch size %d' % (self.n_test_batches, self.batch_size))
         print self.test_set_y
 
         print 'Running test'
         timings = []
+	resultlist = [dict() for x in xrange(self.n_test_batches)]
         test_losses = np.zeros((self.n_test_batches, 1))
         for batch_index in xrange(self.n_test_batches):
                print 'batch nr', batch_index
                # Create tine object
                cnn_time = CNNTime()
                start = time.time()
-               test_losses[batch_index] = self.process_batch(batch_index, cnn_time)
+               
+               resultlist[batch_index] = self.process_batch(batch_index, cnn_time)
+               
                endt = (time.time() - start)*1000/(self.batch_size)
                cnn_time.t_total = round(endt, 2)
                print cnn_time.to_string()
                logging.debug(cnn_time.to_string())
                timings.append(cnn_time)
+               
+               self.compute_batch_error(resultlist[batch_index])
 
         self.log_cnn_time_summary(timings)
         self.log_fit_info()
-        test_score = np.mean(test_losses)
-        test_score *= 100
+        
+        test_score = self.compute_all_saples_error(resultlist)
         print ' Test error of best ', test_score
         logging.debug('Test error: ' + str(test_score))
 
@@ -97,10 +99,11 @@ class CNNTest(CNNBase):
         self.x = self.test_set_x[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
         self.y = self.test_set_y[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
 
-        layer_input = self.x.reshape((self.batch_size, 1, self.input_shape[0], self.input_shape[1]))
+        nbr_feature_maps = 1
+        layer_input = self.x.reshape((self.batch_size, nbr_feature_maps, 
+				      self.input_shape[0], self.input_shape[1]))
         pooled_W = self.input_shape[0];
         pooled_H = self.input_shape[1];
-        nbr_feature_maps = 1
         iter = 0
 
         other = (time.time() - start)*1000 / self.batch_size
@@ -178,11 +181,11 @@ class CNNTest(CNNBase):
         cnn_time.t_non_conv_layers = (time.time() - start)*1000 / self.batch_size
         cnn_time.t_non_conv_layers = round(cnn_time.t_non_conv_layers, 2)
 
-        result =  self.error_measure() #output_layer.VOC_values(self.y)
-        print 'result is ', result.eval()
-        return result.eval()
+        return self.output_layer.result_count_dictionary(self.y)
+
     def log_fit_info(self):
-        iter = 0
+        " Logs the fit of the separable filters for the separable layers."
+	iter = 0
         for clayer_params in self.convolutional_layers:
            if clayer_params.HasField('rank') == False:
                logging.debug('-')
@@ -226,8 +229,10 @@ class CNNTest(CNNBase):
         logging.debug(' non conv layers : ' + str(t_non_conv_layers))
         logging.debug(' total avg image time : ' + str(t_total))
 
-    def error_measure(self):
+    def compute_batch_error(self, batch_result_dict):
 	raise NotImplementedError() 
+    def compute_all_samples_error(self, all_samples_result):
+	raise NotImplementedError()
 ## Store average timing per batch
 class CNNTime:
     def __init__(self):
