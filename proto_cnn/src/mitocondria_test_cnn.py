@@ -24,6 +24,10 @@ from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
 
 class CNNTestVOCMitocondria(CNNTestVOC):
+	def __init__(self, protofile, cached_weights_file, frame = None):
+		self.frame = frame
+		super(CNNTestVOCMitocondria, self).__init__(protofile, cached_weights_file)
+
 	def load_samples(self, frame = None):
 	     path_to_data = '../data/' 
              if frame != None:

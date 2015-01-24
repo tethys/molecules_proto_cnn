@@ -99,7 +99,7 @@ class CNNBase(object):
         # add calendar day information
         # add hour information
         # add extension
-	logger_filename = "%s_%d_%d_%d_%d_%d_%d.log" % (file_path, d.day, d.month, d.year,
+	logger_filename = "%s_%s_%d_%d_%d_%d_%d_%d.log" % (file_path, self.cnntype, d.day, d.month, d.year,
 							d.hour, d.minute, d.second)
         logging.basicConfig(filename=logger_filename, level=logging.DEBUG)
 

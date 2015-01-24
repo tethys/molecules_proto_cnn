@@ -40,8 +40,11 @@ def main():
     	cnn.build_model()
     	cnn.test_model()
     if results.mode == 3:
-      cnn = CNNTestVOCMitocondria(results.prototxt_file, results.cached_weights_file)
-      cnn.compute_test_error()
+      for i in xrange(360):
+         print 'Frame number ', i
+         cnn = CNNTestVOCMitocondria(results.prototxt_file, results.cached_weights_file, i)
+         cnn.compute_test_error()
+      end	
 
 if __name__ == '__main__':
     main()

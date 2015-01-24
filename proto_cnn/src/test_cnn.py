@@ -26,6 +26,7 @@ from mlp import HiddenLayer
 class CNNTest(CNNBase):
     def __init__(self, cnn_settings_protofile, cached_weights_file):
         """ Update parameters from protobuffer file"""
+        self.cnntype = 'TEST'
         super(CNNTest, self).__init__(cnn_settings_protofile, cached_weights_file)
 	self.load_weights()
 

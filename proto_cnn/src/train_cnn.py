@@ -29,7 +29,10 @@ class CNNTrain(CNNBase):
     """ The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
     """
-
+    def __init__(self, protofile, cached_weights):
+	self.cnntype = 'TRAIN'
+	super(CNNTrain, self).__init__(protofile, cached_weights)
+    
     def build_model(self):
 	# Fixed rng, make the results repeatable
 
