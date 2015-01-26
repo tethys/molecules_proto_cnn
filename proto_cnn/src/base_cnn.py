@@ -140,5 +140,5 @@ class CNNBase(object):
             print 'weight array size ', len(w)
         print 'cached weights size is ', len(self.cached_weights)
     
-   def load_samples(self):
+    def load_samples(self):
 	raise NotImplementedError()

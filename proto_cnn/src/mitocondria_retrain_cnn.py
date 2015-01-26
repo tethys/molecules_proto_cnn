@@ -31,7 +31,7 @@ class CNNRetrainVOCMitocondria(CNNRetrainVOC):
     """
     def __init__(self, cnn_settings_protofile, cached_weights_file, small_set):
 	self.small_set = small_set	
-	super(CNNTrainVOCMitocondria, self).__init__(cnn_settings_protofile, cached_weights_file)
+	super(CNNRetrainVOCMitocondria, self).__init__(cnn_settings_protofile, cached_weights_file)
 
     def load_samples(self):
 	print 'Value of small set is ', self.small_set

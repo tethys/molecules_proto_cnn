@@ -166,6 +166,6 @@ class CNNRetrainVOC(CNNRetrain):
 
     def save_parameters(self):
           weights = [i.get_value(borrow=True) for i in self.best_params]
-          numpy.save(self.cached_weights_file, weights)
+          numpy.save(self.cached_weights_file +'retrain.npy', weights)
 
 

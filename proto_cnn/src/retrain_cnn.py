@@ -30,8 +30,8 @@ class CNNRetrain(CNNBase):
         settings, trains the network and saves the weights in a file
     """
     def __init__(self, protofile, cached_weights):
-	self.cnntype = 'TRAIN'
-	super(CNNTrain, self).__init__(protofile, cached_weights)
+	self.cnntype = 'RETRAIN'
+	super(CNNRetrain, self).__init__(protofile, cached_weights)
 	self.load_weights()
     
     def build_model(self):
@@ -72,7 +72,8 @@ class CNNRetrain(CNNBase):
         # BUILD ACTUAL MODEL #
         ######################
         print 'Building the model ...'
-
+	for i in xrange(len(self.cached_weights)):
+		self.cached_weights[i] = theano.shared(self.cached_weights[i])
         # The input is an 4D array of size, number of images in the batch size, number of channels
 	# (or number of feature maps), image width and height.
 	nbr_feature_maps = 1
@@ -89,7 +90,7 @@ class CNNRetrain(CNNBase):
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                      clayer_params.filter_w, clayer_params.filter_w),
                                        poolsize=(self.poolsize, self.poolsize),
-                                       W = self.cached_weights[iter + 1], self.cached_weights[iter])
+                                       W = self.cached_weights[iter + 1], b = self.cached_weights[iter])
 	    iter = iter + 2
             clayers.append(layer)
             pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize;
@@ -106,7 +107,7 @@ class CNNRetrain(CNNBase):
         for hlayer_params in self.hidden_layers:
             print 'Adding hidden layer fully connected %d' % (hlayer_params.num_outputs)
             layer = HiddenLayer(self.rng, input=layer_input, n_in=nbr_input,
-                         n_out = hlayer_params.num_outputs, activation=T.tanh
+                         n_out = hlayer_params.num_outputs, activation=T.tanh,
                          W = self.cached_weights[iter +1], b = self.cached_weights[iter])
             nbr_input = hlayer_params.num_outputs;
             layer_input = layer.output

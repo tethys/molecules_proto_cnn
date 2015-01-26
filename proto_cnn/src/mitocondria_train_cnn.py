@@ -30,8 +30,8 @@ class CNNTrainVOCMitocondria(CNNTrainVOC):
         settings, trains the network and saves the weights in a file
     """
     def __init__(self, cnn_settings_protofile, cached_weights_file, small_set):
+	self.small_set = small_set	
 	super(CNNTrainVOCMitocondria, self).__init__(cnn_settings_protofile, cached_weights_file)
-	self.small_set = True	
 
     def load_samples(self):
 	print 'Value of small set is ', self.small_set
@@ -45,9 +45,11 @@ class CNNTrainVOCMitocondria(CNNTrainVOC):
      	 	valid_set_y = np.load(path_to_data +'valid_set_y_20000_51.npy')
         else:
      	 	train_set_x = np.load(path_to_data + 'train_set_x_1000000_51.npy')
+	#	train_set_x = train_set_x[0:300000,:]
      	 	train_set_y = np.load(path_to_data + 'train_set_y_1000000_51.npy')
      	 	valid_set_x = np.load(path_to_data + 'valid_set_x_200000_51.npy')
-     	 	valid_set_y = np.load(path_to_data +'valid_set_y_200000_51.npy')
+	#	train_set_y = train_set_y[0:300000]
+     	 	valid_set_y = np.load(path_to_data + 'valid_set_y_200000_51.npy')
      
         test_set_x = np.load(path_to_data +'test_set_x_fr1_51.npy')
         test_set_y = np.load(path_to_data +'test_set_y_fr1_51.npy')
