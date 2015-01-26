@@ -44,7 +44,11 @@ def main():
          print 'Frame number ', i
          cnn = CNNTestVOCMitocondria(results.prototxt_file, results.cached_weights_file, i)
          cnn.compute_test_error()
-      end	
+      end
+    if results.mode == 4:
+	cnn = CNNRetrainVOCMitocondria(results.prototxt_file, results.cached_weights_file, True)	
+        cnn.build_model()
+        cnn.test_model()
 
 if __name__ == '__main__':
     main()
