@@ -29,7 +29,7 @@ class CNNTrainTPmnist(CNNTrainTP):
     """ The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
     """
-    def __init__(self, cnn_settings_protofile, cached_weights_file, small_set):
+    def __init__(self, cnn_settings_protofile, cached_weights_file, small_set = True):
 	self.small_set = small_set	
 	super(CNNTrainTPmnist, self).__init__(cnn_settings_protofile, cached_weights_file)
 
@@ -61,9 +61,29 @@ class CNNTrainTPmnist(CNNTrainTP):
     	#train_set, valid_set, test_set format: tuple(input, target)
     	#input is an numpy.ndarray of 2 dimensions (a matrix)
     	#witch row's correspond to an example. target is a
-    	test_set_x, test_set_y = shared_dataset(test_set)
-    	valid_set_x, valid_set_y = shared_dataset(valid_set)
-    	train_set_x, train_set_y = shared_dataset(train_set)
+    	if self.small_data == False:
+		# Upscale the data
+    		N = 10000
+    		tmp_images = np.zeros((N, 56,56))
+    		for i in range(N):
+        		tmp_images[i,:,:] = scipy.misc.imresize(test_set[0][i,:,:], (56,56)) 
+    		test_set_2 = (tmp_images, test_set[1])
+    		test_set_x, test_set_y = shared_dataset(test_set_2)
+    		N = 10000
+    		tmp_images = np.zeros((N, 56,56))
+    		for i in range(N):
+        		tmp_images[i,:,:] = scipy.misc.imresize(valid_set[0][i,:,:], (56,56), interp='nearest') 
+    		valid_set_x, valid_set_y = shared_dataset((tmp_images, valid_set[1]))
+    		N = 60000
+    		tmp_images = np.zeros((N, 56,56))
+    		for i in range(N):
+        		tmp_images[i,:,:] = scipy.misc.imresize(train_set[0][i,:,:], (56,56), interp='nearest')   
+    
+    		train_set_x, train_set_y = shared_dataset((tmp_images, train_set[1]))
+	else:
+		test_set_x, test_set_y = shared_dataset(test_set)
+    		valid_set_x, valid_set_y = shared_dataset(valid_set)
+    		train_set_x, train_set_y = shared_dataset(train_set)
 
     	rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
             (test_set_x, test_set_y)]
