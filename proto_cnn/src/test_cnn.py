@@ -34,14 +34,6 @@ class CNNTest(CNNBase):
         self.layer_convolutional = LeNetLayerConvPoolNonSymbolic(self.rng)
         self.layer_separable_convolutional = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
 
-    def load_weights(self):
-        # Load weights...
-        weights = np.load(self.cached_weights_file)
-        self.cached_weights = []
-        for w in reversed(weights):
-            self.cached_weights.append(w)
-            print 'weight array size ', len(w)
-        print 'cached weights size is ', len(self.cached_weights)
 
 
     def compute_test_error(self):
@@ -80,7 +72,7 @@ class CNNTest(CNNBase):
                
                endt = (time.time() - start)*1000/(self.batch_size)
                cnn_time.t_total = round(endt, 2)
-               print cnn_time.to_string()
+               print 'Batch time ', cnn_time.to_string()
                logging.debug(cnn_time.to_string())
                timings.append(cnn_time)
                
@@ -90,7 +82,7 @@ class CNNTest(CNNBase):
         self.log_fit_info()
         
         test_score = self.compute_all_saples_error(resultlist)
-        print ' Test error of best ', test_score
+        print ' Test error of best ', test_score*100
         logging.debug('Test error: ' + str(test_score))
 
 
@@ -107,8 +99,7 @@ class CNNTest(CNNBase):
         pooled_H = self.input_shape[1];
         iter = 0
 
-        other = (time.time() - start)*1000 / self.batch_size
-        print 'other time {0} in ms '.format(other)
+        start = time.time()
         for clayer_params in self.convolutional_layers:
            if clayer_params.HasField('rank') == False:
            #     print 'Iter ', iter
@@ -132,11 +123,7 @@ class CNNTest(CNNBase):
                 cnn_time.t_convolution.append(round(self.layer_convolutional.convolutional_time,2))
                 cnn_time.t_downsample_activation.append(round(self.layer_convolutional.downsample_time,2))
                 endt = (time.time() - startl)*1000/self.batch_size
-                print 'layer time ', endt
-                startl = time.time()
-                tt = layer_output
-                endl = (time.time() - startl)*1000/self.batch_size
-                print 'copy time ', endl
+                print 'layer time %.2f' % endt
            else:
          #       print 'Separable ', iter
                 layer_output = self.layer_separable_convolutional.run_batch(
@@ -156,10 +143,8 @@ class CNNTest(CNNBase):
            layer_input = layer_output;
            nbr_feature_maps = clayer_params.num_filters;
            iter += 2
-           other = (time.time() - start)*1000 / self.batch_size
-           print 'other time {0} in ms '.format(other)
-        other = (time.time() - start)*1000 / self.batch_size
-        print 'other time {0} in ms '.format(other)
+        endt = (time.time() - start)*1000 / self.batch_size
+        print 'total layers time %.2f in ms ' % endt
 
         # construct a fully-connected sigmoidal layer
         start = time.time()

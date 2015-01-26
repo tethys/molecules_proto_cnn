@@ -114,7 +114,7 @@ class CNNTrainVOC(CNNTrain):
                           # save best validation score and iteration number
                           best_validation_loss = this_validation_loss
                           self.best_params = self.params
-
+          		  self.save_parameters()
                           # test it on the test set
                           test_score = self.compute_test_VOC_loss()
                           logging.info(('     epoch %i, minibatch %i/%i, test error of best '

@@ -131,5 +131,14 @@ class CNNBase(object):
         	# lets ous get around this issue
        	return shared_x, T.cast(shared_y, 'int32')
 
-    def load_samples(self):
+    def load_weights(self):
+        # Load weights...
+        weights = np.load(self.cached_weights_file)
+        self.cached_weights = []
+        for w in reversed(weights):
+            self.cached_weights.append(w)
+            print 'weight array size ', len(w)
+        print 'cached weights size is ', len(self.cached_weights)
+    
+   def load_samples(self):
 	raise NotImplementedError()
