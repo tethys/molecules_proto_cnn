@@ -134,3 +134,16 @@ class CNNRetrain(CNNBase):
 
     def retrain_model(self):
 	raise NotImplementedError()
+    def save_parameters(self):
+          weights = [i.get_value(borrow=True) for i in self.best_params]
+	  ## add here the interleaved convolutional layers
+          nbr_hidden_layers = size(hlayers)
+	  toskip = 1 + nbr_hidden_layers * 2
+	  retrainedw = []
+	  for i in xrange(toskip):
+		retrainedw.append(weights[i])          
+          for c in xrange(size(clayers)):
+                retrainedw.append(self.cached_weights[2*c + 1])
+		retrainedw.append(weights[toskip])
+		toskip++
+          numpy.save(self.cached_weights_file +'retrain.npy', weights)

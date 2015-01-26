@@ -25,7 +25,7 @@ from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
 
 
-class CNNRetrainVOC(CNNRetrain):
+class CNNRetrainTP(CNNRetrain):
     """ The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
     """
@@ -130,7 +130,7 @@ class CNNRetrainVOC(CNNRetrain):
           mean_training_time /= cnt_times
           print 'running_times %f', mean_training_time
 	  logging.info(('running time %f' % (mean_training_time)))
-    def compute_validation_VOC_loss(self):
+    def compute_validation_loss(self):
 	  # works for 0-1 loss
 	  all_y_pred = numpy.empty([])
 	  for i in xrange(self.n_valid_batches):
@@ -140,14 +140,11 @@ class CNNRetrainVOC(CNNRetrain):
 		else:
          	        all_y_pred = numpy.concatenate((all_y_pred, y_pred))
 	  print all_y_pred
-
-          F = T.sum(T.neq(self.valid_set_y, all_y_pred))
-          TP = T.sum(T.and_(T.eq(self.valid_set_y, 1), T.eq(all_y_pred, 1)))
-	  result =  TP/T.cast(TP+F, theano.config.floatX)
+	  result = T.mean(T.neq(self.test_set_y, all_y_pred))
           print 'Print result is ', result.eval()
-	  return result.eval() 
+	  return 1.0 - result.eval() 
 
-    def compute_test_VOC_loss(self):
+    def compute_test_loss(self):
 	  # works for 0-1 loss
           all_y_pred = numpy.empty([])
 	  for i in xrange(self.n_test_batches):
@@ -158,11 +155,7 @@ class CNNRetrainVOC(CNNRetrain):
          	    all_y_pred = numpy.concatenate((all_y_pred, y_pred))
           print all_y_pred
 	  print all_y_pred.shape
-	  F = T.sum(T.neq(self.test_set_y, all_y_pred))
-          TP = T.sum(T.and_(T.eq(self.test_set_y, 1), T.eq(all_y_pred, 1)))
-	  result =  TP/T.cast(TP+F, theano.config.floatX)
+	  result = T.mean(T.neq(self.test_set_y, all_y_pred))
           print 'Print result is ', result.eval()
-	  return result.eval() 
-
-
+	  return 1.0 - result.eval() 
 
