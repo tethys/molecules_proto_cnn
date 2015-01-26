@@ -114,3 +114,4 @@ class LeNetConvPoolLayer(object):
 
         # store parameters of this layer
         self.params = [self.W, self.b]
+        self.b_params = [self.b]

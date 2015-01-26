@@ -9,6 +9,7 @@ Created on Tue Oct 21 16:19:55 2014
 import argparse
 import sys
 from mitocondria_train_cnn import CNNTrainVOCMitocondria
+from mitocondria_retrain_cnn import CNNRetrainVOCMitocondria
 from mitocondria_test_cnn import CNNTestVOCMitocondria
 from cnn_separable_non_symbolic import ConvolutionalNeuralNetworkNonSymbolic;
 from convolutional_nnet_train import ConvolutionalNeuralNetworkTrain;
@@ -48,7 +49,7 @@ def main():
     if results.mode == 4:
 	cnn = CNNRetrainVOCMitocondria(results.prototxt_file, results.cached_weights_file, True)	
         cnn.build_model()
-        cnn.test_model()
+        cnn.retrain_model()
 
 if __name__ == '__main__':
     main()

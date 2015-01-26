@@ -126,9 +126,8 @@ class CNNRetrain(CNNBase):
         self.params = self.output_layer.params
         for hl in reversed(hlayers):
             self.params += hl.params
-        #for cl in reversed(clayers):
-        #    self.params += cl.params
-
+        for cl in reversed(clayers):
+            self.params += cl.b_params
 
         # create a list of gradients for all model parameters
         self.grads = T.grad(self.cost, self.params)
