@@ -31,9 +31,6 @@ class CNNTest(CNNBase):
 	self.load_weights()
 
         ## Create Layers
-        self.layer_convolutional = LeNetLayerConvPoolNonSymbolic(self.rng)
-        self.layer_separable_convolutional = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
-
 
 
     def compute_test_error(self):
@@ -76,7 +73,8 @@ class CNNTest(CNNBase):
                logging.debug(cnn_time.to_string())
                timings.append(cnn_time)
                
-               self.compute_batch_error(resultlist[batch_index])
+               err = self.compute_batch_error(resultlist[batch_index])
+	       print 'Batch error ', err
 
         self.log_cnn_time_summary(timings)
         self.log_fit_info()
@@ -84,7 +82,7 @@ class CNNTest(CNNBase):
         test_score = self.compute_all_saples_error(resultlist)
         print ' Test error of best ', test_score*100
         logging.debug('Test error: ' + str(test_score))
-
+	return test_score
 
     def process_batch(self, batch_index, cnn_time):
         """ Process one single batch"""
@@ -104,7 +102,9 @@ class CNNTest(CNNBase):
            if clayer_params.HasField('rank') == False:
            #     print 'Iter ', iter
                 startl = time.time()
-                layer_output = self.layer_convolutional.run_batch(layer_input,
+                layer_convolutional = LeNetLayerConvPoolNonSymbolic(self.rng)
+        #self.layer_separable_convolutional = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
+                layer_output = layer_convolutional.run_batch(layer_input,
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                      clayer_params.filter_w, clayer_params.filter_w),
@@ -120,8 +120,8 @@ class CNNTest(CNNBase):
 #                                        b = theano.shared(self.cached_weights[iter]))
               #  print 'LAYER OUTPUT IS'
               #  print layer_output
-                cnn_time.t_convolution.append(round(self.layer_convolutional.convolutional_time,2))
-                cnn_time.t_downsample_activation.append(round(self.layer_convolutional.downsample_time,2))
+                cnn_time.t_convolution.append(round(layer_convolutional.convolutional_time,2))
+                cnn_time.t_downsample_activation.append(round(layer_convolutional.downsample_time,2))
                 endt = (time.time() - startl)*1000/self.batch_size
                 print 'layer time %.2f' % endt
            else:

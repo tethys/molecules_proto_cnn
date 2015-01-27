@@ -13,6 +13,8 @@ import os
 import time
 import theano.tensor as T
 import theano
+import misc
+import patches
 
 from google.protobuf import text_format
 
@@ -28,9 +30,9 @@ class CNNTestVOCMitocondria(CNNTestVOC):
 		self.frame = frame
 		super(CNNTestVOCMitocondria, self).__init__(protofile, cached_weights_file)
 
-	def load_samples(self, frame = None):
+	def load_samples(self):
 	     path_to_data = '../data/' 
-             if frame != None:
+             if self.frame != None:
     	 	Vtest = (misc.tiffread(path_to_data + 'Volume_test.tif')/255.0)
     		Gtest = (misc.tiffread(path_to_data + 'Ground_truth_test.tif'))
     	 	Gtest[Gtest==255] = 1
@@ -38,9 +40,9 @@ class CNNTestVOCMitocondria(CNNTestVOC):
          	gap = (areasize -1)/2
 
         	# Extract all 51x51 patches from testing data
-       	 	centers = patches.grid_patches_centers(Vtest[frame,:,:].shape, (areasize,areasize))
-         	test_set_x = patches.get_many_patches(Vtest[frame,:,:], (areasize,areasize), centers, flat=True)
-         	test_set_y = Gtest[frame][centers[:,0], centers[:,1]]
+       	 	centers = patches.grid_patches_centers(Vtest[self.frame,:,:].shape, (areasize,areasize))
+         	test_set_x = patches.get_many_patches(Vtest[self.frame,:,:], (areasize,areasize), centers, flat=True)
+         	test_set_y = Gtest[self.frame][centers[:,0], centers[:,1]]
          	print 'Test set shape ', test_set_x.shape
 	     else:
      	 	test_set_x = np.load(path_to_data +'test_set_x_fr1_51.npy')
