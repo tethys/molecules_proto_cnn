@@ -11,8 +11,6 @@ import datetime
 import logging
 import numpy as np
 import os
-import scipy
-import time
 
 import theano
 import theano.tensor as T
@@ -29,6 +27,7 @@ class CNNBase(object):
         # Filename of the .npy file where the trained weights will be saved.
         self.cached_weights_file = cached_weights_file
         self.initialize_logger()
+        self.cached_weights = []
         # Create protobuff empty object
         settings = pb_cnn.CNNSettings()
         try:
@@ -43,10 +42,12 @@ class CNNBase(object):
             self.create_layers_from_settings(settings)
             proto_file.close()
         except IOError:
-           print "Could not open file " + cnn_settings_protofile
-           self.rng = np.random.RandomState(23455)
-    
+            print "Could not open file " + cnn_settings_protofile
+            self.rng = np.random.RandomState(23455)
+
     def create_layers_from_settings(self, settings):
+        """ Takes as input the settings parsed from the proto file
+            and sets up the CNN configuration."""
         # Default values for optional parameters
         self.learning_rate = 0.1
         self.n_epochs = 100
@@ -77,9 +78,9 @@ class CNNBase(object):
         self.convolutional_layers = []
         self.hidden_layers = []
         for layer in settings.conv_layer:
-              self.convolutional_layers.append(layer)
+            self.convolutional_layers.append(layer)
         for layer in settings.hidden_layer:
-              self.hidden_layers.append(layer)
+            self.hidden_layers.append(layer)
 
         # required at least one layer
         self.last_layer = settings.last_layer
@@ -89,14 +90,17 @@ class CNNBase(object):
         self.cost_function = settings.cost_function
 
     def initialize_logger(self):
-    # The log file is saved in the same folder of the cached weights file
-        (file_path, extension) = os.path.splitext(self.cached_weights_file)
-        d = datetime.datetime.now()
+        """ Initializes the logging level and the logger
+            name based on the path of the weights file"""
+        # The log file is saved in the same folder of the cached weights file
+        file_path = os.path.splitext(self.cached_weights_file)[0]
+        current_time = datetime.datetime.now()
         # add calendar day information
         # add hour information
         # add extension
-        logger_filename = "%s_%s_%d_%d_%d_%d_%d_%d.log" % (file_path, self.cnntype, d.day, d.month, d.year,
-                            d.hour, d.minute, d.second)
+        logger_filename = "%s_%s_%d_%d_%d_%d_%d_%d.log" % (file_path, self.cnntype, 
+                            current_time.day, current_time.month, current_time.year,
+                            current_time.hour, current_time.minute, current_time.second)
         logging.basicConfig(filename=logger_filename, level=logging.DEBUG)
 
     def shared_dataset(self, data_xy, borrow=True):
@@ -110,10 +114,10 @@ class CNNBase(object):
         data_x, data_y = data_xy
         shared_x = theano.shared(np.asarray(data_x,
                                             dtype=theano.config.floatX),
-                                            borrow=borrow)
+                                 borrow=borrow)
         shared_y = theano.shared(np.asarray(data_y,
                                             dtype=theano.config.floatX),
-                                            borrow=borrow)
+                                 borrow=borrow)
             # When storing data on the GPU it has to be stored as floats
             # therefore we will store the labels as ``floatX`` as well
             # (``shared_y`` does exactly that). But during our computations
@@ -126,13 +130,17 @@ class CNNBase(object):
         return shared_x, T.cast(shared_y, 'int32')
 
     def load_weights(self):
-        # Load weights...
-        weights = np.load(self.cached_weights_file)
-        self.cached_weights = []
-        for w in reversed(weights):
-            self.cached_weights.append(w)
-            print 'weight array size ', len(w)
+        """ Load weights from .npy file. The weights are stored in reverse order:
+            b3 W3, b2 W2, b1 W1
+        """
+        all_weights = np.load(self.cached_weights_file)
+        for weight in reversed(all_weights):
+            self.cached_weights.append(weight)
+            print 'weight array size ', len(weight)
         print 'cached weights size is ', len(self.cached_weights)
 
     def load_samples(self):
+        """ Abstract method which is implemented by derived classes.
+            Loads trin, test and validation samples
+        """
         raise NotImplementedError()
