@@ -85,7 +85,7 @@ class CNNTrainTP(CNNTrain):
           while (epoch < self.n_epochs) and (not done_looping):
               epoch = epoch + 1
               for minibatch_index in xrange(self.n_train_batches):
-		  # The model will process the iter batch
+          # The model will process the iter batch
                   iter = (epoch - 1) * self.n_train_batches + minibatch_index
 
                   if iter % 100 == 0:
@@ -95,7 +95,7 @@ class CNNTrainTP(CNNTrain):
                   end = time.time()
                   mean_training_time += end - start
                   cnt_times += 1
-		  logging.info('cost %f, VOC %f' % (train_cost, train_voc_values))
+                  logging.info('cost %f, VOC %f' % (train_cost, train_voc_values))
 
                   if (iter + 1) % 1000 == 0: #validation_frequency == 0:
 
@@ -114,7 +114,7 @@ class CNNTrainTP(CNNTrain):
                           # save best validation score and iteration number
                           best_validation_loss = this_validation_loss
                           self.best_params = self.params
-          		  self.save_parameters()
+                          self.save_parameters()
                           # test it on the test set
                           test_score = self.compute_test_VOC_loss()
                           logging.info(('     epoch %i, minibatch %i/%i, test error of best '
@@ -129,39 +129,43 @@ class CNNTrainTP(CNNTrain):
           self.save_parameters()
           mean_training_time /= cnt_times
           print 'running_times %f', mean_training_time
-	  logging.info(('running time %f' % (mean_training_time)))
+          logging.info(('running time %f' % (mean_training_time)))
+
     def compute_validation_loss(self):
-	  # works for 0-1 loss
-	  all_y_pred = numpy.empty([])
-	  for i in xrange(self.n_valid_batches):
-		[y_pred] = self.validate_model(i)
-		if i == 0:
-			all_y_pred = y_pred
-		else:
-         	        all_y_pred = numpy.concatenate((all_y_pred, y_pred))
-	  print all_y_pred
-	  print all_y_pred.shape
-	  result = T.mean(T.neq(self.test_set_y, all_y_pred))
-          print 'Print result is ', result.eval()
-	  return 1.0 - result.eval() 
+        """ Computes validation loss"""
+        # works for 0-1 loss
+        all_y_pred = numpy.empty([])
+        for i in xrange(self.n_valid_batches):
+            [y_pred] = self.validate_model(i)
+            if i == 0:
+                all_y_pred = y_pred
+            else:
+                all_y_pred = numpy.concatenate((all_y_pred, y_pred))
+        print all_y_pred
+        print all_y_pred.shape
+        result = T.mean(T.neq(self.test_set_y, all_y_pred))
+        print 'Print result is ', result.eval()
+        return 1.0 - result.eval() 
 
     def compute_test_error_loss(self):
-	  # works for 0-1 loss
-          all_y_pred = numpy.empty([])
-	  for i in xrange(self.n_test_batches):
-		[y_pred, test_loss] = self.test_model(i)
-		if i==0:
-		    all_y_pred = y_pred
-		else:
-         	    all_y_pred = numpy.concatenate((all_y_pred, y_pred))
-          print all_y_pred
-	  print all_y_pred.shape
-	  result = T.mean(T.neq(self.test_set_y, all_y_pred))
-          print 'Print result is ', result.eval()
-	  return 1.0 - result.eval() 
+        """ Computes error rate """
+        # works for 0-1 loss
+        all_y_pred = numpy.empty([])
+        for i in xrange(self.n_test_batches):
+            [y_pred, test_loss] = self.test_model(i)
+            if i==0:
+                all_y_pred = y_pred
+            else:
+                 all_y_pred = numpy.concatenate((all_y_pred, y_pred))
+        print all_y_pred
+        print all_y_pred.shape
+        result = T.mean(T.neq(self.test_set_y, all_y_pred))
+        print 'Print result is ', result.eval()
+        return 1.0 - result.eval() 
 
     def save_parameters(self):
-          weights = [i.get_value(borrow=True) for i in self.best_params]
-          numpy.save(self.cached_weights_file, weights)
+        """ saves the weights to a file """
+        weights = [i.get_value(borrow=True) for i in self.best_params]
+        numpy.save(self.cached_weights_file, weights)
 
 
