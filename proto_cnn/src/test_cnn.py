@@ -18,13 +18,17 @@ from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
 
 class CNNTest(CNNBase):
+    """ The class is responsible for creating the layers of the network.
+        The loading of the data and the type of the error used is defined in
+        derived classes."""
     def __init__(self, cnn_settings_protofile, cached_weights_file):
         """ Update parameters from protobuffer file"""
         self.cnntype = 'TEST'
         super(CNNTest, self).__init__(cnn_settings_protofile, cached_weights_file)
         self.load_weights()
         ## Create Layers
-
+        self.test_set_x = None
+        self.test_set_y = None
 
     def compute_test_error(self):
         """Loop through the batches and run process_batch"""
@@ -37,7 +41,7 @@ class CNNTest(CNNBase):
         self.test_set_x = test_set_x.get_value()
         self.test_set_y = test_set_y
 
-        "Image width is the square root of the x dimenstion of the test x data"
+        #"Image width is the square root of the x dimenstion of the test x data"
         image_width_size = np.sqrt(test_set_x.shape[1].eval()).astype(int)
         self.input_shape = (image_width_size, image_width_size)
 
@@ -83,8 +87,8 @@ class CNNTest(CNNBase):
         layer_input = self.x.reshape((self.batch_size,
                                       nbr_feature_maps,
                                       self.input_shape[0], self.input_shape[1]))
-        pooled_W = self.input_shape[0]
-        pooled_H = self.input_shape[1]
+        pooled_width = self.input_shape[0]
+        pooled_height = self.input_shape[1]
         iter = 0
 
         start = time.time()
@@ -97,14 +101,14 @@ class CNNTest(CNNBase):
                 #LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
                 layer_output = layer_convolutional.run_batch(
                                layer_input,
-                                image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
+                                image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),
                                  filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                      clayer_params.filter_w, clayer_params.filter_w),
                                  W = self.cached_weights[iter + 1],
                                  b = self.cached_weights[iter],
                                  poolsize=(self.poolsize, self.poolsize)).eval()
 #                layer_output = LeNetConvPoolLayer(self.rng, input = layer_input,
-#                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
+#                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),
 #                                       filter_shape=(clayer_params.num_filters, nbr_feature_maps,
 #                                                     clayer_params.filter_w, clayer_params.filter_w),
 #                                       poolsize=(self.poolsize, self.poolsize),
@@ -120,7 +124,7 @@ class CNNTest(CNNBase):
          #       print 'Separable ', iter
                 layer_output = self.layer_separable_convolutional.run_batch(
                                                     layer_input,
-                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
+                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                      clayer_params.filter_w, clayer_params.filter_w),
                                        Pstruct = self.cached_weights[iter + 1],
@@ -128,10 +132,10 @@ class CNNTest(CNNBase):
                                        poolsize=(self.poolsize, self.poolsize))
                 cnn_time.t_convolution.append(round(self.layer_separable_convolutional.t_conv,2))
                 cnn_time.t_downsample_activation.append(round(self.layer_separable_convolutional.t_downsample_activ,2))
-        #   print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
+        #   print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_width, pooled_height
         #   print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
-            pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize
-            pooled_H = (pooled_H - clayer_params.filter_w + 1) / self.poolsize
+            pooled_width = (pooled_width - clayer_params.filter_w + 1) / self.poolsize
+            pooled_height = (pooled_height - clayer_params.filter_w + 1) / self.poolsize
             layer_input = layer_output
             nbr_feature_maps = clayer_params.num_filters
             iter += 2
@@ -140,7 +144,7 @@ class CNNTest(CNNBase):
 
         # construct a fully-connected sigmoidal layer
         start = time.time()
-        nbr_input = nbr_feature_maps * pooled_W * pooled_H ## Why is this SO??
+        nbr_input = nbr_feature_maps * pooled_width * pooled_height ## Why is this SO??
         layer_input = layer_input.reshape((self.batch_size, nbr_input))
         hlayers = []
         for hlayer_params in self.hidden_layers:
@@ -163,23 +167,24 @@ class CNNTest(CNNBase):
 
     def log_fit_info(self):
         " Logs the fit of the separable filters for the separable layers."
-        iter = 0
+        idx = 0
         for clayer_params in self.convolutional_layers:
             if clayer_params.HasField('rank') == False:
                 logging.debug('-')
             else:
                 ## log mean and std of fit per chanel
-                Pstruct = self.cached_weights[iter + 1]
+                Pstruct = self.cached_weights[idx + 1]
                 N = len(Pstruct)
                 fitarray = np.zeros((N,1))
                 for chanel in xrange(N):
                     print Pstruct[chanel]['fit']
                     fitarray[chanel] = Pstruct[chanel]['fit']
-                logging.debug('Fit mean {0}, std {1}'.format(np.mean(fitarray),
-                                                         np.std(fitarray)))
-            iter += 2
+                logging.debug('Fit mean {0}, std {1}'.format(np.mean(fitarray), np.std(fitarray)))
+            idx += 2
 
     def log_cnn_time_summary(self, timings):
+        """ The method takes as input a vector of timings 
+            and aggregates the results"""
         t_convolution = []
         t_downsample_activation = []
         t_non_conv_layers = 0
@@ -196,24 +201,32 @@ class CNNTest(CNNBase):
 
 
         for i in range(N):
-                t_convolution[i] /= self.n_test_batches
-                t_downsample_activation[i] /= self.n_test_batches
+            t_convolution[i] /= self.n_test_batches
+            t_downsample_activation[i] /= self.n_test_batches
         t_total /= self.n_test_batches
         t_non_conv_layers /= self.n_test_batches
         logging.debug('Final average results')
         for i in range(N):
-               logging.debug(' convolution '+ str(i) + ' : ' + str(t_convolution[i]))
-               logging.debug(' downs + activ '+ str(i) + ' : ' + str(t_downsample_activation[i]))
+            logging.debug(' convolution '+ str(i) + ' : ' + str(t_convolution[i]))
+            logging.debug(' downs + activ '+ str(i) + ' : ' + str(t_downsample_activation[i]))
         logging.debug(' non conv layers : ' + str(t_non_conv_layers))
         logging.debug(' total avg image time : ' + str(t_total))
 
     def compute_batch_error(self, batch_result_dict):
-        raise NotImplementedError() 
-    def compute_all_samples_error(self, all_samples_result):
+        """ Abstract method for computing the error per batch (VOC or error rate)"""
         raise NotImplementedError()
+    def compute_all_samples_error(self, all_samples_result):
+        """ Abstract method for computing the error on all test samples"""
+        raise NotImplementedError()
+
+
 ## Store average timing per batch
 class CNNTime(object):
+    """ The class holds the timings for every layer,
+        (e.g. convolutional, hidden) etc """
     def __init__(self):
+        """ For every type of layer there is an array
+            where the timings are added """
         ## Convolution time per layer
         self.t_convolution = []
         ## Downsampling time per layer
@@ -221,6 +234,7 @@ class CNNTime(object):
         self.t_non_conv_layers = 0
         self.t_total = 0
     def to_string(self):
+        """ Printable version the the class contents"""
         return "Time :%s :%s %5.2f %5.2f" % (str(self.t_convolution),
                                          str(self.t_downsample_activation),
                                          self.t_non_conv_layers,
