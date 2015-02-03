@@ -2,19 +2,13 @@
 """
 Created on Mon Nov 24 14:39:22 2014
 
-@author: vivianapetrescu
+@author: vpetresc
 """
 
-import convolutional_neural_network_settings_pb2 as pb_cnn
 import numpy as np
 import logging
-import datetime
-import os
 import time
 import theano.tensor as T
-import theano
-
-from google.protobuf import text_format
 
 from base_cnn import CNNBase
 from lenet_conv_pool_layer import LeNetConvPoolLayer
@@ -28,8 +22,7 @@ class CNNTest(CNNBase):
         """ Update parameters from protobuffer file"""
         self.cnntype = 'TEST'
         super(CNNTest, self).__init__(cnn_settings_protofile, cached_weights_file)
-	self.load_weights()
-
+        self.load_weights()
         ## Create Layers
 
 
@@ -45,8 +38,8 @@ class CNNTest(CNNBase):
         self.test_set_y = test_set_y
 
         "Image width is the square root of the x dimenstion of the test x data"
-        image_width_size = np.sqrt(test_set_x.shape[1].eval()).astype(int);
-        self.input_shape = (image_width_size, image_width_size);
+        image_width_size = np.sqrt(test_set_x.shape[1].eval()).astype(int)
+        self.input_shape = (image_width_size, image_width_size)
 
         # compute number of minibatches for training, validation and testing
         # 50000/50 = 1000, 10000/50 = 200
@@ -57,32 +50,28 @@ class CNNTest(CNNBase):
 
         print 'Running test'
         timings = []
-	resultlist = [dict() for x in xrange(self.n_test_batches)]
+        resultlist = [dict() for x in xrange(self.n_test_batches)]
         test_losses = np.zeros((self.n_test_batches, 1))
         for batch_index in xrange(self.n_test_batches):
-               print 'batch nr', batch_index
-               # Create tine object
-               cnn_time = CNNTime()
-               start = time.time()
-               
-               resultlist[batch_index] = self.process_batch(batch_index, cnn_time)
-               
-               endt = (time.time() - start)*1000/(self.batch_size)
-               cnn_time.t_total = round(endt, 2)
-               print 'Batch time ', cnn_time.to_string()
-               logging.debug(cnn_time.to_string())
-               timings.append(cnn_time)
-               
-               err = self.compute_batch_error(resultlist[batch_index])
-	       print 'Batch error ', err
+            print 'batch nr', batch_index
+            # Create tine object
+            cnn_time = CNNTime()
+            start = time.time()
+            resultlist[batch_index] = self.process_batch(batch_index, cnn_time)
+            endt = (time.time() - start)*1000/(self.batch_size)
+            cnn_time.t_total = round(endt, 2)
+            print 'Batch time ', cnn_time.to_string()
+            logging.debug(cnn_time.to_string())
+            timings.append(cnn_time)
+            err = self.compute_batch_error(resultlist[batch_index])
+            print 'Batch error ', err
 
         self.log_cnn_time_summary(timings)
         self.log_fit_info()
-        
         test_score = self.compute_all_saples_error(resultlist)
         print ' Test error of best ', test_score*100
         logging.debug('Test error: ' + str(test_score))
-	return test_score
+        return test_score
 
     def process_batch(self, batch_index, cnn_time):
         """ Process one single batch"""
@@ -92,9 +81,9 @@ class CNNTest(CNNBase):
 
         nbr_feature_maps = 1
         layer_input = self.x.reshape((self.batch_size, nbr_feature_maps, 
-				      self.input_shape[0], self.input_shape[1]))
-        pooled_W = self.input_shape[0];
-        pooled_H = self.input_shape[1];
+                      self.input_shape[0], self.input_shape[1]))
+        pooled_W = self.input_shape[0]
+        pooled_H = self.input_shape[1]
         iter = 0
 
         start = time.time()
@@ -138,10 +127,10 @@ class CNNTest(CNNBase):
                 cnn_time.t_downsample_activation.append(round(self.layer_separable_convolutional.t_downsample_activ,2))
         #   print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_W, pooled_H
         #   print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
-           pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize;
-           pooled_H = (pooled_H - clayer_params.filter_w + 1) / self.poolsize;
-           layer_input = layer_output;
-           nbr_feature_maps = clayer_params.num_filters;
+           pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize
+           pooled_H = (pooled_H - clayer_params.filter_w + 1) / self.poolsize
+           layer_input = layer_output
+           nbr_feature_maps = clayer_params.num_filters
            iter += 2
         endt = (time.time() - start)*1000 / self.batch_size
         print 'total layers time %.2f in ms ' % endt
@@ -155,7 +144,7 @@ class CNNTest(CNNBase):
             layer = HiddenLayer(self.rng, input=layer_input, n_in=nbr_input,
                          n_out = hlayer_params.num_outputs, activation= T.tanh,
                          W = self.cached_weights[iter +1], b = self.cached_weights[iter])
-            nbr_input = hlayer_params.num_outputs;
+            nbr_input = hlayer_params.num_outputs
             layer_input = layer.output
             hlayers.append(layer)
             iter += 2
@@ -171,7 +160,7 @@ class CNNTest(CNNBase):
 
     def log_fit_info(self):
         " Logs the fit of the separable filters for the separable layers."
-	iter = 0
+        iter = 0
         for clayer_params in self.convolutional_layers:
            if clayer_params.HasField('rank') == False:
                logging.debug('-')
@@ -216,11 +205,11 @@ class CNNTest(CNNBase):
         logging.debug(' total avg image time : ' + str(t_total))
 
     def compute_batch_error(self, batch_result_dict):
-	raise NotImplementedError() 
+        raise NotImplementedError() 
     def compute_all_samples_error(self, all_samples_result):
-	raise NotImplementedError()
+        raise NotImplementedError()
 ## Store average timing per batch
-class CNNTime:
+class CNNTime(object):
     def __init__(self):
         ## Convolution time per layer
         self.t_convolution = []
