@@ -22,6 +22,7 @@ class CNNTrainTP(CNNTrain):
         self.test_model = None
         self.validate_model = None
         self.best_params = None
+
     def train_model(self):
         """ The actual training method """
         # train_model is a function that updates the model parameters by
