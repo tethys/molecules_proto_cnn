@@ -29,6 +29,10 @@ class CNNTest(CNNBase):
         ## Create Layers
         self.test_set_x = None
         self.test_set_y = None
+        self.x = None
+        self.y = None
+        self.input_shape = (0, 0)
+        self.n_test_batches = 0
 
     def compute_test_error(self):
         """Loop through the batches and run process_batch"""
@@ -55,7 +59,6 @@ class CNNTest(CNNBase):
         print 'Running test'
         timings = []
         resultlist = [dict() for x in xrange(self.n_test_batches)]
-        test_losses = np.zeros((self.n_test_batches, 1))
         for batch_index in xrange(self.n_test_batches):
             print 'batch nr', batch_index
             # Create tine object
@@ -89,12 +92,11 @@ class CNNTest(CNNBase):
                                       self.input_shape[0], self.input_shape[1]))
         pooled_width = self.input_shape[0]
         pooled_height = self.input_shape[1]
-        iter = 0
+        idx_weight = 0
 
         start = time.time()
         for clayer_params in self.convolutional_layers:
             if clayer_params.HasField('rank') == False:
-                #     print 'Iter ', iter
                 startl = time.time()
                 layer_convolutional = LeNetLayerConvPoolNonSymbolic(self.rng)
                 #self.layer_separable_convolutional =
@@ -104,8 +106,8 @@ class CNNTest(CNNBase):
                                 image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),
                                  filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                      clayer_params.filter_w, clayer_params.filter_w),
-                                 W = self.cached_weights[iter + 1],
-                                 b = self.cached_weights[iter],
+                                 W = self.cached_weights[idx_weight + 1],
+                                 b = self.cached_weights[idx_weight],
                                  poolsize=(self.poolsize, self.poolsize)).eval()
 #                layer_output = LeNetConvPoolLayer(self.rng, input = layer_input,
 #                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),
@@ -122,23 +124,24 @@ class CNNTest(CNNBase):
                 print 'layer time %.2f' % endt
             else:
          #       print 'Separable ', iter
-                layer_output = self.layer_separable_convolutional.run_batch(
+                layer_separable_convolutional = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
+                layer_output = layer_separable_convolutional.run_batch(
                                                     layer_input,
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                      clayer_params.filter_w, clayer_params.filter_w),
-                                       Pstruct = self.cached_weights[iter + 1],
-                                       b = self.cached_weights[iter],
+                                       Pstruct = self.cached_weights[idx_weight + 1],
+                                       b = self.cached_weights[idx_weight],
                                        poolsize=(self.poolsize, self.poolsize))
-                cnn_time.t_convolution.append(round(self.layer_separable_convolutional.t_conv,2))
-                cnn_time.t_downsample_activation.append(round(self.layer_separable_convolutional.t_downsample_activ,2))
+                cnn_time.t_convolution.append(round(layer_separable_convolutional.t_conv, 2))
+                cnn_time.t_downsample_activation.append(round(layer_separable_convolutional.t_downsample_activ, 2))
         #   print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_width, pooled_height
         #   print 'filter_shape ', clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w
             pooled_width = (pooled_width - clayer_params.filter_w + 1) / self.poolsize
             pooled_height = (pooled_height - clayer_params.filter_w + 1) / self.poolsize
             layer_input = layer_output
             nbr_feature_maps = clayer_params.num_filters
-            iter += 2
+            idx_weight += 2
         endt = (time.time() - start)*1000 / self.batch_size
         print 'total layers time %.2f in ms ' % endt
 
@@ -149,36 +152,38 @@ class CNNTest(CNNBase):
         hlayers = []
         for hlayer_params in self.hidden_layers:
             layer = HiddenLayer(self.rng, input=layer_input, n_in=nbr_input,
-                         n_out = hlayer_params.num_outputs, activation= T.tanh,
-                         W = self.cached_weights[iter +1], b = self.cached_weights[iter])
+                         n_out=hlayer_params.num_outputs, activation=T.tanh,
+                         W=self.cached_weights[idx_weight +1], b=self.cached_weights[idx_weight])
             nbr_input = hlayer_params.num_outputs
             layer_input = layer.output
             hlayers.append(layer)
-            iter += 2
+            idx_weight += 2
 
         # classify the values of the fully-connected sigmoidal layer
-        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, n_out=self.last_layer.num_outputs,
-                                               W = self.cached_weights[iter +1],
-                                               b = self.cached_weights[iter])
+        self.output_layer = LogisticRegression(input=layer_input, n_in=nbr_input,
+                                               n_out=self.last_layer.num_outputs,
+                                               W=self.cached_weights[idx_weight + 1],
+                                               b=self.cached_weights[idx_weight])
         cnn_time.t_non_conv_layers = (time.time() - start)*1000 / self.batch_size
         cnn_time.t_non_conv_layers = round(cnn_time.t_non_conv_layers, 2)
 
         return self.output_layer.result_count_dictionary(self.y)
 
     def log_fit_info(self):
-        " Logs the fit of the separable filters for the separable layers."
+        """ Logs the fit of the separable filters for the separable layers.
+            The information is stored in the numpy arrays"""
         idx = 0
         for clayer_params in self.convolutional_layers:
             if clayer_params.HasField('rank') == False:
                 logging.debug('-')
             else:
                 ## log mean and std of fit per chanel
-                Pstruct = self.cached_weights[idx + 1]
-                N = len(Pstruct)
-                fitarray = np.zeros((N,1))
+                sep_filters_struct = self.cached_weights[idx + 1]
+                N = len(sep_filters_struct)
+                fitarray = np.zeros((N, 1))
                 for chanel in xrange(N):
-                    print Pstruct[chanel]['fit']
-                    fitarray[chanel] = Pstruct[chanel]['fit']
+                    print sep_filters_struct[chanel]['fit']
+                    fitarray[chanel] = sep_filters_struct[chanel]['fit']
                 logging.debug('Fit mean {0}, std {1}'.format(np.mean(fitarray), np.std(fitarray)))
             idx += 2
 
@@ -236,6 +241,6 @@ class CNNTime(object):
     def to_string(self):
         """ Printable version the the class contents"""
         return "Time :%s :%s %5.2f %5.2f" % (str(self.t_convolution),
-                                         str(self.t_downsample_activation),
-                                         self.t_non_conv_layers,
-                                         self.t_total)
+                                             str(self.t_downsample_activation),
+                                             self.t_non_conv_layers,
+                                             self.t_total)
