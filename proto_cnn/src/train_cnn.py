@@ -17,8 +17,13 @@ from mlp import HiddenLayer
 
 
 class CNNTrain(CNNBase):
-    """ The class takes a proto bufer as input, setups a CNN according to the
+    """The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
+
+    Args:
+
+    Returns:
+
     """
     def __init__(self, protofile, cached_weights):
         self.cnntype = 'TRAIN'
@@ -42,7 +47,7 @@ class CNNTrain(CNNBase):
         self.y = None
 
     def build_model(self):
-        """ Creates the actual model from the model settings."""
+        """Creates the actual model from the model settings."""
         # Fixed rng, make the results repeatable
 
         datasets = self.load_samples()
@@ -135,5 +140,5 @@ class CNNTrain(CNNBase):
         self.grads = T.grad(self.cost, self.params)
 
     def train_model(self):
-        """ Abstract method to be implemented by subclasses"""
+        """Abstract method to be implemented by subclasses"""
         raise NotImplementedError()

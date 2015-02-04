@@ -20,8 +20,13 @@ from mlp import HiddenLayer
 
 
 class CNNRetrain(CNNBase):
-    """ The class takes a proto bufer as input, setups a CNN according to the
+    """The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
+
+    Args:
+
+    Returns:
+
     """
     def __init__(self, protofile, cached_weights):
         self.cnntype = 'RETRAIN'
@@ -37,7 +42,7 @@ class CNNRetrain(CNNBase):
         self.best_params = None
 
     def build_model(self):
-        """ Create the actual model"""
+        """Create the actual model"""
         # Fixed rng, make the results repeatable
         datasets = self.load_samples()
         # Train, Validation, Test 100000, 20000, 26... fot Mitocondria set
@@ -134,11 +139,11 @@ class CNNRetrain(CNNBase):
         self.grads = T.grad(self.cost, self.params)
 
     def retrain_model(self):
-        """ Abstract method """
+        """Abstract method"""
         raise NotImplementedError()
 
     def save_parameters(self):
-        """ Save best weights """
+        """Save best weights"""
         weights = [i.get_value(borrow=True) for i in self.best_params]
         ## add here the interleaved convolutional layers
         nbr_hidden_layers = size(hlayers)

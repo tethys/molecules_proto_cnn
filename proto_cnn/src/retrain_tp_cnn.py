@@ -14,8 +14,13 @@ import theano.tensor as T
 from retrain_cnn import CNNRetrain
 
 class CNNRetrainTP(CNNRetrain):
-    """ The class takes a proto bufer as input, setups a CNN according to the
+    """The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
+
+    Args:
+
+    Returns:
+
     """
     def __init__(self, protofile, cached_weights):
         super(CNNRetrainTP, self).__init__(protofile, cached_weights)
@@ -23,6 +28,7 @@ class CNNRetrainTP(CNNRetrain):
         self.validate_model = None
 
     def retrain_model(self):
+        """ """
         # train_model is a function that updates the model parameters by
         # SGD Since this model has many parameters, it would be tedious to
           # manually create an update rule for each model parameter. We thus
@@ -116,7 +122,7 @@ class CNNRetrainTP(CNNRetrain):
         logging.info(('running time %f' % (mean_training_time)))
 
     def compute_validation_loss(self):
-        """ Computes  error loss """
+        """Computes  error loss"""
         # works for 0-1 loss
         all_y_pred = numpy.empty([])
         for i in xrange(self.n_valid_batches):
@@ -131,7 +137,7 @@ class CNNRetrainTP(CNNRetrain):
         return 1.0 - result.eval()
 
     def compute_test_loss(self):
-        """ Computes error loss """
+        """Computes error loss"""
         # works for 0-1 loss
         all_y_pred = numpy.empty([])
         for i in xrange(self.n_test_batches):

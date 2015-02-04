@@ -16,11 +16,17 @@ from retrain_cnn import CNNRetrain
 
 
 class CNNRetrainVOC(CNNRetrain):
-    """ The class takes a proto bufer as input, setups a CNN according to the
+    """The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
+
+    Args:
+
+    Returns:
+
     """
 
     def retrain_model(self):
+        """ """
         # train_model is a function that updates the model parameters by
           # SGD Since this model has many parameters, it would be tedious to
           # manually create an update rule for each model parameter. We thus
@@ -116,7 +122,7 @@ class CNNRetrainVOC(CNNRetrain):
             logging.info(('running time %f' % (mean_training_time)))
 
     def compute_validation_VOC_loss(self):
-        """ compute validation loss """
+        """compute validation loss"""
         # works for 0-1 loss
         all_y_pred = numpy.empty([])
         for i in xrange(self.n_valid_batches):
@@ -134,6 +140,7 @@ class CNNRetrainVOC(CNNRetrain):
         return result.eval()
 
     def compute_test_VOC_loss(self):
+        """ """
         # works for 0-1 loss
         all_y_pred = numpy.empty([])
         for i in xrange(self.n_test_batches):

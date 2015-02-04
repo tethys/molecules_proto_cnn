@@ -8,12 +8,25 @@ Created on Mon Nov 24 14:39:22 2014
 from test_cnn import CNNTest
 
 class CNNTestTP(CNNTest):
-    """ The class implements the methods for computing the batch
-        error using the error rate (TP+TN)/(all samples) """
+    """The class implements the methods for computing the batch
+        error using the error rate (TP+TN)/(all samples)
+
+    Args:
+
+    Returns:
+
+    """
 
     def compute_batch_error(self, batch_result_dict):
-        """ computes the error rate as the number of correctly 
-        classified samples"""
+        """computes the error rate as the number of correctly
+        classified samples
+
+        Args:
+          batch_result_dict: 
+
+        Returns:
+
+        """
         TP = batch_result_dict['TP']
         FP = batch_result_dict['FP']
         FN = batch_result_dict['FN']
@@ -21,8 +34,15 @@ class CNNTestTP(CNNTest):
         return (TP + TN)/float(TP + TN+ FP + FN)
 
     def compute_all_samples_error(self, all_samples_result):
-        """ Computes the all samples error by aggregating the
-            results from an array of dictionary results"""
+        """Computes the all samples error by aggregating the
+            results from an array of dictionary results
+
+        Args:
+          all_samples_result: 
+
+        Returns:
+
+        """
         TP = 0
         FP = 0
         FN = 0

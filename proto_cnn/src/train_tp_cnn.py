@@ -14,8 +14,13 @@ from train_cnn import CNNTrain
 
 
 class CNNTrainTP(CNNTrain):
-    """ The class takes a proto bufer as input, setups a CNN according to the
+    """The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
+
+    Args:
+
+    Returns:
+
     """
     def __init__(self, cnn_settings_protofile, cached_weights_file):
         super(CNNTrainTP, self).__init__(cnn_settings_protofile, cached_weights_file)
@@ -24,7 +29,7 @@ class CNNTrainTP(CNNTrain):
         self.best_params = None
 
     def train_model(self):
-        """ The actual training method """
+        """The actual training method"""
         # train_model is a function that updates the model parameters by
           # SGD Since this model has many parameters, it would be tedious to
           # manually create an update rule for each model parameter. We thus
@@ -120,7 +125,7 @@ class CNNTrainTP(CNNTrain):
             logging.info(('running time %f' % (mean_training_time)))
 
     def compute_validation_loss(self):
-        """ Computes validation loss"""
+        """Computes validation loss"""
         # works for 0-1 loss
         all_y_pred = numpy.empty([])
         for i in xrange(self.n_valid_batches):
@@ -136,7 +141,7 @@ class CNNTrainTP(CNNTrain):
         return 1.0 - result.eval()
 
     def compute_test_error_loss(self):
-        """ Computes error rate """
+        """Computes error rate"""
         # works for 0-1 loss
         all_y_pred = numpy.empty([])
         for i in xrange(self.n_test_batches):
@@ -152,7 +157,7 @@ class CNNTrainTP(CNNTrain):
         return 1.0 - result.eval() 
 
     def save_parameters(self):
-        """ saves the weights to a file """
+        """saves the weights to a file"""
         weights = [i.get_value(borrow=True) for i in self.best_params]
         numpy.save(self.cached_weights_file, weights)
 

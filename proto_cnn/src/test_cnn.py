@@ -18,9 +18,15 @@ from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
 
 class CNNTest(CNNBase):
-    """ The class is responsible for creating the layers of the network.
+    """The class is responsible for creating the layers of the network.
         The loading of the data and the type of the error used is defined in
-        derived classes."""
+        derived classes.
+
+    Args:
+
+    Returns:
+
+    """
     def __init__(self, cnn_settings_protofile, cached_weights_file):
         """ Update parameters from protobuffer file"""
         self.cnntype = 'TEST'
@@ -81,7 +87,15 @@ class CNNTest(CNNBase):
         return test_score
 
     def process_batch(self, batch_index, cnn_time):
-        """ Process one single batch"""
+        """Process one single batch
+
+        Args:
+          batch_index: 
+          cnn_time: 
+
+        Returns:
+
+        """
         start = time.time()
         self.x = self.test_set_x[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
         self.y = self.test_set_y[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
@@ -170,8 +184,14 @@ class CNNTest(CNNBase):
         return self.output_layer.result_count_dictionary(self.y)
 
     def log_fit_info(self):
-        """ Logs the fit of the separable filters for the separable layers.
-            The information is stored in the numpy arrays"""
+        """Logs the fit of the separable filters for the separable layers.
+            The information is stored in the numpy arrays
+
+        Args:
+
+        Returns:
+
+        """
         idx = 0
         for clayer_params in self.convolutional_layers:
             if clayer_params.HasField('rank') == False:
@@ -188,8 +208,15 @@ class CNNTest(CNNBase):
             idx += 2
 
     def log_cnn_time_summary(self, timings):
-        """ The method takes as input a vector of timings 
-            and aggregates the results"""
+        """The method takes as input a vector of timings
+            and aggregates the results
+
+        Args:
+          timings: 
+
+        Returns:
+
+        """
         t_convolution = []
         t_downsample_activation = []
         t_non_conv_layers = 0
@@ -218,17 +245,37 @@ class CNNTest(CNNBase):
         logging.debug(' total avg image time : ' + str(t_total))
 
     def compute_batch_error(self, batch_result_dict):
-        """ Abstract method for computing the error per batch (VOC or error rate)"""
+        """Abstract method for computing the error per batch (VOC or error rate)
+
+        Args:
+          batch_result_dict: 
+
+        Returns:
+
+        """
         raise NotImplementedError()
     def compute_all_samples_error(self, all_samples_result):
-        """ Abstract method for computing the error on all test samples"""
+        """Abstract method for computing the error on all test samples
+
+        Args:
+          all_samples_result: 
+
+        Returns:
+
+        """
         raise NotImplementedError()
 
 
 ## Store average timing per batch
 class CNNTime(object):
-    """ The class holds the timings for every layer,
-        (e.g. convolutional, hidden) etc """
+    """The class holds the timings for every layer,
+        (e.g. convolutional, hidden) etc
+
+    Args:
+
+    Returns:
+
+    """
     def __init__(self):
         """ For every type of layer there is an array
             where the timings are added """
@@ -239,7 +286,7 @@ class CNNTime(object):
         self.t_non_conv_layers = 0
         self.t_total = 0
     def to_string(self):
-        """ Printable version the the class contents"""
+        """Printable version the the class contents"""
         return "Time :%s :%s %5.2f %5.2f" % (str(self.t_convolution),
                                              str(self.t_downsample_activation),
                                              self.t_non_conv_layers,

@@ -15,8 +15,13 @@ from train_cnn import CNNTrain
 
 
 class CNNTrainVOC(CNNTrain):
-    """ The class takes a proto bufer as input, setups a CNN according to the
+    """The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
+
+    Args:
+
+    Returns:
+
     """
     def __init__(self, cnn_settings_protofile, cached_weights_file):
         super(CNNTrainVOC, self).__init__(cnn_settings_protofile, cached_weights_file)
@@ -25,7 +30,7 @@ class CNNTrainVOC(CNNTrain):
         self.best_params = None
 
     def train_model(self):
-        """ Train the model using error rate """
+        """Train the model using error rate"""
         # train_model is a function that updates the model parameters by
           # SGD Since this model has many parameters, it would be tedious to
           # manually create an update rule for each model parameter. We thus
@@ -119,7 +124,7 @@ class CNNTrainVOC(CNNTrain):
             logging.info(('running time %f' % (mean_training_time)))
 
     def compute_validation_VOC_loss(self):
-        """ Added validation loss """
+        """Added validation loss"""
         # works for 0-1 loss
         all_y_pred = numpy.empty([])
         for i in xrange(self.n_valid_batches):
@@ -137,7 +142,7 @@ class CNNTrainVOC(CNNTrain):
         return result.eval()
 
     def compute_test_VOC_loss(self):
-        """ Compute test VOC """
+        """Compute test VOC"""
         # works for 0-1 loss
         all_y_pred = numpy.empty([])
         for i in xrange(self.n_test_batches):
@@ -155,7 +160,7 @@ class CNNTrainVOC(CNNTrain):
         return result.eval()
 
     def save_parameters(self):
-        """ Saves the best weights """
+        """Saves the best weights"""
         weights = [i.get_value(borrow=True) for i in self.best_params]
         numpy.save(self.cached_weights_file, weights)
 
