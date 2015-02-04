@@ -11,7 +11,7 @@ import time
 import theano
 import theano.tensor as T
 
-from train_cnn import CNNTrain
+from src.train_cnn import CNNTrain
 
 
 class CNNTrainVOC(CNNTrain):
