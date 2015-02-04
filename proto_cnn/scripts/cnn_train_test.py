@@ -8,13 +8,13 @@ Created on Tue Oct 21 16:19:55 2014
 
 import argparse
 import sys
-from mitocondria_train_cnn import CNNTrainVOCMitocondria
+from src.core import mitocondria_train_cnn
 from mitocondria_retrain_cnn import CNNRetrainVOCMitocondria
-from mitocondria_test_cnn import CNNTestVOCMitocondria
-from cnn_separable_non_symbolic import ConvolutionalNeuralNetworkNonSymbolic;
-from convolutional_nnet_train import ConvolutionalNeuralNetworkTrain;
-from convolutional_nnet_test import ConvolutionalNeuralNetworkTest;
-from convolutional_neural_network_separable import ConvolutionalNeuralNetworkSeparableTest;
+from scripts.mitocondria_test_cnn import CNNTestVOCMitocondria
+from core.cnn_separable_non_symbolic import ConvolutionalNeuralNetworkNonSymbolic;
+from core.convolutional_nnet_train import ConvolutionalNeuralNetworkTrain;
+from core.convolutional_nnet_test import ConvolutionalNeuralNetworkTest;
+from core.convolutional_neural_network_separable import ConvolutionalNeuralNetworkSeparableTest;
 def main():
     sys.path.append('/Users/vivianapetrescu/Documents/theano_tut/convolutional-neural-net/');
     print 'Number of arguments:', len(sys.argv)
