@@ -91,7 +91,10 @@ def decompose_tensor(filters, rank):
     Pstruct = []
     
     matlab = matlab_wrapper.MatlabSession()
-    matlab.eval("""addpath('/Users/vivianapetrescu/Documents/separable_filters')""");
+    matlab.eval("""addpath('./separable_filters');""")
+    matlab.eval("addpath('./separable_filters/tensor_toolbox_2.5');")
+    matlab.eval("addpath('./separable_filters/learning_2d_separable_filters');")
+    matlab.eval("addpath('./separable_filters/poblano_toolbox_1.1');")
     matlab.eval("add_cp_library_path")
     for chanel in range(nbr_channels):
         filter_for_channel = filters[:,chanel,:,:]

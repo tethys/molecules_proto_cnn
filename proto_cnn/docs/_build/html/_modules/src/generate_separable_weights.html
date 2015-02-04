@@ -1,0 +1,233 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>src.generate_separable_weights &mdash; proto_cnn 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="proto_cnn 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for src.generate_separable_weights</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Oct 31 10:59:25 2014</span>
+
+<span class="sd">@author: vivianapetrescu</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">convolutional_neural_network_settings_pb2</span> <span class="kn">as</span> <span class="nn">pb_cnn</span>
+<span class="kn">from</span> <span class="nn">google.protobuf</span> <span class="kn">import</span> <span class="n">text_format</span>
+<span class="kn">import</span> <span class="nn">matlab_wrapper</span>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../src.html#src.generate_separable_weights.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;/Users/vivianapetrescu/Documents/theano_tut/convolutional-neural-net/&#39;</span><span class="p">);</span>
+    <span class="k">print</span> <span class="s">&#39;Number of arguments:&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+    <span class="k">print</span> <span class="s">&#39;Arguments list:&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+    
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-p&#39;</span><span class="p">,</span><span class="s">&#39;--proto_file&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;path to proto file&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;prototxt_file&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-w&#39;</span><span class="p">,</span><span class="s">&#39;--cached_weights_file&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;path to weights file&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;cached_weights_file&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-s&#39;</span><span class="p">,</span><span class="s">&#39;--separable_weights_file&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;path to separable weights file&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;sep_weights_file&#39;</span><span class="p">,</span>  <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    
+    <span class="k">print</span> <span class="s">&#39;protofile is&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">prototxt_file</span> 
+    <span class="k">print</span> <span class="s">&#39;weights file is&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">cached_weights_file</span>
+    <span class="k">print</span> <span class="s">&#39;separable weights file&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">sep_weights_file</span>
+
+    <span class="n">run</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+<span class="c">### Load cached weights</span>
+<span class="c">### Load settings</span>
+<span class="c">### Run for every convolutional layer separable filters and save it somewhere.</span>
+<span class="c">### Save also the other parameters with it</span>
+</div>
+<div class="viewcode-block" id="run"><a class="viewcode-back" href="../../src.html#src.generate_separable_weights.run">[docs]</a><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load settings&quot;&quot;&quot;</span>        
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">pb_cnn</span><span class="o">.</span><span class="n">CNNSettings</span><span class="p">();</span>        
+        <span class="k">try</span><span class="p">:</span>        
+           <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">prototxt_file</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span>
+           <span class="n">data</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+           <span class="k">print</span> <span class="s">&#39;Protofile content:&#39;</span>
+           <span class="k">print</span> <span class="n">data</span>
+           <span class="n">text_format</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">settings</span><span class="p">);</span>
+           <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">();</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+           <span class="k">print</span> <span class="s">&quot;Could not open file &quot;</span> <span class="o">+</span> <span class="n">options</span><span class="o">.</span><span class="n">prototxt_file</span><span class="p">;</span>
+        <span class="sd">&quot;&quot;&quot; Load weights&quot;&quot;&quot;</span>
+        <span class="n">cached_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">cached_weights_file</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">decompose_layers</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">cached_weights</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">sep_weights_file</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="decompose_layers"><a class="viewcode-back" href="../../src.html#src.generate_separable_weights.decompose_layers">[docs]</a><span class="k">def</span> <span class="nf">decompose_layers</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">cached_weights</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Run through every conv layer and check were we have rank enabled.</span>
+<span class="sd">        If we have it enabled, run decompose tensor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+     <span class="c"># TODO this</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">cached_weights</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">conv_layer</span><span class="p">:</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">N</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s">&#39;rank&#39;</span><span class="p">):</span>
+             <span class="k">print</span> <span class="s">&#39;decomposing&#39;</span> 
+             <span class="n">P_struct</span> <span class="o">=</span> <span class="n">decompose_tensor</span><span class="p">(</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">layer</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+             <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">P_struct</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+             <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">2</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+             <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">params</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span> 
+  <span class="c">#  for p in params:    </span>
+  <span class="c">#      print p</span>
+    <span class="k">print</span> <span class="s">&#39;cached weights&#39;</span>
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">cached_weights</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">w</span><span class="o">.</span><span class="n">size</span>
+    <span class="k">return</span> <span class="n">params</span>
+</div>
+<div class="viewcode-block" id="decompose_tensor"><a class="viewcode-back" href="../../src.html#src.generate_separable_weights.decompose_tensor">[docs]</a><span class="k">def</span> <span class="nf">decompose_tensor</span><span class="p">(</span><span class="n">filters</span><span class="p">,</span> <span class="n">rank</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; filters is of type input feature maps, output feature maps, wxh of filter</span>
+<span class="sd">        Output is a structure P which contains lambda, U{1}, U{2}, U{3}    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Set logging to DEBUG to see CP-ALS information</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>   
+    <span class="n">nbr_filters</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nbr_channels</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">fwidth</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">fheight</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">Pstruct</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="n">matlab</span> <span class="o">=</span> <span class="n">matlab_wrapper</span><span class="o">.</span><span class="n">MatlabSession</span><span class="p">()</span>
+    <span class="n">matlab</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;&quot;&quot;addpath(&#39;./separable_filters&#39;);&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">matlab</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;addpath(&#39;./separable_filters/tensor_toolbox_2.5&#39;);&quot;</span><span class="p">)</span>
+    <span class="n">matlab</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;addpath(&#39;./separable_filters/learning_2d_separable_filters&#39;);&quot;</span><span class="p">)</span>
+    <span class="n">matlab</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;addpath(&#39;./separable_filters/poblano_toolbox_1.1&#39;);&quot;</span><span class="p">)</span>
+    <span class="n">matlab</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;add_cp_library_path&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">chanel</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbr_channels</span><span class="p">):</span>
+        <span class="n">filter_for_channel</span> <span class="o">=</span> <span class="n">filters</span><span class="p">[:,</span><span class="n">chanel</span><span class="p">,:,:]</span>
+        <span class="n">filter_for_channel</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nbr_filters</span><span class="p">,</span> <span class="n">fwidth</span><span class="p">,</span> <span class="n">fheight</span><span class="p">)</span>
+        <span class="n">filter_for_channel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">filter_for_channel</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c">#P, fit, itr, exectimes = cp_als(dtensor(filter_for_channel), rank, init=&#39;random&#39;)</span>
+        <span class="c">## P.U, P.lmbda</span>
+        <span class="k">print</span> <span class="s">&#39;shape of filter &#39;</span><span class="p">,</span> <span class="n">filter_for_channel</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">matlab</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">,</span> <span class="n">filter_for_channel</span><span class="p">)</span>
+        <span class="n">matlab</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s">&#39;rank&#39;</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span>
+        <span class="n">matlab</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;&quot;&quot;[P, ~, output]= cp_opt(tensor(f), rank);&quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">matlab</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;&quot;&quot; U1 = P.U{1};</span>
+<span class="s">                    U1  = P.U{1};</span>
+<span class="s">                    U2 = P.U{2};</span>
+<span class="s">                    U3 = P.U{3};</span>
+<span class="s">                    normSep = zeros(rank)</span>
+<span class="s">                    for j = 1 : rank</span>
+<span class="s">                        temp = U1(:,j)*U2(:,j)&#39;;</span>
+<span class="s">                        if j == 1</span>
+<span class="s">                            aux = temp;</span>
+<span class="s">                        end</span>
+<span class="s">                        normSep(j) = norm(temp);</span>
+<span class="s">                    end</span>
+<span class="s">                    lmbda  = P.lambda;</span>
+<span class="s">                    separable_filters.fit = output.Fit;&quot;&quot;&quot;</span><span class="p">);</span>
+        <span class="n">separable_filters</span> <span class="o">=</span> <span class="n">matlab</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;separable_filters&#39;</span><span class="p">)</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="p">{}</span>       
+        <span class="n">P</span><span class="p">[</span><span class="s">&#39;U1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">matlab</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;U1&#39;</span><span class="p">)</span>
+        <span class="n">P</span><span class="p">[</span><span class="s">&#39;U2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">matlab</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;U2&#39;</span><span class="p">)</span>
+        <span class="n">P</span><span class="p">[</span><span class="s">&#39;U3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">matlab</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;U3&#39;</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&#39;auxiliary &#39;</span><span class="p">,</span> <span class="n">matlab</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;aux&#39;</span><span class="p">)</span>
+ <span class="c">#       value_norms = matlab.get(&#39;normSep&#39;)</span>
+<span class="c">#        print &#39;value norms &#39;, value_norms</span>
+        <span class="n">P</span><span class="p">[</span><span class="s">&#39;fit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">separable_filters</span><span class="o">.</span><span class="n">fit</span>
+        <span class="n">P</span><span class="p">[</span><span class="s">&#39;lmbda&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">matlab</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;lmbda&#39;</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&#39;shape of U is &#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="s">&#39;U1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="s">&#39;U2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="s">&#39;U3&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">print</span> <span class="s">&#39;P lambda sizes: &#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="s">&#39;lmbda&#39;</span><span class="p">]</span>
+        <span class="k">print</span> <span class="s">&#39;Fit is &#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="s">&#39;fit&#39;</span><span class="p">]</span>
+        <span class="n">Pstruct</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">Pstruct</span></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, vpetresc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

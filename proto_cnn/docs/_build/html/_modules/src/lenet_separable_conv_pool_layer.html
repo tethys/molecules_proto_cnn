@@ -1,0 +1,381 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>src.lenet_separable_conv_pool_layer &mdash; proto_cnn 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="proto_cnn 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for src.lenet_separable_conv_pool_layer</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Oct 31 00:19:05 2014</span>
+
+<span class="sd">@author: vivianapetrescu</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">theano</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="kn">as</span> <span class="nn">T</span>
+<span class="kn">from</span> <span class="nn">theano.tensor.signal</span> <span class="kn">import</span> <span class="n">downsample</span>
+<span class="kn">from</span> <span class="nn">theano.tensor.signal</span> <span class="kn">import</span> <span class="n">conv</span>
+
+<div class="viewcode-block" id="LeNetSeparableConvPoolLayer"><a class="viewcode-back" href="../../src.html#src.lenet_separable_conv_pool_layer.LeNetSeparableConvPoolLayer">[docs]</a><span class="k">class</span> <span class="nc">LeNetSeparableConvPoolLayer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pool Layer of a convolutional network &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">input_images</span><span class="p">,</span> <span class="n">filter_shape</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">poolsize</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>  
+                 <span class="n">Pstruct</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allocate a LeNetConvPoolLayer with shared variable internal parameters.</span>
+
+<span class="sd">        :type rng: numpy.random.RandomState</span>
+<span class="sd">        :param rng: a random number generator used to initialize weights</span>
+
+<span class="sd">        :type input: theano.tensor.dtensor4</span>
+<span class="sd">        :param input: symbolic image tensor, of shape image_shape</span>
+
+<span class="sd">        :type filter_shape: tuple or list of length 4</span>
+<span class="sd">        :param filter_shape: (number of filters, num input feature maps,</span>
+<span class="sd">                              filter height,filter width)</span>
+
+<span class="sd">        :type image_shape: tuple or list of length 4</span>
+<span class="sd">        :param image_shape: (batch size, num input feature/channels maps,</span>
+<span class="sd">                             image height, image width)</span>
+<span class="sd">                             For a gray image, this is 1 for the first layer.</span>
+<span class="sd">                             For the following layers it is equal with the </span>
+<span class="sd">                             number of output  channels/feature maps</span>
+
+<span class="sd">        :type poolsize: tuple or list of length 2</span>
+<span class="sd">        :param poolsize: the downsampling (pooling) factor (#rows,#cols)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c"># the bias is a 1D tensor -- one bias per output feature map</span>
+        <span class="c"># convolve input feature maps with filters</span>
+
+
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>             
+        <span class="n">fwidth</span> <span class="o">=</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">fheight</span> <span class="o">=</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nbr_channels</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">nbr_filters</span> <span class="o">=</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U3&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">initial_n_rows</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">initial_n_cols</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        
+        <span class="c"># Final number of rows and columns        </span>
+        <span class="n">final_n_rows</span> <span class="o">=</span> <span class="n">initial_n_rows</span> <span class="o">-</span> <span class="n">fwidth</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">final_n_cols</span> <span class="o">=</span> <span class="n">initial_n_cols</span> <span class="o">-</span> <span class="n">fheight</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="c"># The convolved input images</span>
+        <span class="n">input4D</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">nbr_filters</span><span class="p">,</span> 
+                                          <span class="n">final_n_rows</span><span class="p">,</span> <span class="n">final_n_cols</span><span class="p">)))</span>
+        <span class="k">print</span> <span class="s">&#39;batch size &#39;</span><span class="p">,</span> <span class="n">batch_size</span>        
+        <span class="n">one_image_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">initial_n_rows</span><span class="p">,</span> <span class="n">initial_n_cols</span><span class="p">)</span>
+       <span class="c"># assert one_image_shape == (1,28,28)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Pstruct</span> <span class="o">=</span> <span class="n">Pstruct</span>
+        
+        <span class="n">fU1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nbr_channels</span><span class="p">,</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">fU2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nbr_channels</span><span class="p">,</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">fU3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nbr_channels</span><span class="p">,</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U3&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U3&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">flmda</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nbr_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;lmbda&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">nbr_channels</span><span class="p">):</span>
+            <span class="n">fU1</span><span class="p">[</span><span class="n">i</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Pstruct</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&#39;U1&#39;</span><span class="p">]</span>
+            <span class="n">fU2</span><span class="p">[</span><span class="n">i</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Pstruct</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&#39;U2&#39;</span><span class="p">]</span>
+            <span class="n">fU3</span><span class="p">[</span><span class="n">i</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Pstruct</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&#39;U3&#39;</span><span class="p">]</span>
+            <span class="n">flmda</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Pstruct</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&#39;lmbda&#39;</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">channel_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbr_channels</span><span class="p">):</span>
+                <span class="c"># Convolve image with index image_index in the batch</span>
+              <span class="c">#  input4D = self.convolve_one_image(channel_index, </span>
+              <span class="c">#                input4D, </span>
+              <span class="c">#                input_images,</span>
+              <span class="c">#                one_image_shape,</span>
+              <span class="c">#                filter_shape)</span>
+                <span class="n">input4D</span> <span class="o">=</span> <span class="n">convolve_special_image</span><span class="p">(</span><span class="n">channel_index</span><span class="p">,</span> 
+                              <span class="n">input4D</span><span class="p">,</span> 
+                              <span class="n">input_images</span><span class="p">,</span>
+                              <span class="n">fU1</span><span class="p">,</span> <span class="n">fU2</span><span class="p">,</span> <span class="n">fU3</span><span class="p">,</span> <span class="n">flmda</span><span class="p">,</span>
+                              <span class="n">batch_size</span><span class="p">,</span> <span class="n">initial_n_rows</span><span class="p">,</span> <span class="n">initial_n_cols</span><span class="p">)</span>
+<span class="c">#</span>
+<span class="c">#        t_nbr_channels = T.iscalar()</span>
+<span class="c">#        t_input4D = T.tensor4</span>
+<span class="c">#        t_input_images = T.tensor4</span>
+<span class="c">#        t_fU1 = T.tensor3()</span>
+<span class="c">#        t_fU2 = T.tensor3</span>
+<span class="c">#        t_fU3 = T.tensor3</span>
+<span class="c">#        t_flmda = T.matrix</span>
+<span class="c">#        t_batch_size = T.scalar() </span>
+<span class="c">#        t_initial_n_rows = T.scalar()</span>
+<span class="c">#        t_initial_n_cols = T.scalar()</span>
+<span class="c">#        result, updates = theano.scan(fn=convolve_special_image,</span>
+<span class="c">#                                      outputs_info=None,                                      </span>
+<span class="c">#                                      sequences= [theano.tensor.arange(t_nbr_channels)],</span>
+<span class="c">#                                      non_sequences= [t_input4D, t_input_images, t_fU1, t_fU2, t_fU3, </span>
+<span class="c">#                                                      t_flmda,</span>
+<span class="c">#                                                      t_batch_size,</span>
+<span class="c">#                                                      t_initial_n_rows, </span>
+<span class="c">#                                                      t_initial_n_cols])   </span>
+<span class="c">#                                      </span>
+                       
+<span class="c">#        k = T.iscalar(&quot;k&quot;)</span>
+<span class="c">#A = T.vector(&quot;A&quot;)</span>
+<span class="c">#</span>
+<span class="c">## Symbolic description of the result</span>
+<span class="c">#result, updates = theano.scan(fn=lambda prior_result, A: prior_result * A,</span>
+<span class="c">#                              outputs_info=T.ones_like(A),</span>
+<span class="c">#                              non_sequences=A,</span>
+<span class="c">#                              n_steps=k)</span>
+<span class="c">#</span>
+<span class="c">## We only care about A**k, but scan has provided us with A**1 through A**k.</span>
+<span class="c">## Discard the values that we don&#39;t care about. Scan is smart enough to</span>
+<span class="c">## notice this and not waste memory saving them.</span>
+<span class="c">#final_result = result[-1]</span>
+<span class="c">#</span>
+<span class="c">## compiled function that returns A**k</span>
+<span class="c">#power = theano.function(inputs=[A,k], outputs=final_result, updates=updates)</span>
+<span class="c">#</span>
+<span class="c">#print power(range(10),2)</span>
+<span class="c">#print power(range(10),4)                      </span>
+                              
+        <span class="c"># downsample each feature map individually, using maxpooling</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">pooled_out</span> <span class="o">=</span> <span class="n">downsample</span><span class="o">.</span><span class="n">max_pool_2d</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">input4D</span><span class="p">,</span>
+                                            <span class="n">ds</span><span class="o">=</span><span class="n">poolsize</span><span class="p">,</span> 
+                                            <span class="n">ignore_border</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="o">/</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+                
+        <span class="c"># add the bias term. Since the bias is a vector (1D array), we first</span>
+        <span class="c"># reshape it to a tensor of shape (1,n_filters,1,1). Each bias will</span>
+        <span class="c"># thus be broadcasted across mini-batches and feature map</span>
+        <span class="c"># width &amp; height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">pooled_out</span> <span class="o">+</span> <span class="n">b</span><span class="o">.</span><span class="n">dimshuffle</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">))</span>
+    
+    <span class="sd">&quot;&quot;&quot;TODO change to have an image such as nbr channels as well&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LeNetSeparableConvPoolLayer.convolve_one_image"><a class="viewcode-back" href="../../src.html#src.lenet_separable_conv_pool_layer.LeNetSeparableConvPoolLayer.convolve_one_image">[docs]</a>    <span class="k">def</span> <span class="nf">convolve_one_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel_index</span><span class="p">,</span><span class="n">input4D</span><span class="p">,</span> <span class="n">input_images</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> 
+                           <span class="n">filter_shape</span><span class="p">):</span>
+         <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convolve one image with separabl filters.</span>
+
+<span class="sd">        :type input: theano.tensor.dtensor3</span>
+<span class="sd">        :param input: symbolic image tensor, of shape image_shape</span>
+
+<span class="sd">        :type image_shape: tuple or list of length 3</span>
+<span class="sd">        :param image_shape: ( nbr channels, image height, image width)</span>
+<span class="sd">        </span>
+<span class="sd">        :type filter_shape: tuple or list of length 4</span>
+<span class="sd">        :param filter_shape: (number of filters,nbrmaps, filter height,filter width)</span>
+
+<span class="sd">        :type poolsize: tuple or list of length 2</span>
+<span class="sd">        :param poolsize: the downsampling (pooling) factor (#rows,#cols)</span>
+<span class="sd">        &quot;&quot;&quot;</span>                        
+     
+         <span class="n">one_chanel_images</span> <span class="o">=</span> <span class="n">input_images</span><span class="p">[:,</span><span class="n">channel_index</span><span class="p">,:,:];</span>
+        <span class="c">## We look at the composition for the first channel in the beginning  </span>
+         <span class="n">rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+         <span class="n">fwidth</span> <span class="o">=</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+         <span class="n">fheight</span> <span class="o">=</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+         
+         
+         <span class="c"># Construct horizontal filters</span>
+         <span class="c">#TODO save the filters in the correct shape</span>
+         <span class="n">horizontal_filter_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">fwidth</span><span class="p">)</span>
+         <span class="n">horizontal_filters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">horizontal_filter_shape</span><span class="p">)</span>
+         <span class="n">horizontal_filters</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Pstruct</span><span class="p">[</span><span class="n">channel_index</span><span class="p">][</span><span class="s">&#39;U1&#39;</span><span class="p">]);</span>
+        
+         <span class="c"># Output is batch size x rank x W x H</span>
+         <span class="n">horizontal_conv_out</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">one_chanel_images</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">),</span> 
+                                           <span class="n">filters</span> <span class="o">=</span> <span class="n">horizontal_filters</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">),</span>
+                                           <span class="n">filter_shape</span> <span class="o">=</span> <span class="n">horizontal_filter_shape</span><span class="p">,</span> 
+                                           <span class="n">image_shape</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">)</span>
+         
+         <span class="c"># Construct vertical filters</span>
+         <span class="n">vertical_filter_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">fheight</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+         <span class="n">vertical_filters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span><span class="n">vertical_filter_shape</span><span class="p">)</span>        
+         <span class="n">vertical_filters</span><span class="p">[:,:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Pstruct</span><span class="p">[</span><span class="n">channel_index</span><span class="p">][</span><span class="s">&#39;U2&#39;</span><span class="p">]);</span>
+
+         <span class="n">initial_n_rows</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+         <span class="n">final_n_rows</span> <span class="o">=</span> <span class="n">initial_n_rows</span><span class="o">-</span> <span class="n">fwidth</span> <span class="o">+</span> <span class="mi">1</span>
+         <span class="n">final_n_cols</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">fheight</span> <span class="o">+</span> <span class="mi">1</span> 
+         <span class="n">batch_size</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+         <span class="n">conv_out</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">final_n_rows</span><span class="p">,</span> <span class="n">final_n_cols</span><span class="p">)))</span>
+         <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rank</span><span class="p">):</span>
+             <span class="c"># output is batch_size x 1 x imageW x imageH</span>
+             <span class="n">A</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="nb">input</span> <span class="o">=</span> <span class="n">horizontal_conv_out</span><span class="p">[:,</span><span class="n">r</span><span class="p">,:,:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">initial_n_rows</span><span class="p">,</span> <span class="n">final_n_cols</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">),</span> 
+                             <span class="n">filters</span> <span class="o">=</span> <span class="n">vertical_filters</span><span class="p">[</span><span class="n">r</span><span class="p">,:,:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">),</span>
+                             <span class="n">filter_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">fheight</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> 
+                             <span class="n">image_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">initial_n_rows</span><span class="p">,</span> <span class="n">final_n_cols</span><span class="p">))</span>
+             <span class="n">conv_out</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">set_subtensor</span><span class="p">(</span><span class="n">conv_out</span><span class="p">[:,</span><span class="n">r</span><span class="p">,:,:],</span> <span class="n">A</span><span class="p">[:,:,:])</span>
+  
+         <span class="n">nbr_filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U3&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+         <span class="c"># Final number of rows and columns                        </span>
+         <span class="c">## numberof images, number of filters, image width, image height</span>
+         <span class="n">alphas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Pstruct</span><span class="p">[</span><span class="n">channel_index</span><span class="p">][</span><span class="s">&#39;U3&#39;</span><span class="p">]</span>  
+         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbr_filters</span><span class="p">):</span>            
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">final_n_rows</span><span class="p">,</span> <span class="n">final_n_cols</span><span class="p">)))</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rank</span><span class="p">):</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">temp</span> <span class="o">+</span> <span class="n">conv_out</span><span class="p">[:,</span><span class="n">r</span><span class="p">,</span> <span class="p">:,:]</span><span class="o">*</span> <span class="n">alphas</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Pstruct</span><span class="p">[</span><span class="n">channel_index</span><span class="p">][</span><span class="s">&#39;lmbda&#39;</span><span class="p">][</span><span class="n">r</span><span class="p">];</span> 
+            <span class="n">input4D</span> <span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">set_subtensor</span><span class="p">(</span><span class="n">input4D</span><span class="p">[:,</span><span class="n">f</span><span class="p">,:,:],</span> <span class="n">temp</span><span class="p">)</span>
+         <span class="k">return</span> <span class="n">input4D</span>   
+         </div></div>
+<div class="viewcode-block" id="convolve_special_image"><a class="viewcode-back" href="../../src.html#src.lenet_separable_conv_pool_layer.convolve_special_image">[docs]</a><span class="k">def</span> <span class="nf">convolve_special_image</span><span class="p">(</span><span class="n">channel_index</span><span class="p">,</span>
+                               <span class="n">input4D</span><span class="p">,</span> 
+                               <span class="n">input_images</span><span class="p">,</span> <span class="n">fU1</span><span class="p">,</span> <span class="n">fU2</span><span class="p">,</span> <span class="n">fU3</span><span class="p">,</span>  <span class="n">flmda</span><span class="p">,</span>
+                               <span class="n">ib</span><span class="p">,</span> <span class="n">iw</span><span class="p">,</span> <span class="n">ih</span><span class="p">):</span>
+         <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convolve one image with separabl filters.</span>
+
+<span class="sd">        :type input: theano.tensor.dtensor3</span>
+<span class="sd">        :param input: symbolic image tensor, of shape image_shape</span>
+
+<span class="sd">        :type image_shape: tuple or list of length 3</span>
+<span class="sd">        :param image_shape: ( nbr channels, image height, image width)</span>
+<span class="sd">        </span>
+<span class="sd">        :type filter_shape: tuple or list of length 4</span>
+<span class="sd">        :param filter_shape: (number of filters,nbrmaps, filter height,filter width)</span>
+
+<span class="sd">        :type poolsize: tuple or list of length 2</span>
+<span class="sd">        :param poolsize: the downsampling (pooling) factor (#rows,#cols)</span>
+<span class="sd">        &quot;&quot;&quot;</span>                        
+         <span class="n">U1</span> <span class="o">=</span> <span class="n">fU1</span><span class="p">[</span><span class="n">channel_index</span><span class="p">,:,:]</span>
+         <span class="n">U2</span> <span class="o">=</span> <span class="n">fU2</span><span class="p">[</span><span class="n">channel_index</span><span class="p">,:,:]</span>
+         <span class="n">U3</span> <span class="o">=</span> <span class="n">fU3</span><span class="p">[</span><span class="n">channel_index</span><span class="p">,:,:]</span>
+         <span class="n">lmda</span> <span class="o">=</span> <span class="n">flmda</span><span class="p">[</span><span class="n">channel_index</span><span class="p">,:]</span>
+         <span class="n">one_chanel_images</span> <span class="o">=</span> <span class="n">input_images</span><span class="p">[:,</span><span class="n">channel_index</span><span class="p">,:,:];</span>
+        <span class="c">## We look at the composition for the first channel in the beginning  </span>
+         
+         <span class="n">image_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">ib</span><span class="p">,</span> <span class="n">iw</span><span class="p">,</span> <span class="n">ih</span><span class="p">)</span>
+         <span class="n">filter_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">U3</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_images</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">U2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">U1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+         <span class="n">rank</span> <span class="o">=</span> <span class="n">U1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+         <span class="n">fwidth</span> <span class="o">=</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+         <span class="n">fheight</span> <span class="o">=</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+         
+         
+         <span class="c"># Construct horizontal filters</span>
+         <span class="c">#TODO save the filters in the correct shape</span>
+         <span class="n">horizontal_filter_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">fwidth</span><span class="p">)</span>
+         <span class="n">horizontal_filters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">horizontal_filter_shape</span><span class="p">)</span>
+         <span class="n">horizontal_filters</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">U1</span><span class="p">);</span>
+        
+         <span class="c"># Output is batch size x rank x W x H</span>
+         <span class="n">horizontal_conv_out</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">one_chanel_images</span><span class="p">,</span> 
+                                           <span class="n">filters</span> <span class="o">=</span> <span class="n">horizontal_filters</span><span class="p">,</span>
+                                           <span class="n">filter_shape</span> <span class="o">=</span> <span class="n">horizontal_filter_shape</span><span class="p">,</span> 
+                                           <span class="n">image_shape</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">)</span>
+         
+         <span class="c"># Construct vertical filters</span>
+         <span class="n">vertical_filter_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">fheight</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+         <span class="n">vertical_filters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span><span class="n">vertical_filter_shape</span><span class="p">)</span>        
+         <span class="n">vertical_filters</span><span class="p">[:,:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">U2</span><span class="p">);</span>
+
+         <span class="n">initial_n_rows</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+         <span class="n">final_n_rows</span> <span class="o">=</span> <span class="n">initial_n_rows</span><span class="o">-</span> <span class="n">fwidth</span> <span class="o">+</span> <span class="mi">1</span>
+         <span class="n">final_n_cols</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">fheight</span> <span class="o">+</span> <span class="mi">1</span> 
+         <span class="n">batch_size</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+         <span class="n">conv_out</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">final_n_rows</span><span class="p">,</span> <span class="n">final_n_cols</span><span class="p">)))</span>
+         <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rank</span><span class="p">):</span>
+             <span class="c"># output is batch_size x 1 x imageW x imageH</span>
+             <span class="n">A</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="nb">input</span> <span class="o">=</span> <span class="n">horizontal_conv_out</span><span class="p">[:,</span><span class="n">r</span><span class="p">,:,:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">initial_n_rows</span><span class="p">,</span> <span class="n">final_n_cols</span><span class="p">)),</span> 
+                             <span class="n">filters</span> <span class="o">=</span> <span class="n">vertical_filters</span><span class="p">[</span><span class="n">r</span><span class="p">,:,:],</span>
+                             <span class="n">filter_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">fheight</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> 
+                             <span class="n">image_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">initial_n_rows</span><span class="p">,</span> <span class="n">final_n_cols</span><span class="p">))</span>
+             <span class="n">conv_out</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">set_subtensor</span><span class="p">(</span><span class="n">conv_out</span><span class="p">[:,</span><span class="n">r</span><span class="p">,:,:],</span> <span class="n">A</span><span class="p">[:,:,:])</span>
+
+  
+  
+         <span class="n">nbr_filters</span> <span class="o">=</span> <span class="n">U3</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+         <span class="c"># Final number of rows and columns                        </span>
+         <span class="c">## numberof images, number of filters, image width, image height</span>
+         <span class="n">alphas</span> <span class="o">=</span> <span class="n">U3</span> 
+         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbr_filters</span><span class="p">):</span>            
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">final_n_rows</span><span class="p">,</span> <span class="n">final_n_cols</span><span class="p">)))</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rank</span><span class="p">):</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">temp</span> <span class="o">+</span> <span class="n">conv_out</span><span class="p">[:,</span><span class="n">r</span><span class="p">,</span> <span class="p">:,:]</span><span class="o">*</span> <span class="n">alphas</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="n">r</span><span class="p">]</span> <span class="o">*</span> <span class="n">lmda</span><span class="p">[</span><span class="n">r</span><span class="p">];</span> 
+            <span class="n">input4D</span> <span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">set_subtensor</span><span class="p">(</span><span class="n">input4D</span><span class="p">[:,</span><span class="n">f</span><span class="p">,:,:],</span> <span class="n">temp</span><span class="p">)</span>
+         <span class="k">return</span> <span class="n">input4D</span>   
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, vpetresc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

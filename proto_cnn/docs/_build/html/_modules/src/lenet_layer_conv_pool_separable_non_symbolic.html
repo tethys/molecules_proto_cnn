@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>src.lenet_layer_conv_pool_separable_non_symbolic &mdash; proto_cnn 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="proto_cnn 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for src.lenet_layer_conv_pool_separable_non_symbolic</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon Nov 24 15:18:23 2014</span>
+
+<span class="sd">@author: vivianapetrescu</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">theano</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="kn">as</span> <span class="nn">T</span>
+<span class="kn">from</span> <span class="nn">theano.tensor.signal</span> <span class="kn">import</span> <span class="n">downsample</span>
+<span class="kn">from</span> <span class="nn">theano.tensor.signal</span> <span class="kn">import</span> <span class="n">conv</span>
+
+<div class="viewcode-block" id="LeNetLayerConvPoolSeparableNonSymbolic"><a class="viewcode-back" href="../../src.html#src.lenet_layer_conv_pool_separable_non_symbolic.LeNetLayerConvPoolSeparableNonSymbolic">[docs]</a><span class="k">class</span> <span class="nc">LeNetLayerConvPoolSeparableNonSymbolic</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">rng</span>
+<div class="viewcode-block" id="LeNetLayerConvPoolSeparableNonSymbolic.run_batch"><a class="viewcode-back" href="../../src.html#src.lenet_layer_conv_pool_separable_non_symbolic.LeNetLayerConvPoolSeparableNonSymbolic.run_batch">[docs]</a>    <span class="k">def</span> <span class="nf">run_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_images</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">filter_shape</span><span class="p">,</span>  <span class="n">Pstruct</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">poolsize</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c"># the bias is a 1D tensor -- one bias per output feature map</span>
+        <span class="c"># convolve input feature maps with filters</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>             
+        <span class="n">fwidth</span> <span class="o">=</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">fheight</span> <span class="o">=</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nbr_channels</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nbr_filters</span> <span class="o">=</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U3&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">initial_n_rows</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">initial_n_cols</span> <span class="o">=</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        
+        <span class="c"># Final number of rows and columns        </span>
+        <span class="n">final_n_rows</span> <span class="o">=</span> <span class="n">initial_n_rows</span> <span class="o">-</span> <span class="n">fwidth</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">final_n_cols</span> <span class="o">=</span> <span class="n">initial_n_cols</span> <span class="o">-</span> <span class="n">fheight</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="c"># The convolved input images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input4D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbr_filters</span><span class="p">,</span> <span class="n">final_n_rows</span><span class="p">,</span> <span class="n">final_n_cols</span><span class="p">))</span>
+        <span class="n">one_image_shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbr_channels</span><span class="p">,</span> <span class="n">initial_n_rows</span><span class="p">,</span> <span class="n">initial_n_cols</span><span class="p">)</span>
+       <span class="c"># assert one_image_shape == (1,28,28)</span>
+        <span class="n">nbr_filters</span> <span class="o">=</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U3&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">pcoef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">((</span><span class="n">nbr_filters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbr_channels</span><span class="p">,</span> <span class="n">rank</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">filter_index</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">nbr_filters</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">chanel</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbr_channels</span><span class="p">):</span>
+                    <span class="n">pcoef</span><span class="p">[</span><span class="n">filter_index</span><span class="p">,</span><span class="n">chanel</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">Pstruct</span><span class="p">[</span><span class="n">chanel</span><span class="p">][</span><span class="s">&#39;U3&#39;</span><span class="p">][</span><span class="n">filter_index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">Pstruct</span><span class="p">[</span><span class="n">chanel</span><span class="p">][</span><span class="s">&#39;lmbda&#39;</span><span class="p">][:];</span> 
+        <span class="n">U1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nbr_channels</span><span class="p">,</span> <span class="n">rank</span> <span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">fwidth</span><span class="p">))</span>
+        <span class="n">U2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nbr_channels</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">fheight</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">chanel</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbr_channels</span><span class="p">):</span>
+            <span class="n">U1</span><span class="p">[</span><span class="n">chanel</span><span class="p">,:,</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">Pstruct</span><span class="p">[</span><span class="n">chanel</span><span class="p">][</span><span class="s">&#39;U1&#39;</span><span class="p">]);</span>  
+            <span class="n">U2</span><span class="p">[</span><span class="n">chanel</span><span class="p">,:,:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">Pstruct</span><span class="p">[</span><span class="n">chanel</span><span class="p">][</span><span class="s">&#39;U2&#39;</span><span class="p">]);</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">image_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+                <span class="c"># Convolve image with index image_index in the batch</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">convolve_one_image</span><span class="p">(</span><span class="n">input_images</span><span class="p">[</span><span class="n">image_index</span><span class="p">,:,:,:],</span>
+                              <span class="n">one_image_shape</span><span class="p">,</span>
+                              <span class="n">Pstruct</span><span class="p">,</span> <span class="n">pcoef</span><span class="p">,</span> <span class="n">U1</span><span class="p">,</span> <span class="n">U2</span><span class="p">,</span>
+                              <span class="n">filter_shape</span><span class="p">,</span> 
+                              <span class="n">image_index</span><span class="p">)</span>   
+        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+       
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_conv</span> <span class="o">=</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="o">/</span> <span class="n">batch_size</span> 
+   <span class="c">#     print &#39;convolution time of batch image {0}&#39;.format(self.t_conv)</span>
+   <span class="c">#     print &#39;before downsample&#39;, self.input4D</span>
+        <span class="c"># downsample each feature map individually, using maxpooling</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">pooled_out</span> <span class="o">=</span> <span class="n">downsample</span><span class="o">.</span><span class="n">max_pool_2d</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">input4D</span><span class="p">,</span>
+                                            <span class="n">ds</span><span class="o">=</span><span class="n">poolsize</span><span class="p">,</span> 
+                                            <span class="n">ignore_border</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                
+        <span class="c"># add the bias term. Since the bias is a vector (1D array), we first</span>
+        <span class="c"># reshape it to a tensor of shape (1,n_filters,1,1). Each bias will</span>
+        <span class="c"># thus be broadcasted across mini-batches and feature map</span>
+        <span class="c"># width &amp; height</span>
+        <span class="n">sb</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">pooled_out</span> <span class="o">+</span> <span class="n">sb</span><span class="o">.</span><span class="n">dimshuffle</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">))</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_downsample_activ</span> <span class="o">=</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="o">/</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> 
+    <span class="c">#    print &#39;pool+tanh time of batch image {0}&#39;.format(self.t_downsample_activ)        </span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+    </div>
+    <span class="sd">&quot;&quot;&quot;TODO change to have an image such as nbr channels as well&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LeNetLayerConvPoolSeparableNonSymbolic.convolve_one_image"><a class="viewcode-back" href="../../src.html#src.lenet_layer_conv_pool_separable_non_symbolic.LeNetLayerConvPoolSeparableNonSymbolic.convolve_one_image">[docs]</a>    <span class="k">def</span> <span class="nf">convolve_one_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">one_image</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">,</span> 
+                           <span class="n">Pstruct</span><span class="p">,</span> <span class="n">pcoef</span><span class="p">,</span> <span class="n">U1</span><span class="p">,</span> <span class="n">U2</span><span class="p">,</span> <span class="n">filter_shape</span><span class="p">,</span>
+                           <span class="n">image_index</span><span class="p">):</span>
+   
+        <span class="n">rank</span> <span class="o">=</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">fwidth</span> <span class="o">=</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">fheight</span> <span class="o">=</span> <span class="n">Pstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;U2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c">#</span>
+     
+        <span class="n">num_input_feature_maps</span> <span class="o">=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+ 
+        <span class="n">n_rows</span> <span class="o">=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">fwidth</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">n_cols</span> <span class="o">=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">fheight</span> <span class="o">+</span> <span class="mi">1</span>
+       <span class="c"># horizontal_conv_out = np.ndarray((img_shape[1], n_cols))</span>
+        <span class="n">vertical_conv_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">((</span> <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">,</span><span class="n">num_input_feature_maps</span><span class="p">,</span> <span class="n">rank</span><span class="p">))</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+      <span class="c">#  vertical_filter_shape = (rank, fheight,1)</span>
+      <span class="c">#  vertical_filters = np.ndarray(vertical_filter_shape)      </span>
+      <span class="c">#  horizontal_filter_shape = (rank, 1, fwidth)</span>
+      <span class="c">#  horizontal_filters = np.ndarray(horizontal_filter_shape)</span>
+        <span class="k">for</span> <span class="n">chanel</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">num_input_feature_maps</span><span class="p">):</span>        
+                <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">rank</span><span class="p">):</span>
+                   <span class="c">#   horizontal_conv_out = scipy.signal.convolve2d(one_image[chanel,:,:], </span>
+                   <span class="c">#                                           U1[chanel,r,:,:], mode=&#39;valid&#39;)</span>
+                      <span class="n">vertical_conv_out</span><span class="p">[:,:,</span> <span class="n">chanel</span><span class="p">,</span><span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">convolve2d</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">convolve2d</span><span class="p">(</span><span class="n">one_image</span><span class="p">[</span><span class="n">chanel</span><span class="p">,:,:],</span> 
+                                                              <span class="n">U1</span><span class="p">[</span><span class="n">chanel</span><span class="p">,</span><span class="n">r</span><span class="p">,:,:],</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;valid&#39;</span><span class="p">),</span> 
+                                                    <span class="n">U2</span><span class="p">[</span><span class="n">chanel</span><span class="p">,</span> <span class="n">r</span><span class="p">,:,:],</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;valid&#39;</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span>
+  <span class="c">#      print &#39;part 1 &#39;, end</span>
+       
+       
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>       
+        <span class="n">output_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_input_feature_maps</span><span class="p">,</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">filter_index</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbr_filters</span><span class="p">):</span>            
+         <span class="c">#   for chanel in xrange(num_input_feature_maps):</span>
+         <span class="c">#       temp = vertical_conv_out[chanel,:,:,:]*pcoef[filter_index, chanel,:]</span>
+         <span class="c">#       output_image[chanel, :, :] = np.sum(temp, axis=2)</span>
+            <span class="n">output_image</span> <span class="o">=</span> <span class="n">vertical_conv_out</span><span class="p">[:,:,:,:]</span><span class="o">*</span><span class="n">pcoef</span><span class="p">[</span><span class="n">filter_index</span><span class="p">,:,:]</span>                
+            <span class="bp">self</span><span class="o">.</span><span class="n">input4D</span><span class="p">[</span><span class="n">image_index</span><span class="p">,</span><span class="n">filter_index</span><span class="p">,:,:]</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">output_image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        
+        <span class="n">end</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="p">;</span>
+   <span class="c">#     print &#39;part2 &#39;, end</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, vpetresc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

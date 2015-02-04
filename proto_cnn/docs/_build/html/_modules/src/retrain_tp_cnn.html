@@ -1,0 +1,246 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>src.retrain_tp_cnn &mdash; proto_cnn 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="proto_cnn 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for src.retrain_tp_cnn</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Oct 21 15:27:51 2014</span>
+<span class="sd">@author: vpetrescu</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">theano</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="kn">as</span> <span class="nn">T</span>
+
+<span class="kn">from</span> <span class="nn">retrain_cnn</span> <span class="kn">import</span> <span class="n">CNNRetrain</span>
+
+<div class="viewcode-block" id="CNNRetrainTP"><a class="viewcode-back" href="../../src.html#src.retrain_tp_cnn.CNNRetrainTP">[docs]</a><span class="k">class</span> <span class="nc">CNNRetrainTP</span><span class="p">(</span><span class="n">CNNRetrain</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The class takes a proto bufer as input, setups a CNN according to the</span>
+<span class="sd">        settings, trains the network and saves the weights in a file</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protofile</span><span class="p">,</span> <span class="n">cached_weights</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CNNRetrainTP</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">protofile</span><span class="p">,</span> <span class="n">cached_weights</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_model</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_model</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="CNNRetrainTP.retrain_model"><a class="viewcode-back" href="../../src.html#src.retrain_tp_cnn.CNNRetrainTP.retrain_model">[docs]</a>    <span class="k">def</span> <span class="nf">retrain_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="c"># train_model is a function that updates the model parameters by</span>
+        <span class="c"># SGD Since this model has many parameters, it would be tedious to</span>
+          <span class="c"># manually create an update rule for each model parameter. We thus</span>
+          <span class="c"># create the updates list by automatically looping over all</span>
+          <span class="c"># (params[i],grads[i]) pairs.</span>
+        <span class="n">updates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">param_i</span><span class="p">,</span> <span class="n">grad_i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grads</span><span class="p">):</span>
+            <span class="n">updates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">param_i</span><span class="p">,</span> <span class="n">param_i</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">*</span> <span class="n">grad_i</span><span class="p">))</span>
+
+        <span class="n">train_model</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">function</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">VOC_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)],</span> <span class="n">updates</span><span class="o">=</span><span class="n">updates</span><span class="p">,</span>
+                    <span class="n">givens</span><span class="o">=</span><span class="p">{</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_set_x</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_set_y</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">]},</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s">&#39;train_model&#39;</span><span class="p">)</span>
+
+             <span class="c"># create a function to compute the mistakes that are made by the model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_model</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">function</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">VOC_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)],</span>
+                        <span class="n">givens</span><span class="o">=</span><span class="p">{</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">],</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">]},</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s">&#39;test_model&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_model</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">function</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">VOC_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)],</span>
+                            <span class="n">givens</span><span class="o">=</span><span class="p">{</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_set_x</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">],</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_set_y</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">]},</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s">&#39;validate_model&#39;</span><span class="p">)</span>
+            <span class="c">###############</span>
+            <span class="c"># TRAIN MODEL #</span>
+            <span class="c">###############</span>
+        <span class="k">print</span> <span class="s">&#39;... Retraining&#39;</span>
+           <span class="c"># early-stopping parameters</span>
+        <span class="n">patience</span> <span class="o">=</span> <span class="mi">1000000</span> <span class="c"># look as this many examples regardless</span>
+        <span class="n">patience_increase</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c"># wait this much longer when a new best is</span>
+                           <span class="c"># found</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_params</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">best_validation_loss</span> <span class="o">=</span> <span class="mi">0</span><span class="c">#numpy.inf</span>
+        <span class="n">test_score</span> <span class="o">=</span> <span class="mf">0.</span>
+
+        <span class="n">epoch</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">done_looping</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="n">mean_training_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">cnt_times</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_epochs</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">done_looping</span><span class="p">):</span>
+            <span class="n">epoch</span> <span class="o">=</span> <span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">minibatch_index</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span><span class="p">):</span>
+          <span class="c"># The model will process the iter batch</span>
+                <span class="n">iteration</span> <span class="o">=</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span> <span class="o">+</span> <span class="n">minibatch_index</span>
+
+                <span class="k">if</span> <span class="n">iteration</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="s">&#39;training @ iter = &#39;</span><span class="p">,</span> <span class="n">iteration</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="p">[</span><span class="n">train_cost</span><span class="p">,</span> <span class="n">train_voc_values</span><span class="p">]</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span><span class="n">minibatch_index</span><span class="p">)</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="n">mean_training_time</span> <span class="o">+=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
+                <span class="n">cnt_times</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;cost </span><span class="si">%f</span><span class="s">, VOC </span><span class="si">%f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">train_cost</span><span class="p">,</span> <span class="n">train_voc_values</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">1000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c">#validation_frequency == 0:</span>
+
+                    <span class="c"># compute zero-one loss on validation set</span>
+                    <span class="n">this_validation_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_validation_loss</span><span class="p">()</span> 
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;epoch </span><span class="si">%i</span><span class="s">, minibatch </span><span class="si">%i</span><span class="s">/</span><span class="si">%i</span><span class="s">, validation error </span><span class="si">%f</span><span class="s"> </span><span class="si">%%</span><span class="s">&#39;</span> <span class="o">%</span> \
+                        <span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">minibatch_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span><span class="p">,</span> \
+                         <span class="n">this_validation_loss</span> <span class="o">*</span> <span class="mf">100.</span><span class="p">))</span>
+
+                    <span class="c"># if we got the best validation score until now</span>
+                    <span class="k">if</span> <span class="n">this_validation_loss</span> <span class="o">&gt;</span> <span class="n">best_validation_loss</span><span class="p">:</span>
+                        <span class="c">#improve patience if loss improvement is good enough</span>
+                        <span class="n">patience</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">patience</span><span class="p">,</span> <span class="n">iteration</span> <span class="o">*</span> <span class="n">patience_increase</span><span class="p">)</span>
+
+                        <span class="c"># save best validation score and iteration number</span>
+                        <span class="n">best_validation_loss</span> <span class="o">=</span> <span class="n">this_validation_loss</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">best_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">save_parameters</span><span class="p">()</span>
+                        <span class="c"># test it on the test set</span>
+                        <span class="n">test_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_test_loss</span><span class="p">()</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">((</span><span class="s">&#39;     epoch </span><span class="si">%i</span><span class="s">, minibatch </span><span class="si">%i</span><span class="s">/</span><span class="si">%i</span><span class="s">, test error of best &#39;</span>
+                             <span class="s">&#39;model </span><span class="si">%f</span><span class="s"> </span><span class="si">%%</span><span class="s">&#39;</span><span class="p">)</span> <span class="o">%</span>
+                             <span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">minibatch_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span><span class="p">,</span>
+                             <span class="n">test_score</span> <span class="o">*</span> <span class="mf">100.</span><span class="p">))</span>
+
+                    <span class="k">if</span> <span class="n">patience</span> <span class="o">&lt;=</span> <span class="n">iteration</span><span class="p">:</span>
+                        <span class="n">done_looping</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="k">break</span>
+            <span class="k">print</span> <span class="s">&#39;Saving best parameters&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_parameters</span><span class="p">()</span>
+            <span class="n">mean_training_time</span> <span class="o">/=</span> <span class="n">cnt_times</span>
+            <span class="k">print</span> <span class="s">&#39;running_times </span><span class="si">%f</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">mean_training_time</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">((</span><span class="s">&#39;running time </span><span class="si">%f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mean_training_time</span><span class="p">)))</span>
+</div>
+<div class="viewcode-block" id="CNNRetrainTP.compute_validation_loss"><a class="viewcode-back" href="../../src.html#src.retrain_tp_cnn.CNNRetrainTP.compute_validation_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_validation_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes  error loss&quot;&quot;&quot;</span>
+        <span class="c"># works for 0-1 loss</span>
+        <span class="n">all_y_pred</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_valid_batches</span><span class="p">):</span>
+            <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_model</span><span class="p">(</span><span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">all_y_pred</span> <span class="o">=</span> <span class="n">y_pred</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">all_y_pred</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">all_y_pred</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
+            <span class="k">print</span> <span class="n">all_y_pred</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">neq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span><span class="p">,</span> <span class="n">all_y_pred</span><span class="p">))</span>
+        <span class="k">print</span> <span class="s">&#39;Print result is &#39;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="k">return</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">result</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="CNNRetrainTP.compute_test_loss"><a class="viewcode-back" href="../../src.html#src.retrain_tp_cnn.CNNRetrainTP.compute_test_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_test_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes error loss&quot;&quot;&quot;</span>
+        <span class="c"># works for 0-1 loss</span>
+        <span class="n">all_y_pred</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span><span class="p">):</span>
+            <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_model</span><span class="p">(</span><span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">all_y_pred</span> <span class="o">=</span> <span class="n">y_pred</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">all_y_pred</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">all_y_pred</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
+        <span class="k">print</span> <span class="n">all_y_pred</span>
+        <span class="k">print</span> <span class="n">all_y_pred</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">neq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span><span class="p">,</span> <span class="n">all_y_pred</span><span class="p">))</span>
+        <span class="k">print</span> <span class="s">&#39;Print result is &#39;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="k">return</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">result</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, vpetresc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

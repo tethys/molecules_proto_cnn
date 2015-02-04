@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>src.mnist_train_cnn &mdash; proto_cnn 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="proto_cnn 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for src.mnist_train_cnn</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Oct 21 15:27:51 2014</span>
+<span class="sd">@author: vpetresc</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">from</span> <span class="nn">train_tp_cnn</span> <span class="kn">import</span> <span class="n">CNNTrainTP</span>
+
+
+<div class="viewcode-block" id="CNNTrainTPmnist"><a class="viewcode-back" href="../../src.html#src.mnist_train_cnn.CNNTrainTPmnist">[docs]</a><span class="k">class</span> <span class="nc">CNNTrainTPmnist</span><span class="p">(</span><span class="n">CNNTrainTP</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The class takes a proto bufer as input, setups a CNN according to the</span>
+<span class="sd">        settings, trains the network and saves the weights in a file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cnn_settings_protofile</span><span class="p">,</span> <span class="n">cached_weights_file</span><span class="p">,</span> <span class="n">small_set</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">small_set</span> <span class="o">=</span> <span class="n">small_set</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CNNTrainTPmnist</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">cnn_settings_protofile</span><span class="p">,</span> <span class="n">cached_weights_file</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CNNTrainTPmnist.load_samples"><a class="viewcode-back" href="../../src.html#src.mnist_train_cnn.CNNTrainTPmnist.load_samples">[docs]</a>    <span class="k">def</span> <span class="nf">load_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span> <span class="s">&#39;Value of small set is &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">small_set</span>
+        <span class="c"># Load datasets</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="s">&#39;mnist.pkl.gz&#39;</span>
+        <span class="c"># Download the MNIST dataset if it is not present</span>
+        <span class="n">data_dir</span><span class="p">,</span> <span class="n">data_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data_dir</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+            <span class="c"># Check if dataset is in the data directory.</span>
+            <span class="n">new_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">__file__</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&quot;..&quot;</span><span class="p">,</span> <span class="s">&quot;data&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">new_path</span><span class="p">)</span> <span class="ow">or</span> <span class="n">data_file</span> <span class="o">==</span> <span class="s">&#39;mnist.pkl.gz&#39;</span><span class="p">:</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">new_path</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">dataset</span><span class="p">))</span> <span class="ow">and</span> <span class="n">data_file</span> <span class="o">==</span> <span class="s">&#39;mnist.pkl.gz&#39;</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">urllib</span>
+            <span class="n">origin</span> <span class="o">=</span> <span class="s">&#39;http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz&#39;</span>
+            <span class="k">print</span> <span class="s">&#39;Downloading data from </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">origin</span>
+            <span class="n">urllib</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
+
+        <span class="k">print</span> <span class="s">&#39;... loading data&#39;</span>
+
+        <span class="c"># Load the dataset</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span>
+        <span class="n">train_set</span><span class="p">,</span> <span class="n">valid_set</span><span class="p">,</span> <span class="n">test_set</span> <span class="o">=</span> <span class="n">cPickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="c">#train_set, valid_set, test_set format: tuple(input, target)</span>
+        <span class="c">#input is an numpy.ndarray of 2 dimensions (a matrix)</span>
+        <span class="c">#witch row&#39;s correspond to an example. target is a</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">small_data</span> <span class="o">==</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="c"># Upscale the data</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="mi">10000</span>
+            <span class="n">tmp_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">tmp_images</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">imresize</span><span class="p">(</span><span class="n">test_set</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">))</span>
+            <span class="n">test_set_2</span> <span class="o">=</span> <span class="p">(</span><span class="n">tmp_images</span><span class="p">,</span> <span class="n">test_set</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">test_set_x</span><span class="p">,</span> <span class="n">test_set_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_dataset</span><span class="p">(</span><span class="n">test_set_2</span><span class="p">)</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="mi">10000</span>
+            <span class="n">tmp_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">tmp_images</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">imresize</span><span class="p">(</span><span class="n">valid_set</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">),</span> <span class="n">interp</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">)</span>
+            <span class="n">valid_set_x</span><span class="p">,</span> <span class="n">valid_set_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_dataset</span><span class="p">((</span><span class="n">tmp_images</span><span class="p">,</span> <span class="n">valid_set</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="mi">60000</span>
+            <span class="n">tmp_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">tmp_images</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">imresize</span><span class="p">(</span><span class="n">train_set</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="p">(</span><span class="mi">56</span><span class="p">,</span> <span class="mi">56</span><span class="p">),</span> <span class="n">interp</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">)</span>
+            <span class="n">train_set_x</span><span class="p">,</span> <span class="n">train_set_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_dataset</span><span class="p">((</span><span class="n">tmp_images</span><span class="p">,</span> <span class="n">train_set</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">test_set_x</span><span class="p">,</span> <span class="n">test_set_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_dataset</span><span class="p">(</span><span class="n">test_set</span><span class="p">)</span>
+            <span class="n">valid_set_x</span><span class="p">,</span> <span class="n">valid_set_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_dataset</span><span class="p">(</span><span class="n">valid_set</span><span class="p">)</span>
+            <span class="n">train_set_x</span><span class="p">,</span> <span class="n">train_set_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_dataset</span><span class="p">(</span><span class="n">train_set</span><span class="p">)</span>
+
+            <span class="n">rval</span> <span class="o">=</span> <span class="p">[(</span><span class="n">train_set_x</span><span class="p">,</span> <span class="n">train_set_y</span><span class="p">),</span> <span class="p">(</span><span class="n">valid_set_x</span><span class="p">,</span> <span class="n">valid_set_y</span><span class="p">),</span>
+                    <span class="p">(</span><span class="n">test_set_x</span><span class="p">,</span> <span class="n">test_set_y</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="n">rval</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, vpetresc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

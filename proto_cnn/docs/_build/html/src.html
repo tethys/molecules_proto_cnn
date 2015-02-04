@@ -1,0 +1,1619 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>src package &mdash; proto_cnn 0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="proto_cnn 0 documentation" href="index.html" />
+    <link rel="up" title="src" href="modules.html" />
+    <link rel="prev" title="src" href="modules.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="src"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="modules.html" accesskey="U">src</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="src-package">
+<h1>src package<a class="headerlink" href="#src-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-src.base_cnn">
+<span id="src-base-cnn-module"></span><h2>src.base_cnn module<a class="headerlink" href="#module-src.base_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 15:27:51 2014
+&#64;author: vpetresc</p>
+<p>TODO consider using abstract base class
+<a class="reference external" href="http://zaiste.net/2013/01/abstract_classes_in_python/">http://zaiste.net/2013/01/abstract_classes_in_python/</a></p>
+<dl class="class">
+<dt id="src.base_cnn.CNNBase">
+<em class="property">class </em><tt class="descclassname">src.base_cnn.</tt><tt class="descname">CNNBase</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/src/base_cnn.html#CNNBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.base_cnn.CNNBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>The class takes a proto bufer as input, setups a CNN according to the
+settings, trains the network and saves the weights in a file</p>
+<dl class="method">
+<dt id="src.base_cnn.CNNBase.create_layers_from_settings">
+<tt class="descname">create_layers_from_settings</tt><big>(</big><em>settings</em><big>)</big><a class="reference internal" href="_modules/src/base_cnn.html#CNNBase.create_layers_from_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.base_cnn.CNNBase.create_layers_from_settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes as input the settings parsed from the proto file
+and sets up the CNN configuration.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.base_cnn.CNNBase.initialize_logger">
+<tt class="descname">initialize_logger</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/base_cnn.html#CNNBase.initialize_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.base_cnn.CNNBase.initialize_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the logging level and the logger
+name based on the path of the weights file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.base_cnn.CNNBase.load_samples">
+<tt class="descname">load_samples</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/base_cnn.html#CNNBase.load_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.base_cnn.CNNBase.load_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract method which is implemented by derived classes.
+Loads trin, test and validation samples</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.base_cnn.CNNBase.load_weights">
+<tt class="descname">load_weights</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/base_cnn.html#CNNBase.load_weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.base_cnn.CNNBase.load_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load weights from .npy file. The weights are stored in reverse order:
+b3 W3, b2 W2, b1 W1</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.base_cnn.CNNBase.shared_dataset">
+<tt class="descname">shared_dataset</tt><big>(</big><em>data_xy</em>, <em>borrow=True</em><big>)</big><a class="reference internal" href="_modules/src/base_cnn.html#CNNBase.shared_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.base_cnn.CNNBase.shared_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that loads the dataset into shared variables
+The reason we store our dataset in shared variables is to allow
+Theano to copy it into the GPU memory (when code is run on GPU).
+Since copying data into the GPU is slow, copying a minibatch everytime
+is needed (the default behaviour if the data is not in a shared
+variable) would lead to a large decrease in performance.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.cnn_non_symbolic">
+<span id="src-cnn-non-symbolic-module"></span><h2>src.cnn_non_symbolic module<a class="headerlink" href="#module-src.cnn_non_symbolic" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Nov 24 14:39:22 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="class">
+<dt id="src.cnn_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic">
+<em class="property">class </em><tt class="descclassname">src.cnn_non_symbolic.</tt><tt class="descname">ConvolutionalNeuralNetworkNonSymbolic</tt><big>(</big><em>rng</em>, <em>protofile</em><big>)</big><a class="reference internal" href="_modules/src/cnn_non_symbolic.html#ConvolutionalNeuralNetworkNonSymbolic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="src.cnn_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.compute_test_error">
+<tt class="descname">compute_test_error</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/cnn_non_symbolic.html#ConvolutionalNeuralNetworkNonSymbolic.compute_test_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.compute_test_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loop through the batches and run process_batch</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.cnn_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.process_batch">
+<tt class="descname">process_batch</tt><big>(</big><em>image_batch</em><big>)</big><a class="reference internal" href="_modules/src/cnn_non_symbolic.html#ConvolutionalNeuralNetworkNonSymbolic.process_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.process_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process one single batch</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.cnn_separable_non_symbolic">
+<span id="src-cnn-separable-non-symbolic-module"></span><h2>src.cnn_separable_non_symbolic module<a class="headerlink" href="#module-src.cnn_separable_non_symbolic" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Nov 24 14:39:22 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="class">
+<dt id="src.cnn_separable_non_symbolic.CNNTime">
+<em class="property">class </em><tt class="descclassname">src.cnn_separable_non_symbolic.</tt><tt class="descname">CNNTime</tt><a class="reference internal" href="_modules/src/cnn_separable_non_symbolic.html#CNNTime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_separable_non_symbolic.CNNTime" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="src.cnn_separable_non_symbolic.CNNTime.to_string">
+<tt class="descname">to_string</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/cnn_separable_non_symbolic.html#CNNTime.to_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_separable_non_symbolic.CNNTime.to_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic">
+<em class="property">class </em><tt class="descclassname">src.cnn_separable_non_symbolic.</tt><tt class="descname">ConvolutionalNeuralNetworkNonSymbolic</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/src/cnn_separable_non_symbolic.html#ConvolutionalNeuralNetworkNonSymbolic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.compute_test_error">
+<tt class="descname">compute_test_error</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/cnn_separable_non_symbolic.html#ConvolutionalNeuralNetworkNonSymbolic.compute_test_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.compute_test_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loop through the batches and run process_batch</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.create_layers_from_settings">
+<tt class="descname">create_layers_from_settings</tt><big>(</big><em>settings</em><big>)</big><a class="reference internal" href="_modules/src/cnn_separable_non_symbolic.html#ConvolutionalNeuralNetworkNonSymbolic.create_layers_from_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.create_layers_from_settings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.initialize_logger">
+<tt class="descname">initialize_logger</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/cnn_separable_non_symbolic.html#ConvolutionalNeuralNetworkNonSymbolic.initialize_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.initialize_logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.load_weights">
+<tt class="descname">load_weights</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/cnn_separable_non_symbolic.html#ConvolutionalNeuralNetworkNonSymbolic.load_weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.load_weights" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.log_cnn_time_summary">
+<tt class="descname">log_cnn_time_summary</tt><big>(</big><em>timings</em><big>)</big><a class="reference internal" href="_modules/src/cnn_separable_non_symbolic.html#ConvolutionalNeuralNetworkNonSymbolic.log_cnn_time_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.log_cnn_time_summary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.log_fit_info">
+<tt class="descname">log_fit_info</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/cnn_separable_non_symbolic.html#ConvolutionalNeuralNetworkNonSymbolic.log_fit_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.log_fit_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.process_batch">
+<tt class="descname">process_batch</tt><big>(</big><em>batch_index</em>, <em>cnn_time</em><big>)</big><a class="reference internal" href="_modules/src/cnn_separable_non_symbolic.html#ConvolutionalNeuralNetworkNonSymbolic.process_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_separable_non_symbolic.ConvolutionalNeuralNetworkNonSymbolic.process_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process one single batch</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.cnn_train_test">
+<span id="src-cnn-train-test-module"></span><h2>src.cnn_train_test module<a class="headerlink" href="#module-src.cnn_train_test" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 16:19:55 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="function">
+<dt id="src.cnn_train_test.main">
+<tt class="descclassname">src.cnn_train_test.</tt><tt class="descname">main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/cnn_train_test.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.cnn_train_test.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-src.conf">
+<span id="src-conf-module"></span><h2>src.conf module<a class="headerlink" href="#module-src.conf" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="src-convolutional-mlp-module">
+<h2>src.convolutional_mlp module<a class="headerlink" href="#src-convolutional-mlp-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-src.convolutional_neural_network_separable">
+<span id="src-convolutional-neural-network-separable-module"></span><h2>src.convolutional_neural_network_separable module<a class="headerlink" href="#module-src.convolutional_neural_network_separable" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Nov  4 00:30:04 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="class">
+<dt id="src.convolutional_neural_network_separable.ConvolutionalNeuralNetworkSeparableTest">
+<em class="property">class </em><tt class="descclassname">src.convolutional_neural_network_separable.</tt><tt class="descname">ConvolutionalNeuralNetworkSeparableTest</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/src/convolutional_neural_network_separable.html#ConvolutionalNeuralNetworkSeparableTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_neural_network_separable.ConvolutionalNeuralNetworkSeparableTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="method">
+<dt id="src.convolutional_neural_network_separable.ConvolutionalNeuralNetworkSeparableTest.build_model">
+<tt class="descname">build_model</tt><big>(</big><em>frame</em><big>)</big><a class="reference internal" href="_modules/src/convolutional_neural_network_separable.html#ConvolutionalNeuralNetworkSeparableTest.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_neural_network_separable.ConvolutionalNeuralNetworkSeparableTest.build_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.convolutional_neural_network_separable.ConvolutionalNeuralNetworkSeparableTest.compute_test_VOC_loss">
+<tt class="descname">compute_test_VOC_loss</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/convolutional_neural_network_separable.html#ConvolutionalNeuralNetworkSeparableTest.compute_test_VOC_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_neural_network_separable.ConvolutionalNeuralNetworkSeparableTest.compute_test_VOC_loss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.convolutional_neural_network_separable.ConvolutionalNeuralNetworkSeparableTest.create_layers_from_settings">
+<tt class="descname">create_layers_from_settings</tt><big>(</big><em>settings</em><big>)</big><a class="reference internal" href="_modules/src/convolutional_neural_network_separable.html#ConvolutionalNeuralNetworkSeparableTest.create_layers_from_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_neural_network_separable.ConvolutionalNeuralNetworkSeparableTest.create_layers_from_settings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.convolutional_neural_network_separable.ConvolutionalNeuralNetworkSeparableTest.save_parameters">
+<tt class="descname">save_parameters</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/convolutional_neural_network_separable.html#ConvolutionalNeuralNetworkSeparableTest.save_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_neural_network_separable.ConvolutionalNeuralNetworkSeparableTest.save_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.convolutional_neural_network_separable.ConvolutionalNeuralNetworkSeparableTest.test_model">
+<tt class="descname">test_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/convolutional_neural_network_separable.html#ConvolutionalNeuralNetworkSeparableTest.test_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_neural_network_separable.ConvolutionalNeuralNetworkSeparableTest.test_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="src.convolutional_neural_network_separable.inspect_inputs">
+<tt class="descclassname">src.convolutional_neural_network_separable.</tt><tt class="descname">inspect_inputs</tt><big>(</big><em>i</em>, <em>node</em>, <em>fn</em><big>)</big><a class="reference internal" href="_modules/src/convolutional_neural_network_separable.html#inspect_inputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_neural_network_separable.inspect_inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="src.convolutional_neural_network_separable.inspect_outputs">
+<tt class="descclassname">src.convolutional_neural_network_separable.</tt><tt class="descname">inspect_outputs</tt><big>(</big><em>i</em>, <em>node</em>, <em>fn</em><big>)</big><a class="reference internal" href="_modules/src/convolutional_neural_network_separable.html#inspect_outputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_neural_network_separable.inspect_outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-src.convolutional_neural_network_settings_pb2">
+<span id="src-convolutional-neural-network-settings-pb2-module"></span><h2>src.convolutional_neural_network_settings_pb2 module<a class="headerlink" href="#module-src.convolutional_neural_network_settings_pb2" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-src.convolutional_nnet_test">
+<span id="src-convolutional-nnet-test-module"></span><h2>src.convolutional_nnet_test module<a class="headerlink" href="#module-src.convolutional_nnet_test" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 15:27:51 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="class">
+<dt id="src.convolutional_nnet_test.ConvolutionalNeuralNetworkTest">
+<em class="property">class </em><tt class="descclassname">src.convolutional_nnet_test.</tt><tt class="descname">ConvolutionalNeuralNetworkTest</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/src/convolutional_nnet_test.html#ConvolutionalNeuralNetworkTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_nnet_test.ConvolutionalNeuralNetworkTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="method">
+<dt id="src.convolutional_nnet_test.ConvolutionalNeuralNetworkTest.build_model">
+<tt class="descname">build_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/convolutional_nnet_test.html#ConvolutionalNeuralNetworkTest.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_nnet_test.ConvolutionalNeuralNetworkTest.build_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.convolutional_nnet_test.ConvolutionalNeuralNetworkTest.create_layers_from_settings">
+<tt class="descname">create_layers_from_settings</tt><big>(</big><em>settings</em><big>)</big><a class="reference internal" href="_modules/src/convolutional_nnet_test.html#ConvolutionalNeuralNetworkTest.create_layers_from_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_nnet_test.ConvolutionalNeuralNetworkTest.create_layers_from_settings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.convolutional_nnet_test.ConvolutionalNeuralNetworkTest.test_model">
+<tt class="descname">test_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/convolutional_nnet_test.html#ConvolutionalNeuralNetworkTest.test_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_nnet_test.ConvolutionalNeuralNetworkTest.test_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.convolutional_nnet_train">
+<span id="src-convolutional-nnet-train-module"></span><h2>src.convolutional_nnet_train module<a class="headerlink" href="#module-src.convolutional_nnet_train" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 15:27:51 2014
+&#64;author: vivianapetrescu</p>
+<dl class="class">
+<dt id="src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain">
+<em class="property">class </em><tt class="descclassname">src.convolutional_nnet_train.</tt><tt class="descname">ConvolutionalNeuralNetworkTrain</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/src/convolutional_nnet_train.html#ConvolutionalNeuralNetworkTrain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>The class takes a proto bufer as input, setups a CNN according to the
+settings, trains the network and saves the weights in a file</p>
+<dl class="method">
+<dt id="src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.build_model">
+<tt class="descname">build_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/convolutional_nnet_train.html#ConvolutionalNeuralNetworkTrain.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.build_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.compute_test_VOC_loss">
+<tt class="descname">compute_test_VOC_loss</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/convolutional_nnet_train.html#ConvolutionalNeuralNetworkTrain.compute_test_VOC_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.compute_test_VOC_loss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.compute_validation_VOC_loss">
+<tt class="descname">compute_validation_VOC_loss</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/convolutional_nnet_train.html#ConvolutionalNeuralNetworkTrain.compute_validation_VOC_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.compute_validation_VOC_loss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.create_layers_from_settings">
+<tt class="descname">create_layers_from_settings</tt><big>(</big><em>settings</em><big>)</big><a class="reference internal" href="_modules/src/convolutional_nnet_train.html#ConvolutionalNeuralNetworkTrain.create_layers_from_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.create_layers_from_settings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.initialize_logger">
+<tt class="descname">initialize_logger</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/convolutional_nnet_train.html#ConvolutionalNeuralNetworkTrain.initialize_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.initialize_logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.save_parameters">
+<tt class="descname">save_parameters</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/convolutional_nnet_train.html#ConvolutionalNeuralNetworkTrain.save_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.save_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.train_model">
+<tt class="descname">train_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/convolutional_nnet_train.html#ConvolutionalNeuralNetworkTrain.train_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.train_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="src-generate-folders-module">
+<h2>src.generate_folders module<a class="headerlink" href="#src-generate-folders-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="src-generate-foldersl1-module">
+<h2>src.generate_foldersl1 module<a class="headerlink" href="#src-generate-foldersl1-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-src.generate_separable_weights">
+<span id="src-generate-separable-weights-module"></span><h2>src.generate_separable_weights module<a class="headerlink" href="#module-src.generate_separable_weights" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri Oct 31 10:59:25 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="function">
+<dt id="src.generate_separable_weights.decompose_layers">
+<tt class="descclassname">src.generate_separable_weights.</tt><tt class="descname">decompose_layers</tt><big>(</big><em>settings</em>, <em>cached_weights</em><big>)</big><a class="reference internal" href="_modules/src/generate_separable_weights.html#decompose_layers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.generate_separable_weights.decompose_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run through every conv layer and check were we have rank enabled.
+If we have it enabled, run decompose tensor.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.generate_separable_weights.decompose_tensor">
+<tt class="descclassname">src.generate_separable_weights.</tt><tt class="descname">decompose_tensor</tt><big>(</big><em>filters</em>, <em>rank</em><big>)</big><a class="reference internal" href="_modules/src/generate_separable_weights.html#decompose_tensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.generate_separable_weights.decompose_tensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>filters is of type input feature maps, output feature maps, wxh of filter
+Output is a structure P which contains lambda, U{1}, U{2}, U{3}</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.generate_separable_weights.main">
+<tt class="descclassname">src.generate_separable_weights.</tt><tt class="descname">main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/generate_separable_weights.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.generate_separable_weights.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="src.generate_separable_weights.run">
+<tt class="descclassname">src.generate_separable_weights.</tt><tt class="descname">run</tt><big>(</big><em>options</em><big>)</big><a class="reference internal" href="_modules/src/generate_separable_weights.html#run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.generate_separable_weights.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load settings</p>
+</dd></dl>
+
+</div>
+<div class="section" id="src-imagenet-test-cnn-module">
+<h2>src.imagenet_test_cnn module<a class="headerlink" href="#src-imagenet-test-cnn-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="src-index-module">
+<h2>src.index module<a class="headerlink" href="#src-index-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-src.lenet_conv_pool_layer">
+<span id="src-lenet-conv-pool-layer-module"></span><h2>src.lenet_conv_pool_layer module<a class="headerlink" href="#module-src.lenet_conv_pool_layer" title="Permalink to this headline">¶</a></h2>
+<p>This tutorial introduces the LeNet5 neural network architecture
+using Theano.  LeNet5 is a convolutional neural network, good for
+classifying images. This tutorial shows how to build the architecture,
+and comes with all the hyper-parameters you need to reproduce the
+paper&#8217;s MNIST results.</p>
+<p>This implementation simplifies the model in the following ways:</p>
+<blockquote>
+<div><ul class="simple">
+<li>LeNetConvPool doesn&#8217;t implement location-specific gain and bias parameters</li>
+<li>LeNetConvPool doesn&#8217;t implement pooling by average, it implements pooling
+by max.</li>
+<li>Digit classification is implemented with a logistic regression rather than
+an RBF network</li>
+<li>LeNet5 was not fully-connected convolutions at second layer</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>References:</dt>
+<dd><ul class="first last simple">
+<li>Y. LeCun, L. Bottou, Y. Bengio and P. Haffner:
+Gradient-Based Learning Applied to Document
+Recognition, Proceedings of the IEEE, 86(11):2278-2324, November 1998.
+<a class="reference external" href="http://yann.lecun.com/exdb/publis/pdf/lecun-98.pdf">http://yann.lecun.com/exdb/publis/pdf/lecun-98.pdf</a></li>
+</ul>
+</dd>
+</dl>
+<dl class="class">
+<dt id="src.lenet_conv_pool_layer.LeNetConvPoolLayer">
+<em class="property">class </em><tt class="descclassname">src.lenet_conv_pool_layer.</tt><tt class="descname">LeNetConvPoolLayer</tt><big>(</big><em>rng</em>, <em>input</em>, <em>filter_shape</em>, <em>image_shape</em>, <em>poolsize=(2</em>, <em>2)</em>, <em>W=None</em>, <em>b=None</em><big>)</big><a class="reference internal" href="_modules/src/lenet_conv_pool_layer.html#LeNetConvPoolLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_conv_pool_layer.LeNetConvPoolLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Pool Layer of a convolutional network</p>
+<dl class="method">
+<dt id="src.lenet_conv_pool_layer.LeNetConvPoolLayer.run_conv_pool">
+<tt class="descname">run_conv_pool</tt><big>(</big><em>input</em>, <em>filter_shape</em>, <em>image_shape</em>, <em>poolsize</em><big>)</big><a class="reference internal" href="_modules/src/lenet_conv_pool_layer.html#LeNetConvPoolLayer.run_conv_pool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_conv_pool_layer.LeNetConvPoolLayer.run_conv_pool" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.lenet_layer_conv_pool_non_symbolic">
+<span id="src-lenet-layer-conv-pool-non-symbolic-module"></span><h2>src.lenet_layer_conv_pool_non_symbolic module<a class="headerlink" href="#module-src.lenet_layer_conv_pool_non_symbolic" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Nov 24 15:17:50 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="class">
+<dt id="src.lenet_layer_conv_pool_non_symbolic.LeNetLayerConvPoolNonSymbolic">
+<em class="property">class </em><tt class="descclassname">src.lenet_layer_conv_pool_non_symbolic.</tt><tt class="descname">LeNetLayerConvPoolNonSymbolic</tt><big>(</big><em>rng</em><big>)</big><a class="reference internal" href="_modules/src/lenet_layer_conv_pool_non_symbolic.html#LeNetLayerConvPoolNonSymbolic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_layer_conv_pool_non_symbolic.LeNetLayerConvPoolNonSymbolic" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="src.lenet_layer_conv_pool_non_symbolic.LeNetLayerConvPoolNonSymbolic.run_batch">
+<tt class="descname">run_batch</tt><big>(</big><em>images</em>, <em>filter_shape</em>, <em>image_shape</em>, <em>W=None</em>, <em>b=None</em>, <em>poolsize=(2</em>, <em>2)</em><big>)</big><a class="reference internal" href="_modules/src/lenet_layer_conv_pool_non_symbolic.html#LeNetLayerConvPoolNonSymbolic.run_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_layer_conv_pool_non_symbolic.LeNetLayerConvPoolNonSymbolic.run_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocate a LeNetConvPoolLayer with shared variable internal parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>rng</strong> (<em>numpy.random.RandomState</em>) &#8211; a random number generator used to initialize weights</li>
+<li><strong>input</strong> (<em>theano.tensor.dtensor4</em>) &#8211; symbolic image tensor, of shape image_shape</li>
+<li><strong>filter_shape</strong> (<em>tuple or list of length 4</em>) &#8211; (number of filters, num input feature maps,
+filter height,filter width)</li>
+<li><strong>image_shape</strong> (<em>tuple or list of length 4</em>) &#8211; (batch size, num input feature maps,
+image height, image width)</li>
+<li><strong>poolsize</strong> (<em>tuple or list of length 2</em>) &#8211; the downsampling (pooling) factor (#rows,#cols)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.lenet_layer_conv_pool_non_symbolic.LeNetLayerConvPoolNonSymbolic.run_conv_pool">
+<tt class="descname">run_conv_pool</tt><big>(</big><em>images</em>, <em>filter_shape</em>, <em>image_shape</em>, <em>poolsize</em><big>)</big><a class="reference internal" href="_modules/src/lenet_layer_conv_pool_non_symbolic.html#LeNetLayerConvPoolNonSymbolic.run_conv_pool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_layer_conv_pool_non_symbolic.LeNetLayerConvPoolNonSymbolic.run_conv_pool" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.lenet_layer_conv_pool_separable_non_symbolic">
+<span id="src-lenet-layer-conv-pool-separable-non-symbolic-module"></span><h2>src.lenet_layer_conv_pool_separable_non_symbolic module<a class="headerlink" href="#module-src.lenet_layer_conv_pool_separable_non_symbolic" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Nov 24 15:18:23 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="class">
+<dt id="src.lenet_layer_conv_pool_separable_non_symbolic.LeNetLayerConvPoolSeparableNonSymbolic">
+<em class="property">class </em><tt class="descclassname">src.lenet_layer_conv_pool_separable_non_symbolic.</tt><tt class="descname">LeNetLayerConvPoolSeparableNonSymbolic</tt><big>(</big><em>rng</em><big>)</big><a class="reference internal" href="_modules/src/lenet_layer_conv_pool_separable_non_symbolic.html#LeNetLayerConvPoolSeparableNonSymbolic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_layer_conv_pool_separable_non_symbolic.LeNetLayerConvPoolSeparableNonSymbolic" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="src.lenet_layer_conv_pool_separable_non_symbolic.LeNetLayerConvPoolSeparableNonSymbolic.convolve_one_image">
+<tt class="descname">convolve_one_image</tt><big>(</big><em>one_image</em>, <em>img_shape</em>, <em>Pstruct</em>, <em>pcoef</em>, <em>U1</em>, <em>U2</em>, <em>filter_shape</em>, <em>image_index</em><big>)</big><a class="reference internal" href="_modules/src/lenet_layer_conv_pool_separable_non_symbolic.html#LeNetLayerConvPoolSeparableNonSymbolic.convolve_one_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_layer_conv_pool_separable_non_symbolic.LeNetLayerConvPoolSeparableNonSymbolic.convolve_one_image" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.lenet_layer_conv_pool_separable_non_symbolic.LeNetLayerConvPoolSeparableNonSymbolic.run_batch">
+<tt class="descname">run_batch</tt><big>(</big><em>input_images</em>, <em>image_shape</em>, <em>filter_shape</em>, <em>Pstruct</em>, <em>b</em>, <em>poolsize</em><big>)</big><a class="reference internal" href="_modules/src/lenet_layer_conv_pool_separable_non_symbolic.html#LeNetLayerConvPoolSeparableNonSymbolic.run_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_layer_conv_pool_separable_non_symbolic.LeNetLayerConvPoolSeparableNonSymbolic.run_batch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.lenet_separable_conv_pool_layer">
+<span id="src-lenet-separable-conv-pool-layer-module"></span><h2>src.lenet_separable_conv_pool_layer module<a class="headerlink" href="#module-src.lenet_separable_conv_pool_layer" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri Oct 31 00:19:05 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="class">
+<dt id="src.lenet_separable_conv_pool_layer.LeNetSeparableConvPoolLayer">
+<em class="property">class </em><tt class="descclassname">src.lenet_separable_conv_pool_layer.</tt><tt class="descname">LeNetSeparableConvPoolLayer</tt><big>(</big><em>rng</em>, <em>input_images</em>, <em>filter_shape</em>, <em>image_shape</em>, <em>poolsize=(2</em>, <em>2)</em>, <em>Pstruct=None</em>, <em>b=None</em><big>)</big><a class="reference internal" href="_modules/src/lenet_separable_conv_pool_layer.html#LeNetSeparableConvPoolLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_separable_conv_pool_layer.LeNetSeparableConvPoolLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Pool Layer of a convolutional network</p>
+<dl class="method">
+<dt id="src.lenet_separable_conv_pool_layer.LeNetSeparableConvPoolLayer.convolve_one_image">
+<tt class="descname">convolve_one_image</tt><big>(</big><em>channel_index</em>, <em>input4D</em>, <em>input_images</em>, <em>image_shape</em>, <em>filter_shape</em><big>)</big><a class="reference internal" href="_modules/src/lenet_separable_conv_pool_layer.html#LeNetSeparableConvPoolLayer.convolve_one_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_separable_conv_pool_layer.LeNetSeparableConvPoolLayer.convolve_one_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convolve one image with separabl filters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>input</strong> (<em>theano.tensor.dtensor3</em>) &#8211; symbolic image tensor, of shape image_shape</li>
+<li><strong>image_shape</strong> (<em>tuple or list of length 3</em>) &#8211; ( nbr channels, image height, image width)</li>
+<li><strong>filter_shape</strong> (<em>tuple or list of length 4</em>) &#8211; (number of filters,nbrmaps, filter height,filter width)</li>
+<li><strong>poolsize</strong> (<em>tuple or list of length 2</em>) &#8211; the downsampling (pooling) factor (#rows,#cols)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="src.lenet_separable_conv_pool_layer.convolve_special_image">
+<tt class="descclassname">src.lenet_separable_conv_pool_layer.</tt><tt class="descname">convolve_special_image</tt><big>(</big><em>channel_index</em>, <em>input4D</em>, <em>input_images</em>, <em>fU1</em>, <em>fU2</em>, <em>fU3</em>, <em>flmda</em>, <em>ib</em>, <em>iw</em>, <em>ih</em><big>)</big><a class="reference internal" href="_modules/src/lenet_separable_conv_pool_layer.html#convolve_special_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_separable_conv_pool_layer.convolve_special_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convolve one image with separabl filters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>input</strong> (<em>theano.tensor.dtensor3</em>) &#8211; symbolic image tensor, of shape image_shape</li>
+<li><strong>image_shape</strong> (<em>tuple or list of length 3</em>) &#8211; ( nbr channels, image height, image width)</li>
+<li><strong>filter_shape</strong> (<em>tuple or list of length 4</em>) &#8211; (number of filters,nbrmaps, filter height,filter width)</li>
+<li><strong>poolsize</strong> (<em>tuple or list of length 2</em>) &#8211; the downsampling (pooling) factor (#rows,#cols)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.lenet_separable_non_symbolic">
+<span id="src-lenet-separable-non-symbolic-module"></span><h2>src.lenet_separable_non_symbolic module<a class="headerlink" href="#module-src.lenet_separable_non_symbolic" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri Oct 31 00:19:05 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="class">
+<dt id="src.lenet_separable_non_symbolic.LeNetNonSymbolicSeparableConvPoolLayer">
+<em class="property">class </em><tt class="descclassname">src.lenet_separable_non_symbolic.</tt><tt class="descname">LeNetNonSymbolicSeparableConvPoolLayer</tt><big>(</big><em>rng</em><big>)</big><a class="reference internal" href="_modules/src/lenet_separable_non_symbolic.html#LeNetNonSymbolicSeparableConvPoolLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_separable_non_symbolic.LeNetNonSymbolicSeparableConvPoolLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Pool Layer of a convolutional network</p>
+<dl class="method">
+<dt id="src.lenet_separable_non_symbolic.LeNetNonSymbolicSeparableConvPoolLayer.compute_output">
+<tt class="descname">compute_output</tt><big>(</big><em>input_images</em>, <em>filter_shape</em>, <em>image_shape</em>, <em>poolsize=(2</em>, <em>2)</em>, <em>Pstruct=None</em>, <em>b=None</em><big>)</big><a class="reference internal" href="_modules/src/lenet_separable_non_symbolic.html#LeNetNonSymbolicSeparableConvPoolLayer.compute_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_separable_non_symbolic.LeNetNonSymbolicSeparableConvPoolLayer.compute_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocate a LeNetConvPoolLayer with shared variable internal parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>rng</strong> (<em>numpy.random.RandomState</em>) &#8211; a random number generator used to initialize weights</li>
+<li><strong>input</strong> (<em>theano.tensor.dtensor4</em>) &#8211; symbolic image tensor, of shape image_shape</li>
+<li><strong>filter_shape</strong> (<em>tuple or list of length 4</em>) &#8211; (number of filters, num input feature maps,
+filter height,filter width)</li>
+<li><strong>image_shape</strong> (<em>tuple or list of length 4</em>) &#8211; (batch size, num input feature/channels maps,
+image height, image width)
+For a gray image, this is 1 for the first layer.
+For the following layers it is equal with the 
+number of output  channels/feature maps</li>
+<li><strong>poolsize</strong> (<em>tuple or list of length 2</em>) &#8211; the downsampling (pooling) factor (#rows,#cols)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.lenet_separable_non_symbolic.LeNetNonSymbolicSeparableConvPoolLayer.convolve_one_image">
+<tt class="descname">convolve_one_image</tt><big>(</big><em>input4D</em>, <em>one_image</em>, <em>image_shape</em>, <em>Pstruct</em>, <em>filter_shape</em>, <em>image_index</em>, <em>channel_index</em><big>)</big><a class="reference internal" href="_modules/src/lenet_separable_non_symbolic.html#LeNetNonSymbolicSeparableConvPoolLayer.convolve_one_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.lenet_separable_non_symbolic.LeNetNonSymbolicSeparableConvPoolLayer.convolve_one_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convolve one image with separabl filters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>input</strong> (<em>theano.tensor.dtensor3</em>) &#8211; symbolic image tensor, of shape image_shape</li>
+<li><strong>image_shape</strong> (<em>tuple or list of length 3</em>) &#8211; ( nbr channels, image height, image width)</li>
+<li><strong>filter_shape</strong> (<em>tuple or list of length 4</em>) &#8211; (number of filters,nbrmaps, filter height,filter width)</li>
+<li><strong>poolsize</strong> (<em>tuple or list of length 2</em>) &#8211; the downsampling (pooling) factor (#rows,#cols)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.load_Gtest">
+<span id="src-load-gtest-module"></span><h2>src.load_Gtest module<a class="headerlink" href="#module-src.load_Gtest" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-src.load_data">
+<span id="src-load-data-module"></span><h2>src.load_data module<a class="headerlink" href="#module-src.load_data" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="src.load_data.load_mnist_data">
+<tt class="descclassname">src.load_data.</tt><tt class="descname">load_mnist_data</tt><big>(</big><em>dataset</em><big>)</big><a class="reference internal" href="_modules/src/load_data.html#load_mnist_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.load_data.load_mnist_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the dataset</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dataset</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; the path to the dataset (here MNIST)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.load_data_rescaled">
+<span id="src-load-data-rescaled-module"></span><h2>src.load_data_rescaled module<a class="headerlink" href="#module-src.load_data_rescaled" title="Permalink to this headline">¶</a></h2>
+<p>Created on Thu Dec  4 00:34:09 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="function">
+<dt id="src.load_data_rescaled.load_mnist_data_rescaled">
+<tt class="descclassname">src.load_data_rescaled.</tt><tt class="descname">load_mnist_data_rescaled</tt><big>(</big><em>dataset</em><big>)</big><a class="reference internal" href="_modules/src/load_data_rescaled.html#load_mnist_data_rescaled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.load_data_rescaled.load_mnist_data_rescaled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the dataset</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dataset</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; the path to the dataset (here MNIST)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.load_mitocondria">
+<span id="src-load-mitocondria-module"></span><h2>src.load_mitocondria module<a class="headerlink" href="#module-src.load_mitocondria" title="Permalink to this headline">¶</a></h2>
+<p>Created on Wed Dec 17 18:17:44 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="function">
+<dt id="src.load_mitocondria.load_mitocondria">
+<tt class="descclassname">src.load_mitocondria.</tt><tt class="descname">load_mitocondria</tt><big>(</big><em>frame=None</em><big>)</big><a class="reference internal" href="_modules/src/load_mitocondria.html#load_mitocondria"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.load_mitocondria.load_mitocondria" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-src.logistic_sgd">
+<span id="src-logistic-sgd-module"></span><h2>src.logistic_sgd module<a class="headerlink" href="#module-src.logistic_sgd" title="Permalink to this headline">¶</a></h2>
+<p>This tutorial introduces logistic regression using Theano and stochastic
+gradient descent.</p>
+<p>Logistic regression is a probabilistic, linear classifier. It is parametrized
+by a weight matrix <span class="math">\(W\)</span> and a bias vector <span class="math">\(b\)</span>. Classification is
+done by projecting data points onto a set of hyperplanes, the distance to
+which is used to determine a class membership probability.</p>
+<p>Mathematically, this can be written as:</p>
+<div class="math">
+\[\begin{split}P(Y=i|x, W,b) &amp;= softmax_i(W x + b) \
+              &amp;= \end{split}\]</div>
+<p>rac {e^{W_i x + b_i}} {sum_j e^{W_j x + b_j}}</p>
+<p>The output of the model or prediction is then done by taking the argmax of
+the vector whose i&#8217;th element is P(Y=i|x).</p>
+<div class="math">
+\[y_{pred} = argmax_i P(Y=i|x,W,b)\]</div>
+<p>This tutorial presents a stochastic gradient descent optimization method
+suitable for large datasets, and a conjugate gradient optimization method
+that is suitable for smaller datasets.</p>
+<p>References:</p>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt>textbooks: &#8220;Pattern Recognition and Machine Learning&#8221; -</dt>
+<dd><p class="first last">Christopher M. Bishop, section 4.3.2</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="class">
+<dt id="src.logistic_sgd.LogisticRegression">
+<em class="property">class </em><tt class="descclassname">src.logistic_sgd.</tt><tt class="descname">LogisticRegression</tt><big>(</big><em>input</em>, <em>n_in</em>, <em>n_out</em>, <em>W=None</em>, <em>b=None</em><big>)</big><a class="reference internal" href="_modules/src/logistic_sgd.html#LogisticRegression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.logistic_sgd.LogisticRegression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Multi-class Logistic Regression Class</p>
+<p>The logistic regression is fully described by a weight matrix <span class="math">\(W\)</span>
+and bias vector <span class="math">\(b\)</span>. Classification is done by projecting data
+points onto a set of hyperplanes, the distance to which is used to
+determine a class membership probability.</p>
+<dl class="method">
+<dt id="src.logistic_sgd.LogisticRegression.VOC_values">
+<tt class="descname">VOC_values</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/src/logistic_sgd.html#LogisticRegression.VOC_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.logistic_sgd.LogisticRegression.VOC_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a float representing the number of errors in the minibatch
+over the total number of examples of the minibatch ; zero one
+loss over the size of the minibatch</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>y</strong> (<em>theano.tensor.TensorType</em>) &#8211; corresponds to a vector that gives for each example the
+correct label</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.logistic_sgd.LogisticRegression.errors">
+<tt class="descname">errors</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/src/logistic_sgd.html#LogisticRegression.errors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.logistic_sgd.LogisticRegression.errors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a float representing the number of errors in the minibatch
+over the total number of examples of the minibatch ; zero one
+loss over the size of the minibatch</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>y</strong> (<em>theano.tensor.TensorType</em>) &#8211; corresponds to a vector that gives for each example the
+correct label</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.logistic_sgd.LogisticRegression.false_negatives_count">
+<tt class="descname">false_negatives_count</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/src/logistic_sgd.html#LogisticRegression.false_negatives_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.logistic_sgd.LogisticRegression.false_negatives_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.logistic_sgd.LogisticRegression.false_positives_count">
+<tt class="descname">false_positives_count</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/src/logistic_sgd.html#LogisticRegression.false_positives_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.logistic_sgd.LogisticRegression.false_positives_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.logistic_sgd.LogisticRegression.false_result_count">
+<tt class="descname">false_result_count</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/src/logistic_sgd.html#LogisticRegression.false_result_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.logistic_sgd.LogisticRegression.false_result_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.logistic_sgd.LogisticRegression.negative_log_likelihood">
+<tt class="descname">negative_log_likelihood</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/src/logistic_sgd.html#LogisticRegression.negative_log_likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.logistic_sgd.LogisticRegression.negative_log_likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Return the mean of the negative log-likelihood of the prediction</dt>
+<dd><p class="first">of this model under a given target distribution.</p>
+<div class="last math">
+</div>
+</dd>
+</dl>
+<p>rac{1}{<a href="#id1"><span class="problematic" id="id2">|\mathcal{D}|</span></a>} mathcal{L} (        heta={W,b}, mathcal{D}) =</p>
+<dl class="docutils">
+<dt>rac{1}{<a href="#id3"><span class="problematic" id="id4">|\mathcal{D}|</span></a>} sum_{i=0}^{<a href="#id5"><span class="problematic" id="id6">|\mathcal{D}|</span></a>} log(P(Y=y^{(i)}|x^{(i)}, W,b)) </dt>
+<dd><blockquote class="first">
+<div>ell (  heta={W,b}, mathcal{D})</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">type y:</th><td class="field-body">theano.tensor.TensorType</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param y:</th><td class="field-body">corresponds to a vector that gives for each example the
+correct label</td>
+</tr>
+</tbody>
+</table>
+<dl class="last docutils">
+<dt>Note: we use the mean instead of the sum so that</dt>
+<dd>the learning rate is less dependent on the batch size</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.logistic_sgd.LogisticRegression.result_count_dictionary">
+<tt class="descname">result_count_dictionary</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/src/logistic_sgd.html#LogisticRegression.result_count_dictionary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.logistic_sgd.LogisticRegression.result_count_dictionary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.logistic_sgd.LogisticRegression.true_negatives_count">
+<tt class="descname">true_negatives_count</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/src/logistic_sgd.html#LogisticRegression.true_negatives_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.logistic_sgd.LogisticRegression.true_negatives_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.logistic_sgd.LogisticRegression.true_positives_count">
+<tt class="descname">true_positives_count</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/src/logistic_sgd.html#LogisticRegression.true_positives_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.logistic_sgd.LogisticRegression.true_positives_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.misc">
+<span id="src-misc-module"></span><h2>src.misc module<a class="headerlink" href="#module-src.misc" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="misc">
+<h3>misc<a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h3>
+<p>This module implements functions which do not have another home.</p>
+<dl class="function">
+<dt id="src.misc.colorzoom">
+<tt class="descclassname">src.misc.</tt><tt class="descname">colorzoom</tt><big>(</big><em>img</em>, <em>zoom</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#colorzoom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.colorzoom" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="src.misc.detect_peaks">
+<tt class="descclassname">src.misc.</tt><tt class="descname">detect_peaks</tt><big>(</big><em>img</em>, <em>minimum_distance=None</em>, <em>window_size=3</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#detect_peaks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.detect_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detect prominent peaks in an image.</p>
+<p>If given, <tt class="docutils literal"><span class="pre">minimum_distance</span></tt> indicates the minimum distance
+that each detected peak is from its nearest neighbor.</p>
+<p><tt class="docutils literal"><span class="pre">window_size</span></tt> indicates the size of the window
+for the non-maxima suppression algorithm. The default is (3,3).</p>
+<p>From Yanxi Liu, Robert T. Collins, 
+&#8220;A Computational Model for Repeated Pattern Perception using
+Frieze and Wallpaper Groups&#8221;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.misc.grouper">
+<tt class="descclassname">src.misc.</tt><tt class="descname">grouper</tt><big>(</big><em>n</em>, <em>iterable</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#grouper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.grouper" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="src.misc.loadz">
+<tt class="descclassname">src.misc.</tt><tt class="descname">loadz</tt><big>(</big><em>filename</em>, <em>destdict=None</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#loadz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.loadz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a .npz file and insert its contents into a namespace.</p>
+<p>If destdict is not given, the contents will be inserted
+in the global namespace of the calling frame.</p>
+<p>Example:
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; A = np.array([1,2,3])
+&gt;&gt;&gt; b = np.array([[1,2],[3,4]])
+&gt;&gt;&gt; np.savez(&#8220;test&#8221;, A=A, b=b)
+&gt;&gt;&gt; del A, b
+&gt;&gt;&gt; loadz(&#8220;test.npz&#8221;)
+&gt;&gt;&gt; A
+array([1, 2, 3])
+&gt;&gt;&gt; b
+array([[1, 2],</p>
+<blockquote>
+<div>[3, 4]])</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.misc.matarray">
+<tt class="descclassname">src.misc.</tt><tt class="descname">matarray</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#matarray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.matarray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a 2D array using a Matlab-like notation.
+You can specify the separator element using the keyword
+argument &#8216;sep&#8217;. By default, it is &#8216;None&#8217;. This is
+useful when creating block matrices.</p>
+<p>When the resulting matrix has only one element, matarray
+will return the element.</p>
+<p>Examples:
+&gt;&gt;&gt; matarray(1,2,None,3,4)
+array([[1, 2],</p>
+<blockquote>
+<div>[3, 4]])</div></blockquote>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">matarray</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+<span class="go">array([[1, 2],</span>
+<span class="go">       [3, 4]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matarray</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">array([[ 1.,  1.,  1.,  0.],</span>
+<span class="go">       [ 1.,  1.,  1.,  0.],</span>
+<span class="go">       [ 1.,  1.,  1.,  0.],</span>
+<span class="go">       [ 0.,  0.,  0.,  1.]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matarray</span><span class="p">([</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.misc.mklist">
+<tt class="descclassname">src.misc.</tt><tt class="descname">mklist</tt><big>(</big><em>lst</em>, <em>dim</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#mklist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.mklist" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <em>lst</em> is a scalar value or a sequence with one element, returns a list
+of that element repeated <em>dim</em> times.</p>
+<p>If <em>lst</em> is a sequence of length <em>dim</em>, returns <em>lst</em>.</p>
+<p>Otherwise, it raises a ValueError exception.</p>
+<p>Examples:
+&gt;&gt;&gt; mklist(1, 4)
+[1, 1, 1, 1]
+&gt;&gt;&gt; mklist([2], 4)
+[2, 2, 2, 2]
+&gt;&gt;&gt; mklist([1, 2, 3, 4], 4)
+[1, 2, 3, 4]
+&gt;&gt;&gt; mklist([1, 2, 3], 4)
+ValueError: lst has an invalid length</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.misc.normalize_data">
+<tt class="descclassname">src.misc.</tt><tt class="descname">normalize_data</tt><big>(</big><em>data</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#normalize_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.normalize_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="src.misc.npz2dict">
+<tt class="descclassname">src.misc.</tt><tt class="descname">npz2dict</tt><big>(</big><em>npz</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#npz2dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.npz2dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a npz structure in a Python dictionary.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.misc.plot_grid">
+<tt class="descclassname">src.misc.</tt><tt class="descname">plot_grid</tt><big>(</big><em>elements</em>, <em>plotfun</em>, <em>width=None</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#plot_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.plot_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a set of elements in a grid of subplots.</p>
+<dl class="docutils">
+<dt>elements <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>List of any type.</dd>
+<dt>plotfun <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
+<dd>The function <em>plotfun</em> should accept two parameters:
+plotfun(axes, element). <em>axes</em> is a instance of matplotlib
+AxesSubplot, and <em>element</em> is an element of the list <em>elements</em>.
+<em>plotfun</em> should plot the element in the given AxesSubplot.</dd>
+<dt>width <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>If given, it determines the width of the plot grid. If not given,
+the width of the grid is the square root of the length of <em>elements</em>.</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="src.misc.redict">
+<em class="property">class </em><tt class="descclassname">src.misc.</tt><tt class="descname">redict</tt><a class="reference internal" href="_modules/src/misc.html#redict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.redict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></a></p>
+<p>Dictionary indexed by regular expressions.</p>
+<dl class="attribute">
+<dt id="src.misc.redict.re">
+<tt class="descname">re</tt><em class="property"> = &lt;module 're' from '//anaconda/lib/python2.7/re.pyc'&gt;</em><a class="headerlink" href="#src.misc.redict.re" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="src.misc.rgb2gray">
+<tt class="descclassname">src.misc.</tt><tt class="descname">rgb2gray</tt><big>(</big><em>img</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#rgb2gray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.rgb2gray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a RGB image to gray scale.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.misc.sort_nicely">
+<tt class="descclassname">src.misc.</tt><tt class="descname">sort_nicely</tt><big>(</big><em>l</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#sort_nicely"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.sort_nicely" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort the given list in the way that humans expect.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.misc.srgb2cielab">
+<tt class="descclassname">src.misc.</tt><tt class="descname">srgb2cielab</tt><big>(</big><em>img</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#srgb2cielab"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.srgb2cielab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="src.misc.srgb2ciexyz">
+<tt class="descclassname">src.misc.</tt><tt class="descname">srgb2ciexyz</tt><big>(</big><em>img</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#srgb2ciexyz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.srgb2ciexyz" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="src.misc.tiffread">
+<tt class="descclassname">src.misc.</tt><tt class="descname">tiffread</tt><big>(</big><em>fname</em>, <em>strip=False</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#tiffread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.tiffread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a multi-page TIFF image to a three-dimensional array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.misc.unique_rows">
+<tt class="descclassname">src.misc.</tt><tt class="descname">unique_rows</tt><big>(</big><em>a</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#unique_rows"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.unique_rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove duplicated rows in a 2D array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.misc.whiten">
+<tt class="descclassname">src.misc.</tt><tt class="descname">whiten</tt><big>(</big><em>data</em>, <em>epsilon=0.001</em><big>)</big><a class="reference internal" href="_modules/src/misc.html#whiten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.misc.whiten" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-src.mitocondria_retrain_cnn">
+<span id="src-mitocondria-retrain-cnn-module"></span><h2>src.mitocondria_retrain_cnn module<a class="headerlink" href="#module-src.mitocondria_retrain_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 15:27:51 2014
+&#64;author: vpetresc</p>
+<dl class="class">
+<dt id="src.mitocondria_retrain_cnn.CNNRetrainVOCMitocondria">
+<em class="property">class </em><tt class="descclassname">src.mitocondria_retrain_cnn.</tt><tt class="descname">CNNRetrainVOCMitocondria</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em>, <em>small_set</em><big>)</big><a class="reference internal" href="_modules/src/mitocondria_retrain_cnn.html#CNNRetrainVOCMitocondria"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.mitocondria_retrain_cnn.CNNRetrainVOCMitocondria" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.retrain_voc_cnn.CNNRetrainVOC" title="src.retrain_voc_cnn.CNNRetrainVOC"><tt class="xref py py-class docutils literal"><span class="pre">src.retrain_voc_cnn.CNNRetrainVOC</span></tt></a></p>
+<p>The class takes a proto bufer as input, setups a CNN according to the
+settings, trains the network and saves the weights in a file</p>
+<dl class="method">
+<dt id="src.mitocondria_retrain_cnn.CNNRetrainVOCMitocondria.load_samples">
+<tt class="descname">load_samples</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/mitocondria_retrain_cnn.html#CNNRetrainVOCMitocondria.load_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.mitocondria_retrain_cnn.CNNRetrainVOCMitocondria.load_samples" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.mitocondria_test_cnn">
+<span id="src-mitocondria-test-cnn-module"></span><h2>src.mitocondria_test_cnn module<a class="headerlink" href="#module-src.mitocondria_test_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Nov 24 14:39:22 2014</p>
+<p>&#64;author: vpetresc</p>
+<dl class="class">
+<dt id="src.mitocondria_test_cnn.CNNTestVOCMitocondria">
+<em class="property">class </em><tt class="descclassname">src.mitocondria_test_cnn.</tt><tt class="descname">CNNTestVOCMitocondria</tt><big>(</big><em>protofile</em>, <em>cached_weights_file</em>, <em>frame=None</em><big>)</big><a class="reference internal" href="_modules/src/mitocondria_test_cnn.html#CNNTestVOCMitocondria"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.mitocondria_test_cnn.CNNTestVOCMitocondria" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.test_voc_cnn.CNNTestVOC" title="src.test_voc_cnn.CNNTestVOC"><tt class="xref py py-class docutils literal"><span class="pre">src.test_voc_cnn.CNNTestVOC</span></tt></a></p>
+<p>Loads the mitocondria data</p>
+<dl class="method">
+<dt id="src.mitocondria_test_cnn.CNNTestVOCMitocondria.load_samples">
+<tt class="descname">load_samples</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/mitocondria_test_cnn.html#CNNTestVOCMitocondria.load_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.mitocondria_test_cnn.CNNTestVOCMitocondria.load_samples" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.mitocondria_train_cnn">
+<span id="src-mitocondria-train-cnn-module"></span><h2>src.mitocondria_train_cnn module<a class="headerlink" href="#module-src.mitocondria_train_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 15:27:51 2014
+&#64;author: vpetresc</p>
+<dl class="class">
+<dt id="src.mitocondria_train_cnn.CNNTrainVOCMitocondria">
+<em class="property">class </em><tt class="descclassname">src.mitocondria_train_cnn.</tt><tt class="descname">CNNTrainVOCMitocondria</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em>, <em>small_set</em><big>)</big><a class="reference internal" href="_modules/src/mitocondria_train_cnn.html#CNNTrainVOCMitocondria"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.mitocondria_train_cnn.CNNTrainVOCMitocondria" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.train_voc_cnn.CNNTrainVOC" title="src.train_voc_cnn.CNNTrainVOC"><tt class="xref py py-class docutils literal"><span class="pre">src.train_voc_cnn.CNNTrainVOC</span></tt></a></p>
+<p>The class takes a proto bufer as input, setups a CNN according to the
+settings, trains the network and saves the weights in a file</p>
+<dl class="method">
+<dt id="src.mitocondria_train_cnn.CNNTrainVOCMitocondria.load_samples">
+<tt class="descname">load_samples</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/mitocondria_train_cnn.html#CNNTrainVOCMitocondria.load_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.mitocondria_train_cnn.CNNTrainVOCMitocondria.load_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load mitocondria data</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.mlp">
+<span id="src-mlp-module"></span><h2>src.mlp module<a class="headerlink" href="#module-src.mlp" title="Permalink to this headline">¶</a></h2>
+<p>This tutorial introduces the multilayer perceptron using Theano.</p>
+<blockquote>
+<div>A multilayer perceptron is a logistic regressor where</div></blockquote>
+<p>instead of feeding the input to the logistic regression you insert a
+intermediate layer, called the hidden layer, that has a nonlinear
+activation function (usually tanh or sigmoid) . One can use many such
+hidden layers making the architecture deep. The tutorial will also tackle
+the problem of MNIST digit classification.</p>
+<div class="math">
+\[f(x) = G( b^{(2)} + W^{(2)}( s( b^{(1)} + W^{(1)} x))),\]</div>
+<p>References:</p>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt>textbooks: &#8220;Pattern Recognition and Machine Learning&#8221; -</dt>
+<dd><p class="first last">Christopher M. Bishop, section 5</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="class">
+<dt id="src.mlp.HiddenLayer">
+<em class="property">class </em><tt class="descclassname">src.mlp.</tt><tt class="descname">HiddenLayer</tt><big>(</big><em>rng</em>, <em>input</em>, <em>n_in</em>, <em>n_out</em>, <em>W=None</em>, <em>b=None</em>, <em>activation=&lt;theano.tensor.elemwise.Elemwise object at 0x106924d10&gt;</em><big>)</big><a class="reference internal" href="_modules/src/mlp.html#HiddenLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.mlp.HiddenLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.mnist_test_cnn">
+<span id="src-mnist-test-cnn-module"></span><h2>src.mnist_test_cnn module<a class="headerlink" href="#module-src.mnist_test_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Nov 24 14:39:22 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="class">
+<dt id="src.mnist_test_cnn.CNNTestTPmnist">
+<em class="property">class </em><tt class="descclassname">src.mnist_test_cnn.</tt><tt class="descname">CNNTestTPmnist</tt><big>(</big><em>protofile</em>, <em>cached_weights_file</em>, <em>frame=None</em><big>)</big><a class="reference internal" href="_modules/src/mnist_test_cnn.html#CNNTestTPmnist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.mnist_test_cnn.CNNTestTPmnist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.test_tp_cnn.CNNTestTP" title="src.test_tp_cnn.CNNTestTP"><tt class="xref py py-class docutils literal"><span class="pre">src.test_tp_cnn.CNNTestTP</span></tt></a></p>
+<p>Loads the MNIST data set</p>
+<dl class="method">
+<dt id="src.mnist_test_cnn.CNNTestTPmnist.load_samples">
+<tt class="descname">load_samples</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/mnist_test_cnn.html#CNNTestTPmnist.load_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.mnist_test_cnn.CNNTestTPmnist.load_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the normal sised images or the upscaled version</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.mnist_train_cnn">
+<span id="src-mnist-train-cnn-module"></span><h2>src.mnist_train_cnn module<a class="headerlink" href="#module-src.mnist_train_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 15:27:51 2014
+&#64;author: vpetresc</p>
+<dl class="class">
+<dt id="src.mnist_train_cnn.CNNTrainTPmnist">
+<em class="property">class </em><tt class="descclassname">src.mnist_train_cnn.</tt><tt class="descname">CNNTrainTPmnist</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em>, <em>small_set=True</em><big>)</big><a class="reference internal" href="_modules/src/mnist_train_cnn.html#CNNTrainTPmnist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.mnist_train_cnn.CNNTrainTPmnist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.train_tp_cnn.CNNTrainTP" title="src.train_tp_cnn.CNNTrainTP"><tt class="xref py py-class docutils literal"><span class="pre">src.train_tp_cnn.CNNTrainTP</span></tt></a></p>
+<p>The class takes a proto bufer as input, setups a CNN according to the
+settings, trains the network and saves the weights in a file</p>
+<dl class="method">
+<dt id="src.mnist_train_cnn.CNNTrainTPmnist.load_samples">
+<tt class="descname">load_samples</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/mnist_train_cnn.html#CNNTrainTPmnist.load_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.mnist_train_cnn.CNNTrainTPmnist.load_samples" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.patches">
+<span id="src-patches-module"></span><h2>src.patches module<a class="headerlink" href="#module-src.patches" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="src.patches.get_grid_patches">
+<tt class="descclassname">src.patches.</tt><tt class="descname">get_grid_patches</tt><big>(</big><em>image</em>, <em>patch_shape</em>, <em>step=1</em>, <em>flat=True</em><big>)</big><a class="reference internal" href="_modules/src/patches.html#get_grid_patches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.patches.get_grid_patches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all the patches in a grid</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.patches.get_many_patches">
+<tt class="descclassname">src.patches.</tt><tt class="descname">get_many_patches</tt><big>(</big><em>image</em>, <em>patch_shape</em>, <em>centers</em>, <em>flat=True</em><big>)</big><a class="reference internal" href="_modules/src/patches.html#get_many_patches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.patches.get_many_patches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the patches at given centers</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.patches.get_patch">
+<tt class="descclassname">src.patches.</tt><tt class="descname">get_patch</tt><big>(</big><em>image</em>, <em>patch_shape</em>, <em>center</em><big>)</big><a class="reference internal" href="_modules/src/patches.html#get_patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.patches.get_patch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a single patch with the given shape and center</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="src.patches.grid_patches_centers">
+<tt class="descclassname">src.patches.</tt><tt class="descname">grid_patches_centers</tt><big>(</big><em>img_shape</em>, <em>patch_shape</em>, <em>step=1</em><big>)</big><a class="reference internal" href="_modules/src/patches.html#grid_patches_centers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.patches.grid_patches_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the centers of a grid of patches with given shape</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.retrain_cnn">
+<span id="src-retrain-cnn-module"></span><h2>src.retrain_cnn module<a class="headerlink" href="#module-src.retrain_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 15:27:51 2014
+&#64;author: vpetresc</p>
+<p>TODO consider using abstract base class
+<a class="reference external" href="http://zaiste.net/2013/01/abstract_classes_in_python/">http://zaiste.net/2013/01/abstract_classes_in_python/</a></p>
+<dl class="class">
+<dt id="src.retrain_cnn.CNNRetrain">
+<em class="property">class </em><tt class="descclassname">src.retrain_cnn.</tt><tt class="descname">CNNRetrain</tt><big>(</big><em>protofile</em>, <em>cached_weights</em><big>)</big><a class="reference internal" href="_modules/src/retrain_cnn.html#CNNRetrain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.retrain_cnn.CNNRetrain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.base_cnn.CNNBase" title="src.base_cnn.CNNBase"><tt class="xref py py-class docutils literal"><span class="pre">src.base_cnn.CNNBase</span></tt></a></p>
+<dl class="docutils">
+<dt>The class takes a proto bufer as input, setups a CNN according to the</dt>
+<dd>settings, trains the network and saves the weights in a file</dd>
+</dl>
+<p>Args:</p>
+<p>Returns:</p>
+<dl class="method">
+<dt id="src.retrain_cnn.CNNRetrain.build_model">
+<tt class="descname">build_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/retrain_cnn.html#CNNRetrain.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.retrain_cnn.CNNRetrain.build_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the actual model</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.retrain_cnn.CNNRetrain.retrain_model">
+<tt class="descname">retrain_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/retrain_cnn.html#CNNRetrain.retrain_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.retrain_cnn.CNNRetrain.retrain_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract method</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.retrain_cnn.CNNRetrain.save_parameters">
+<tt class="descname">save_parameters</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/retrain_cnn.html#CNNRetrain.save_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.retrain_cnn.CNNRetrain.save_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save best weights</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.retrain_tp_cnn">
+<span id="src-retrain-tp-cnn-module"></span><h2>src.retrain_tp_cnn module<a class="headerlink" href="#module-src.retrain_tp_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 15:27:51 2014
+&#64;author: vpetrescu</p>
+<dl class="class">
+<dt id="src.retrain_tp_cnn.CNNRetrainTP">
+<em class="property">class </em><tt class="descclassname">src.retrain_tp_cnn.</tt><tt class="descname">CNNRetrainTP</tt><big>(</big><em>protofile</em>, <em>cached_weights</em><big>)</big><a class="reference internal" href="_modules/src/retrain_tp_cnn.html#CNNRetrainTP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.retrain_tp_cnn.CNNRetrainTP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.retrain_cnn.CNNRetrain" title="src.retrain_cnn.CNNRetrain"><tt class="xref py py-class docutils literal"><span class="pre">src.retrain_cnn.CNNRetrain</span></tt></a></p>
+<dl class="docutils">
+<dt>The class takes a proto bufer as input, setups a CNN according to the</dt>
+<dd>settings, trains the network and saves the weights in a file</dd>
+</dl>
+<p>Args:</p>
+<p>Returns:</p>
+<dl class="method">
+<dt id="src.retrain_tp_cnn.CNNRetrainTP.compute_test_loss">
+<tt class="descname">compute_test_loss</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/retrain_tp_cnn.html#CNNRetrainTP.compute_test_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.retrain_tp_cnn.CNNRetrainTP.compute_test_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes error loss</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.retrain_tp_cnn.CNNRetrainTP.compute_validation_loss">
+<tt class="descname">compute_validation_loss</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/retrain_tp_cnn.html#CNNRetrainTP.compute_validation_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.retrain_tp_cnn.CNNRetrainTP.compute_validation_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes  error loss</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.retrain_tp_cnn.CNNRetrainTP.retrain_model">
+<tt class="descname">retrain_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/retrain_tp_cnn.html#CNNRetrainTP.retrain_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.retrain_tp_cnn.CNNRetrainTP.retrain_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.retrain_voc_cnn">
+<span id="src-retrain-voc-cnn-module"></span><h2>src.retrain_voc_cnn module<a class="headerlink" href="#module-src.retrain_voc_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 15:27:51 2014
+&#64;author: vpetrescu</p>
+<dl class="class">
+<dt id="src.retrain_voc_cnn.CNNRetrainVOC">
+<em class="property">class </em><tt class="descclassname">src.retrain_voc_cnn.</tt><tt class="descname">CNNRetrainVOC</tt><big>(</big><em>protofile</em>, <em>cached_weights</em><big>)</big><a class="reference internal" href="_modules/src/retrain_voc_cnn.html#CNNRetrainVOC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.retrain_voc_cnn.CNNRetrainVOC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.retrain_cnn.CNNRetrain" title="src.retrain_cnn.CNNRetrain"><tt class="xref py py-class docutils literal"><span class="pre">src.retrain_cnn.CNNRetrain</span></tt></a></p>
+<dl class="docutils">
+<dt>The class takes a proto bufer as input, setups a CNN according to the</dt>
+<dd>settings, trains the network and saves the weights in a file</dd>
+</dl>
+<p>Args:</p>
+<p>Returns:</p>
+<dl class="method">
+<dt id="src.retrain_voc_cnn.CNNRetrainVOC.compute_test_VOC_loss">
+<tt class="descname">compute_test_VOC_loss</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/retrain_voc_cnn.html#CNNRetrainVOC.compute_test_VOC_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.retrain_voc_cnn.CNNRetrainVOC.compute_test_VOC_loss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="src.retrain_voc_cnn.CNNRetrainVOC.compute_validation_VOC_loss">
+<tt class="descname">compute_validation_VOC_loss</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/retrain_voc_cnn.html#CNNRetrainVOC.compute_validation_VOC_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.retrain_voc_cnn.CNNRetrainVOC.compute_validation_VOC_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>compute validation loss</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.retrain_voc_cnn.CNNRetrainVOC.retrain_model">
+<tt class="descname">retrain_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/retrain_voc_cnn.html#CNNRetrainVOC.retrain_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.retrain_voc_cnn.CNNRetrainVOC.retrain_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.run_separable_visualization_test">
+<span id="src-run-separable-visualization-test-module"></span><h2>src.run_separable_visualization_test module<a class="headerlink" href="#module-src.run_separable_visualization_test" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Nov 11 14:06:13 2014</p>
+<p>&#64;author: vivianapetrescu</p>
+<dl class="function">
+<dt id="src.run_separable_visualization_test.main">
+<tt class="descclassname">src.run_separable_visualization_test.</tt><tt class="descname">main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/run_separable_visualization_test.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.run_separable_visualization_test.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="src-run-test-mitocondria-module">
+<h2>src.run_test_mitocondria module<a class="headerlink" href="#src-run-test-mitocondria-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-src.test_cnn">
+<span id="src-test-cnn-module"></span><h2>src.test_cnn module<a class="headerlink" href="#module-src.test_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Nov 24 14:39:22 2014</p>
+<p>&#64;author: vpetresc</p>
+<dl class="class">
+<dt id="src.test_cnn.CNNTest">
+<em class="property">class </em><tt class="descclassname">src.test_cnn.</tt><tt class="descname">CNNTest</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/src/test_cnn.html#CNNTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_cnn.CNNTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.base_cnn.CNNBase" title="src.base_cnn.CNNBase"><tt class="xref py py-class docutils literal"><span class="pre">src.base_cnn.CNNBase</span></tt></a></p>
+<dl class="docutils">
+<dt>The class is responsible for creating the layers of the network.</dt>
+<dd>The loading of the data and the type of the error used is defined in
+derived classes.</dd>
+</dl>
+<p>Args:</p>
+<p>Returns:</p>
+<dl class="method">
+<dt id="src.test_cnn.CNNTest.compute_all_samples_error">
+<tt class="descname">compute_all_samples_error</tt><big>(</big><em>all_samples_result</em><big>)</big><a class="reference internal" href="_modules/src/test_cnn.html#CNNTest.compute_all_samples_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_cnn.CNNTest.compute_all_samples_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract method for computing the error on all test samples</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>all_samples_result:</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.test_cnn.CNNTest.compute_batch_error">
+<tt class="descname">compute_batch_error</tt><big>(</big><em>batch_result_dict</em><big>)</big><a class="reference internal" href="_modules/src/test_cnn.html#CNNTest.compute_batch_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_cnn.CNNTest.compute_batch_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract method for computing the error per batch (VOC or error rate)</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>batch_result_dict:</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.test_cnn.CNNTest.compute_test_error">
+<tt class="descname">compute_test_error</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/test_cnn.html#CNNTest.compute_test_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_cnn.CNNTest.compute_test_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loop through the batches and run process_batch</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.test_cnn.CNNTest.log_cnn_time_summary">
+<tt class="descname">log_cnn_time_summary</tt><big>(</big><em>timings</em><big>)</big><a class="reference internal" href="_modules/src/test_cnn.html#CNNTest.log_cnn_time_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_cnn.CNNTest.log_cnn_time_summary" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The method takes as input a vector of timings</dt>
+<dd>and aggregates the results</dd>
+<dt>Args:</dt>
+<dd>timings:</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.test_cnn.CNNTest.log_fit_info">
+<tt class="descname">log_fit_info</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/test_cnn.html#CNNTest.log_fit_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_cnn.CNNTest.log_fit_info" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Logs the fit of the separable filters for the separable layers.</dt>
+<dd>The information is stored in the numpy arrays</dd>
+</dl>
+<p>Args:</p>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.test_cnn.CNNTest.process_batch">
+<tt class="descname">process_batch</tt><big>(</big><em>batch_index</em>, <em>cnn_time</em><big>)</big><a class="reference internal" href="_modules/src/test_cnn.html#CNNTest.process_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_cnn.CNNTest.process_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process one single batch</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>batch_index: 
+cnn_time:</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="src.test_cnn.CNNTime">
+<em class="property">class </em><tt class="descclassname">src.test_cnn.</tt><tt class="descname">CNNTime</tt><a class="reference internal" href="_modules/src/test_cnn.html#CNNTime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_cnn.CNNTime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="docutils">
+<dt>The class holds the timings for every layer,</dt>
+<dd>(e.g. convolutional, hidden) etc</dd>
+</dl>
+<p>Args:</p>
+<p>Returns:</p>
+<dl class="method">
+<dt id="src.test_cnn.CNNTime.to_string">
+<tt class="descname">to_string</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/test_cnn.html#CNNTime.to_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_cnn.CNNTime.to_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Printable version the the class contents</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.test_tp_cnn">
+<span id="src-test-tp-cnn-module"></span><h2>src.test_tp_cnn module<a class="headerlink" href="#module-src.test_tp_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Nov 24 14:39:22 2014</p>
+<p>&#64;author: vpetresc</p>
+<dl class="class">
+<dt id="src.test_tp_cnn.CNNTestTP">
+<em class="property">class </em><tt class="descclassname">src.test_tp_cnn.</tt><tt class="descname">CNNTestTP</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/src/test_tp_cnn.html#CNNTestTP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_tp_cnn.CNNTestTP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.test_cnn.CNNTest" title="src.test_cnn.CNNTest"><tt class="xref py py-class docutils literal"><span class="pre">src.test_cnn.CNNTest</span></tt></a></p>
+<dl class="docutils">
+<dt>The class implements the methods for computing the batch</dt>
+<dd>error using the error rate (TP+TN)/(all samples)</dd>
+</dl>
+<p>Args:</p>
+<p>Returns:</p>
+<dl class="method">
+<dt id="src.test_tp_cnn.CNNTestTP.compute_all_samples_error">
+<tt class="descname">compute_all_samples_error</tt><big>(</big><em>all_samples_result</em><big>)</big><a class="reference internal" href="_modules/src/test_tp_cnn.html#CNNTestTP.compute_all_samples_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_tp_cnn.CNNTestTP.compute_all_samples_error" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Computes the all samples error by aggregating the</dt>
+<dd>results from an array of dictionary results</dd>
+<dt>Args:</dt>
+<dd>all_samples_result:</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.test_tp_cnn.CNNTestTP.compute_batch_error">
+<tt class="descname">compute_batch_error</tt><big>(</big><em>batch_result_dict</em><big>)</big><a class="reference internal" href="_modules/src/test_tp_cnn.html#CNNTestTP.compute_batch_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_tp_cnn.CNNTestTP.compute_batch_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes the error rate as the number of correctly
+classified samples</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>batch_result_dict:</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.test_voc_cnn">
+<span id="src-test-voc-cnn-module"></span><h2>src.test_voc_cnn module<a class="headerlink" href="#module-src.test_voc_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Nov 24 14:39:22 2014</p>
+<p>&#64;author: vpetresc</p>
+<dl class="class">
+<dt id="src.test_voc_cnn.CNNTestVOC">
+<em class="property">class </em><tt class="descclassname">src.test_voc_cnn.</tt><tt class="descname">CNNTestVOC</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/src/test_voc_cnn.html#CNNTestVOC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_voc_cnn.CNNTestVOC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.test_cnn.CNNTest" title="src.test_cnn.CNNTest"><tt class="xref py py-class docutils literal"><span class="pre">src.test_cnn.CNNTest</span></tt></a></p>
+<p>Computes the VOC error</p>
+<dl class="method">
+<dt id="src.test_voc_cnn.CNNTestVOC.compute_all_samples_error">
+<tt class="descname">compute_all_samples_error</tt><big>(</big><em>all_samples_result</em><big>)</big><a class="reference internal" href="_modules/src/test_voc_cnn.html#CNNTestVOC.compute_all_samples_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_voc_cnn.CNNTestVOC.compute_all_samples_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the error as VOC across al samples</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>all_samples_result:</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.test_voc_cnn.CNNTestVOC.compute_batch_error">
+<tt class="descname">compute_batch_error</tt><big>(</big><em>batch_result_dict</em><big>)</big><a class="reference internal" href="_modules/src/test_voc_cnn.html#CNNTestVOC.compute_batch_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.test_voc_cnn.CNNTestVOC.compute_batch_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the VOC error</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>batch_result_dict:</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.train_cnn">
+<span id="src-train-cnn-module"></span><h2>src.train_cnn module<a class="headerlink" href="#module-src.train_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 15:27:51 2014
+&#64;author: vpetresc</p>
+<p>TODO consider using abstract base class
+<a class="reference external" href="http://zaiste.net/2013/01/abstract_classes_in_python/">http://zaiste.net/2013/01/abstract_classes_in_python/</a></p>
+<dl class="class">
+<dt id="src.train_cnn.CNNTrain">
+<em class="property">class </em><tt class="descclassname">src.train_cnn.</tt><tt class="descname">CNNTrain</tt><big>(</big><em>protofile</em>, <em>cached_weights</em><big>)</big><a class="reference internal" href="_modules/src/train_cnn.html#CNNTrain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_cnn.CNNTrain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.base_cnn.CNNBase" title="src.base_cnn.CNNBase"><tt class="xref py py-class docutils literal"><span class="pre">src.base_cnn.CNNBase</span></tt></a></p>
+<dl class="docutils">
+<dt>The class takes a proto bufer as input, setups a CNN according to the</dt>
+<dd>settings, trains the network and saves the weights in a file</dd>
+</dl>
+<p>Args:</p>
+<p>Returns:</p>
+<dl class="method">
+<dt id="src.train_cnn.CNNTrain.build_model">
+<tt class="descname">build_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/train_cnn.html#CNNTrain.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_cnn.CNNTrain.build_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the actual model from the model settings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.train_cnn.CNNTrain.train_model">
+<tt class="descname">train_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/train_cnn.html#CNNTrain.train_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_cnn.CNNTrain.train_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract method to be implemented by subclasses</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.train_tp_cnn">
+<span id="src-train-tp-cnn-module"></span><h2>src.train_tp_cnn module<a class="headerlink" href="#module-src.train_tp_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 15:27:51 2014
+&#64;author: vivianapetrescu</p>
+<dl class="class">
+<dt id="src.train_tp_cnn.CNNTrainTP">
+<em class="property">class </em><tt class="descclassname">src.train_tp_cnn.</tt><tt class="descname">CNNTrainTP</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/src/train_tp_cnn.html#CNNTrainTP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_tp_cnn.CNNTrainTP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.train_cnn.CNNTrain" title="src.train_cnn.CNNTrain"><tt class="xref py py-class docutils literal"><span class="pre">src.train_cnn.CNNTrain</span></tt></a></p>
+<dl class="docutils">
+<dt>The class takes a proto bufer as input, setups a CNN according to the</dt>
+<dd>settings, trains the network and saves the weights in a file</dd>
+</dl>
+<p>Args:</p>
+<p>Returns:</p>
+<dl class="method">
+<dt id="src.train_tp_cnn.CNNTrainTP.compute_test_error_loss">
+<tt class="descname">compute_test_error_loss</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/train_tp_cnn.html#CNNTrainTP.compute_test_error_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_tp_cnn.CNNTrainTP.compute_test_error_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes error rate</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.train_tp_cnn.CNNTrainTP.compute_validation_loss">
+<tt class="descname">compute_validation_loss</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/train_tp_cnn.html#CNNTrainTP.compute_validation_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_tp_cnn.CNNTrainTP.compute_validation_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes validation loss</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.train_tp_cnn.CNNTrainTP.save_parameters">
+<tt class="descname">save_parameters</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/train_tp_cnn.html#CNNTrainTP.save_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_tp_cnn.CNNTrainTP.save_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>saves the weights to a file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.train_tp_cnn.CNNTrainTP.train_model">
+<tt class="descname">train_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/train_tp_cnn.html#CNNTrainTP.train_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_tp_cnn.CNNTrainTP.train_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>The actual training method</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-src.train_voc_cnn">
+<span id="src-train-voc-cnn-module"></span><h2>src.train_voc_cnn module<a class="headerlink" href="#module-src.train_voc_cnn" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Oct 21 15:27:51 2014
+&#64;author: vivianapetrescu</p>
+<dl class="class">
+<dt id="src.train_voc_cnn.CNNTrainVOC">
+<em class="property">class </em><tt class="descclassname">src.train_voc_cnn.</tt><tt class="descname">CNNTrainVOC</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/src/train_voc_cnn.html#CNNTrainVOC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_voc_cnn.CNNTrainVOC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.train_cnn.CNNTrain" title="src.train_cnn.CNNTrain"><tt class="xref py py-class docutils literal"><span class="pre">src.train_cnn.CNNTrain</span></tt></a></p>
+<dl class="docutils">
+<dt>The class takes a proto bufer as input, setups a CNN according to the</dt>
+<dd>settings, trains the network and saves the weights in a file</dd>
+</dl>
+<p>Args:</p>
+<p>Returns:</p>
+<dl class="method">
+<dt id="src.train_voc_cnn.CNNTrainVOC.compute_test_VOC_loss">
+<tt class="descname">compute_test_VOC_loss</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/train_voc_cnn.html#CNNTrainVOC.compute_test_VOC_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_voc_cnn.CNNTrainVOC.compute_test_VOC_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute test VOC</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.train_voc_cnn.CNNTrainVOC.compute_validation_VOC_loss">
+<tt class="descname">compute_validation_VOC_loss</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/train_voc_cnn.html#CNNTrainVOC.compute_validation_VOC_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_voc_cnn.CNNTrainVOC.compute_validation_VOC_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Added validation loss</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.train_voc_cnn.CNNTrainVOC.save_parameters">
+<tt class="descname">save_parameters</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/train_voc_cnn.html#CNNTrainVOC.save_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_voc_cnn.CNNTrainVOC.save_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the best weights</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="src.train_voc_cnn.CNNTrainVOC.train_model">
+<tt class="descname">train_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/src/train_voc_cnn.html#CNNTrainVOC.train_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.train_voc_cnn.CNNTrainVOC.train_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train the model using error rate</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="src-transform-mat-module">
+<h2>src.transform_mat module<a class="headerlink" href="#src-transform-mat-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-src">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">src package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-src.base_cnn">src.base_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.cnn_non_symbolic">src.cnn_non_symbolic module</a></li>
+<li><a class="reference internal" href="#module-src.cnn_separable_non_symbolic">src.cnn_separable_non_symbolic module</a></li>
+<li><a class="reference internal" href="#module-src.cnn_train_test">src.cnn_train_test module</a></li>
+<li><a class="reference internal" href="#module-src.conf">src.conf module</a></li>
+<li><a class="reference internal" href="#src-convolutional-mlp-module">src.convolutional_mlp module</a></li>
+<li><a class="reference internal" href="#module-src.convolutional_neural_network_separable">src.convolutional_neural_network_separable module</a></li>
+<li><a class="reference internal" href="#module-src.convolutional_neural_network_settings_pb2">src.convolutional_neural_network_settings_pb2 module</a></li>
+<li><a class="reference internal" href="#module-src.convolutional_nnet_test">src.convolutional_nnet_test module</a></li>
+<li><a class="reference internal" href="#module-src.convolutional_nnet_train">src.convolutional_nnet_train module</a></li>
+<li><a class="reference internal" href="#src-generate-folders-module">src.generate_folders module</a></li>
+<li><a class="reference internal" href="#src-generate-foldersl1-module">src.generate_foldersl1 module</a></li>
+<li><a class="reference internal" href="#module-src.generate_separable_weights">src.generate_separable_weights module</a></li>
+<li><a class="reference internal" href="#src-imagenet-test-cnn-module">src.imagenet_test_cnn module</a></li>
+<li><a class="reference internal" href="#src-index-module">src.index module</a></li>
+<li><a class="reference internal" href="#module-src.lenet_conv_pool_layer">src.lenet_conv_pool_layer module</a></li>
+<li><a class="reference internal" href="#module-src.lenet_layer_conv_pool_non_symbolic">src.lenet_layer_conv_pool_non_symbolic module</a></li>
+<li><a class="reference internal" href="#module-src.lenet_layer_conv_pool_separable_non_symbolic">src.lenet_layer_conv_pool_separable_non_symbolic module</a></li>
+<li><a class="reference internal" href="#module-src.lenet_separable_conv_pool_layer">src.lenet_separable_conv_pool_layer module</a></li>
+<li><a class="reference internal" href="#module-src.lenet_separable_non_symbolic">src.lenet_separable_non_symbolic module</a></li>
+<li><a class="reference internal" href="#module-src.load_Gtest">src.load_Gtest module</a></li>
+<li><a class="reference internal" href="#module-src.load_data">src.load_data module</a></li>
+<li><a class="reference internal" href="#module-src.load_data_rescaled">src.load_data_rescaled module</a></li>
+<li><a class="reference internal" href="#module-src.load_mitocondria">src.load_mitocondria module</a></li>
+<li><a class="reference internal" href="#module-src.logistic_sgd">src.logistic_sgd module</a></li>
+<li><a class="reference internal" href="#module-src.misc">src.misc module</a><ul>
+<li><a class="reference internal" href="#misc">misc</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-src.mitocondria_retrain_cnn">src.mitocondria_retrain_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.mitocondria_test_cnn">src.mitocondria_test_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.mitocondria_train_cnn">src.mitocondria_train_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.mlp">src.mlp module</a></li>
+<li><a class="reference internal" href="#module-src.mnist_test_cnn">src.mnist_test_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.mnist_train_cnn">src.mnist_train_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.patches">src.patches module</a></li>
+<li><a class="reference internal" href="#module-src.retrain_cnn">src.retrain_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.retrain_tp_cnn">src.retrain_tp_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.retrain_voc_cnn">src.retrain_voc_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.run_separable_visualization_test">src.run_separable_visualization_test module</a></li>
+<li><a class="reference internal" href="#src-run-test-mitocondria-module">src.run_test_mitocondria module</a></li>
+<li><a class="reference internal" href="#module-src.test_cnn">src.test_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.test_tp_cnn">src.test_tp_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.test_voc_cnn">src.test_voc_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.train_cnn">src.train_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.train_tp_cnn">src.train_tp_cnn module</a></li>
+<li><a class="reference internal" href="#module-src.train_voc_cnn">src.train_voc_cnn module</a></li>
+<li><a class="reference internal" href="#src-transform-mat-module">src.transform_mat module</a></li>
+<li><a class="reference internal" href="#module-src">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="modules.html"
+                        title="previous chapter">src</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/src.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="src"
+             >previous</a> |</li>
+        <li><a href="index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >src</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, vpetresc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

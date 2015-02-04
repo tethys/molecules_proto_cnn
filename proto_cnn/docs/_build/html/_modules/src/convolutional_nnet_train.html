@@ -1,0 +1,431 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>src.convolutional_nnet_train &mdash; proto_cnn 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="proto_cnn 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for src.convolutional_nnet_train</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Oct 21 15:27:51 2014</span>
+<span class="sd">@author: vivianapetrescu</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">theano</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="kn">as</span> <span class="nn">T</span>
+
+<span class="kn">import</span> <span class="nn">convolutional_neural_network_settings_pb2</span> <span class="kn">as</span> <span class="nn">pb_cnn</span>
+<span class="kn">from</span> <span class="nn">google.protobuf</span> <span class="kn">import</span> <span class="n">text_format</span>
+<span class="kn">from</span> <span class="nn">lenet_conv_pool_layer</span> <span class="kn">import</span> <span class="n">LeNetConvPoolLayer</span>
+<span class="kn">from</span> <span class="nn">load_mitocondria</span> <span class="kn">import</span> <span class="n">load_mitocondria</span>
+<span class="kn">from</span> <span class="nn">load_data_rescaled</span> <span class="kn">import</span> <span class="n">load_mnist_data_rescaled</span>
+<span class="kn">from</span> <span class="nn">load_data</span> <span class="kn">import</span> <span class="n">load_mnist_data</span>
+<span class="kn">from</span> <span class="nn">logistic_sgd</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="kn">from</span> <span class="nn">mlp</span> <span class="kn">import</span> <span class="n">HiddenLayer</span>
+
+
+<div class="viewcode-block" id="ConvolutionalNeuralNetworkTrain"><a class="viewcode-back" href="../../src.html#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain">[docs]</a><span class="k">class</span> <span class="nc">ConvolutionalNeuralNetworkTrain</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The class takes a proto bufer as input, setups a CNN according to the</span>
+<span class="sd">        settings, trains the network and saves the weights in a file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cnn_settings_protofile</span><span class="p">,</span> <span class="n">cached_weights_file</span><span class="p">):</span>
+        <span class="c"># Filename of the .npy file where the trained weights will be saved.</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">cached_weights_file</span> <span class="o">=</span> <span class="n">cached_weights_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_logger</span><span class="p">()</span>
+        <span class="c"># Create protobuff empty object</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">pb_cnn</span><span class="o">.</span><span class="n">CNNSettings</span><span class="p">();</span>
+        <span class="k">try</span><span class="p">:</span>
+           <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">cnn_settings_protofile</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span>
+           <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+           <span class="n">text_format</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+           <span class="k">print</span> <span class="s">&quot;Network settings are </span><span class="se">\n</span><span class="s">&quot;</span>
+           <span class="k">print</span> <span class="n">data</span>
+           <span class="k">print</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+	   <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+           <span class="c"># Build up the ConvolutionalNeuralNetworkTrain model from the layers description</span>
+           <span class="bp">self</span><span class="o">.</span><span class="n">create_layers_from_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+	   <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">();</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+           <span class="k">print</span> <span class="s">&quot;Could not open file &quot;</span> <span class="o">+</span> <span class="n">cnn_settings_protofile</span><span class="p">;</span>
+
+<div class="viewcode-block" id="ConvolutionalNeuralNetworkTrain.create_layers_from_settings"><a class="viewcode-back" href="../../src.html#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.create_layers_from_settings">[docs]</a>    <span class="k">def</span> <span class="nf">create_layers_from_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+        <span class="c"># Default values for optional parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_epochs</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="c"># This fields are optional</span>
+        <span class="c">##TODO add colored warning if default value is used</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s">&#39;learning_rate&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">;</span>
+        <span class="k">else</span><span class="p">:</span>
+		<span class="k">print</span> <span class="s">&#39;Warning - default learning rate &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span>
+	<span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s">&#39;n_epochs&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_epochs</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">n_epochs</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">print</span> <span class="s">&#39;Warning - default number of epochs &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_epochs</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s">&#39;batch_size&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">batch_size</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">print</span> <span class="s">&#39;Warning - default number of batch size &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s">&#39;poolsize&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">poolsize</span><span class="p">;</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">print</span> <span class="s">&#39;Warning - default number of poolsize &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span>
+        <span class="c"># This fields are required</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="s">&#39;mnist.pkl.gz&#39;</span> <span class="c">#settings.dataset;</span>
+
+        <span class="c"># Add every convolutional layer to an array. Similarly for hidden layers.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convolutional_layers</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">conv_layer</span><span class="p">:</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">convolutional_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">hidden_layer</span><span class="p">:</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+
+        <span class="c"># required at least one layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">last_layer</span><span class="p">;</span>
+
+	<span class="c"># Required parameters TODO still needed?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost_function</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">cost_function</span><span class="p">;</span>
+
+</div>
+<div class="viewcode-block" id="ConvolutionalNeuralNetworkTrain.initialize_logger"><a class="viewcode-back" href="../../src.html#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.initialize_logger">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="c"># The log file is saved in the same folder of the cached weights file</span>
+        <span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">extension</span><span class="p">)</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cached_weights_file</span><span class="p">)</span>
+        <span class="n">logger_filename</span> <span class="o">=</span> <span class="n">file_path</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="c"># add calendar day information</span>
+        <span class="n">logger_filename</span> <span class="o">+=</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">day</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">month</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">year</span><span class="p">);</span>
+        <span class="c"># add hour information</span>
+        <span class="n">logger_filename</span> <span class="o">+=</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">minute</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">second</span><span class="p">);</span>
+        <span class="c"># add extension</span>
+        <span class="n">logger_filename</span> <span class="o">+=</span> <span class="s">&#39;.log&#39;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">logger_filename</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ConvolutionalNeuralNetworkTrain.build_model"><a class="viewcode-back" href="../../src.html#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.build_model">[docs]</a>    <span class="k">def</span> <span class="nf">build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="c"># Fixed rng, make the results repeatable</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">23455</span><span class="p">)</span>
+
+        <span class="n">datasets</span> <span class="o">=</span> <span class="n">load_mitocondria</span><span class="p">()</span>
+
+	<span class="c"># Train, Validation, Test 100000, 20000, 26... fot Mitocondria set</span>
+        <span class="c"># Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784 for MNIST dataset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_set_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_set_y</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_set_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_set_y</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="c"># assumes the width equals the height</span>
+        <span class="n">img_width_size</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&quot;Image shape </span><span class="si">%s</span><span class="s"> x </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">img_width_size</span><span class="p">,</span> <span class="n">img_width_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">img_width_size</span><span class="p">,</span> <span class="n">img_width_size</span><span class="p">)</span>
+
+        <span class="c"># Compute number of minibatches for training, validation and testing</span>
+        <span class="c"># Divide the total number of elements in the set by the batch size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_set_x</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">borrow</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_valid_batches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_set_x</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">borrow</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">borrow</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_valid_batches</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+
+        <span class="c">#print(&#39;Size train %d, valid %d, test %d&#39; % (self.train_set_x.shape.eval(), self.valid_set_x.shape.eval(), self.test_set_x.shape.eval())</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;Size train_batches </span><span class="si">%d</span><span class="s">, n_valid_batches </span><span class="si">%d</span><span class="s">, n_test_batches </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_valid_batches</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span><span class="p">))</span>
+
+        <span class="c"># allocate symbolic variables for the data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">lscalar</span><span class="p">()</span>  <span class="c"># index to a [mini]batch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>   <span class="c"># the data is presented as rasterized images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">ivector</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span>  <span class="c"># the labels are presented as 1D vector of</span>
+              		         <span class="c"># [int] labels</span>
+
+        <span class="c">######################</span>
+        <span class="c"># BUILD ACTUAL MODEL #</span>
+        <span class="c">######################</span>
+        <span class="k">print</span> <span class="s">&#39;Building the model ...&#39;</span>
+
+        <span class="c"># The input is an 4D array of size, number of images in the batch size, number of channels</span>
+	<span class="c"># (or number of feature maps), image width and height.</span>
+	<span class="n">nbr_feature_maps</span> <span class="o">=</span> <span class="mi">1</span>
+	<span class="n">layer_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">nbr_feature_maps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">pooled_W</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="n">pooled_H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+	<span class="c"># Add convolutional layers followed by pooling</span>
+        <span class="n">clayers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">clayer_params</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">convolutional_layers</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Adding conv layer nbr filter </span><span class="si">%d</span><span class="s">, Ksize </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">clayer_params</span><span class="o">.</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">clayer_params</span><span class="o">.</span><span class="n">filter_w</span><span class="p">)</span>
+            <span class="n">layer</span> <span class="o">=</span> <span class="n">LeNetConvPoolLayer</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="nb">input</span> <span class="o">=</span> <span class="n">layer_input</span><span class="p">,</span>
+                                       <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">nbr_feature_maps</span><span class="p">,</span> <span class="n">pooled_W</span><span class="p">,</span> <span class="n">pooled_H</span><span class="p">),</span>
+                                       <span class="n">filter_shape</span><span class="o">=</span><span class="p">(</span><span class="n">clayer_params</span><span class="o">.</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">nbr_feature_maps</span><span class="p">,</span>
+                                                     <span class="n">clayer_params</span><span class="o">.</span><span class="n">filter_w</span><span class="p">,</span> <span class="n">clayer_params</span><span class="o">.</span><span class="n">filter_w</span><span class="p">),</span>
+                                       <span class="n">poolsize</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span><span class="p">))</span>
+            <span class="n">clayers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+            <span class="n">pooled_W</span> <span class="o">=</span> <span class="p">(</span><span class="n">pooled_W</span> <span class="o">-</span> <span class="n">clayer_params</span><span class="o">.</span><span class="n">filter_w</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span><span class="p">;</span>
+            <span class="n">pooled_H</span> <span class="o">=</span> <span class="p">(</span><span class="n">pooled_H</span> <span class="o">-</span> <span class="n">clayer_params</span><span class="o">.</span><span class="n">filter_w</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span><span class="p">;</span>
+            <span class="n">layer_input</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">output</span><span class="p">;</span>
+            <span class="n">nbr_feature_maps</span> <span class="o">=</span> <span class="n">clayer_params</span><span class="o">.</span><span class="n">num_filters</span><span class="p">;</span>
+
+
+        <span class="c"># Flatten the output of the previous layers and add</span>
+        <span class="c"># fully connected sigmoidal layers	</span>
+        <span class="n">layer_input</span> <span class="o">=</span> <span class="n">layer_input</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+        <span class="n">nbr_input</span> <span class="o">=</span> <span class="n">nbr_feature_maps</span> <span class="o">*</span> <span class="n">pooled_W</span> <span class="o">*</span> <span class="n">pooled_H</span>
+        <span class="n">hlayers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">hlayer_params</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Adding hidden layer fully connected </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">hlayer_params</span><span class="o">.</span><span class="n">num_outputs</span><span class="p">)</span>
+            <span class="n">layer</span> <span class="o">=</span> <span class="n">HiddenLayer</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="n">layer_input</span><span class="p">,</span> <span class="n">n_in</span><span class="o">=</span><span class="n">nbr_input</span><span class="p">,</span>
+                         <span class="n">n_out</span> <span class="o">=</span> <span class="n">hlayer_params</span><span class="o">.</span><span class="n">num_outputs</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">tanh</span><span class="p">)</span>
+            <span class="n">nbr_input</span> <span class="o">=</span> <span class="n">hlayer_params</span><span class="o">.</span><span class="n">num_outputs</span><span class="p">;</span>
+            <span class="n">layer_input</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">output</span>
+            <span class="n">hlayers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+
+        <span class="c"># classify the values of the fully-connected sigmoidal layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">layer_input</span><span class="p">,</span> <span class="n">n_in</span><span class="o">=</span> <span class="n">nbr_input</span><span class="p">,</span> <span class="n">n_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">num_outputs</span><span class="p">)</span>
+
+        <span class="c"># the cost we minimize during training is the NLL of the model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">negative_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="c"># create a list of all model parameters to be fit by gradient descent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">for</span> <span class="n">hl</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">hlayers</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">+=</span> <span class="n">hl</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">clayers</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">+=</span> <span class="n">cl</span><span class="o">.</span><span class="n">params</span>
+
+
+        <span class="c"># create a list of gradients for all model parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grads</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ConvolutionalNeuralNetworkTrain.train_model"><a class="viewcode-back" href="../../src.html#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.train_model">[docs]</a>    <span class="k">def</span> <span class="nf">train_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+          <span class="c"># train_model is a function that updates the model parameters by</span>
+          <span class="c"># SGD Since this model has many parameters, it would be tedious to</span>
+          <span class="c"># manually create an update rule for each model parameter. We thus</span>
+          <span class="c"># create the updates list by automatically looping over all</span>
+          <span class="c"># (params[i],grads[i]) pairs.</span>
+          <span class="n">updates</span> <span class="o">=</span> <span class="p">[]</span>
+          <span class="k">for</span> <span class="n">param_i</span><span class="p">,</span> <span class="n">grad_i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grads</span><span class="p">):</span>
+              <span class="n">updates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">param_i</span><span class="p">,</span> <span class="n">param_i</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">*</span> <span class="n">grad_i</span><span class="p">))</span>
+
+          <span class="n">train_model</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">function</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">VOC_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)],</span> <span class="n">updates</span><span class="o">=</span><span class="n">updates</span><span class="p">,</span>
+              <span class="n">givens</span><span class="o">=</span><span class="p">{</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_set_x</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_set_y</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">]},</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;train_model&#39;</span><span class="p">)</span>
+
+             <span class="c"># create a function to compute the mistakes that are made by the model</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">test_model</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">function</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">VOC_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)],</span>
+             <span class="n">givens</span><span class="o">=</span><span class="p">{</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">]},</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;test_model&#39;</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">validate_model</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">function</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">VOC_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)],</span>
+            <span class="n">givens</span><span class="o">=</span><span class="p">{</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_set_x</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_set_y</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">]},</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;validate_model&#39;</span><span class="p">)</span>
+            <span class="c">###############</span>
+            <span class="c"># TRAIN MODEL #</span>
+            <span class="c">###############</span>
+          <span class="k">print</span> <span class="s">&#39;... training&#39;</span>
+           <span class="c"># early-stopping parameters</span>
+          <span class="n">patience</span> <span class="o">=</span> <span class="mi">1000000</span> <span class="c"># look as this many examples regardless</span>
+          <span class="n">patience_increase</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c"># wait this much longer when a new best is</span>
+                           <span class="c"># found</span>
+          <span class="n">improvement_threshold</span> <span class="o">=</span> <span class="mf">0.995</span>  <span class="c"># a relative improvement of this much is</span>
+                                   <span class="c"># considered significant</span>
+          <span class="n">validation_frequency</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span><span class="p">,</span> <span class="n">patience</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+                                  <span class="c"># go through this many</span>
+                                  <span class="c"># minibatche before checking the network</span>
+                                  <span class="c"># on the validation set; in this case we</span>
+                                  <span class="c"># check every epoch</span>
+
+          <span class="bp">self</span><span class="o">.</span><span class="n">best_params</span> <span class="o">=</span> <span class="bp">None</span>
+          <span class="n">best_validation_loss</span> <span class="o">=</span> <span class="mi">0</span><span class="c">#numpy.inf</span>
+          <span class="n">test_score</span> <span class="o">=</span> <span class="mf">0.</span>
+
+          <span class="n">epoch</span> <span class="o">=</span> <span class="mi">0</span>
+          <span class="n">done_looping</span> <span class="o">=</span> <span class="bp">False</span>
+
+          <span class="n">mean_training_time</span> <span class="o">=</span> <span class="mi">0</span>
+          <span class="n">cnt_times</span> <span class="o">=</span> <span class="mi">0</span>
+          <span class="k">while</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_epochs</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">done_looping</span><span class="p">):</span>
+              <span class="n">epoch</span> <span class="o">=</span> <span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span>
+              <span class="k">for</span> <span class="n">minibatch_index</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span><span class="p">):</span>
+		  <span class="c"># The model will process the iter batch</span>
+                  <span class="nb">iter</span> <span class="o">=</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span> <span class="o">+</span> <span class="n">minibatch_index</span>
+
+                  <span class="k">if</span> <span class="nb">iter</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                      <span class="k">print</span> <span class="s">&#39;training @ iter = &#39;</span><span class="p">,</span> <span class="nb">iter</span>
+                  <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                  <span class="p">[</span><span class="n">train_cost</span><span class="p">,</span> <span class="n">train_voc_values</span><span class="p">]</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span><span class="n">minibatch_index</span><span class="p">)</span>
+                  <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                  <span class="n">mean_training_time</span> <span class="o">+=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
+                  <span class="n">cnt_times</span> <span class="o">+=</span> <span class="mi">1</span>
+		  <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;cost </span><span class="si">%f</span><span class="s">, VOC </span><span class="si">%f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">train_cost</span><span class="p">,</span> <span class="n">train_voc_values</span><span class="p">))</span>
+
+                  <span class="k">if</span> <span class="p">(</span><span class="nb">iter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">1000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c">#validation_frequency == 0:</span>
+
+                    <span class="c"># compute zero-one loss on validation set</span>
+                    <span class="n">this_validation_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_validation_VOC_loss</span><span class="p">()</span> 
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;epoch </span><span class="si">%i</span><span class="s">, minibatch </span><span class="si">%i</span><span class="s">/</span><span class="si">%i</span><span class="s">, validation error </span><span class="si">%f</span><span class="s"> </span><span class="si">%%</span><span class="s">&#39;</span> <span class="o">%</span> \
+                      <span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">minibatch_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span><span class="p">,</span> \
+                       <span class="n">this_validation_loss</span> <span class="o">*</span> <span class="mf">100.</span><span class="p">))</span>
+
+                    <span class="c"># if we got the best validation score until now</span>
+                    <span class="k">if</span> <span class="n">this_validation_loss</span> <span class="o">&gt;</span> <span class="n">best_validation_loss</span><span class="p">:</span>
+
+                      <span class="c">#improve patience if loss improvement is good enough</span>
+                      <span class="k">if</span> <span class="n">this_validation_loss</span> <span class="o">&gt;</span> <span class="n">best_validation_loss</span><span class="p">:</span>
+                          <span class="n">patience</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">patience</span><span class="p">,</span> <span class="nb">iter</span> <span class="o">*</span> <span class="n">patience_increase</span><span class="p">)</span>
+
+                          <span class="c"># save best validation score and iteration number</span>
+                          <span class="n">best_validation_loss</span> <span class="o">=</span> <span class="n">this_validation_loss</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">best_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+
+                          <span class="c"># test it on the test set</span>
+                          <span class="n">test_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_test_VOC_loss</span><span class="p">()</span>
+                          <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">((</span><span class="s">&#39;     epoch </span><span class="si">%i</span><span class="s">, minibatch </span><span class="si">%i</span><span class="s">/</span><span class="si">%i</span><span class="s">, test error of best &#39;</span>
+                             <span class="s">&#39;model </span><span class="si">%f</span><span class="s"> </span><span class="si">%%</span><span class="s">&#39;</span><span class="p">)</span> <span class="o">%</span>
+                             <span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">minibatch_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span><span class="p">,</span>
+                             <span class="n">test_score</span> <span class="o">*</span> <span class="mf">100.</span><span class="p">))</span>
+
+                    <span class="k">if</span> <span class="n">patience</span> <span class="o">&lt;=</span> <span class="nb">iter</span><span class="p">:</span>
+                        <span class="n">done_looping</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="k">break</span>
+          <span class="k">print</span> <span class="s">&#39;Saving best parameters&#39;</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">save_parameters</span><span class="p">()</span>
+          <span class="n">mean_training_time</span> <span class="o">/=</span> <span class="n">cnt_times</span>
+          <span class="k">print</span> <span class="s">&#39;running_times </span><span class="si">%f</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">mean_training_time</span>
+	  <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">((</span><span class="s">&#39;running time </span><span class="si">%f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mean_training_time</span><span class="p">)))</span></div>
+<div class="viewcode-block" id="ConvolutionalNeuralNetworkTrain.compute_validation_VOC_loss"><a class="viewcode-back" href="../../src.html#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.compute_validation_VOC_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_validation_VOC_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	  <span class="c"># works for 0-1 loss</span>
+	  <span class="n">all_y_pred</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">([])</span>
+	  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_valid_batches</span><span class="p">):</span>
+		<span class="p">[</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">validation_loss</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_model</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="n">all_y_pred</span> <span class="o">=</span> <span class="n">y_pred</span>
+		<span class="k">else</span><span class="p">:</span>
+         	        <span class="n">all_y_pred</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">all_y_pred</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
+	  <span class="k">print</span> <span class="n">all_y_pred</span>
+
+          <span class="n">F</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">neq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_set_y</span><span class="p">,</span> <span class="n">all_y_pred</span><span class="p">))</span>
+          <span class="n">TP</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_set_y</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">all_y_pred</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+	  <span class="n">result</span> <span class="o">=</span>  <span class="n">TP</span><span class="o">/</span><span class="n">T</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">TP</span><span class="o">+</span><span class="n">F</span><span class="p">,</span> <span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">)</span>
+          <span class="k">print</span> <span class="s">&#39;Print result is &#39;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+	  <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span> 
+</div>
+<div class="viewcode-block" id="ConvolutionalNeuralNetworkTrain.compute_test_VOC_loss"><a class="viewcode-back" href="../../src.html#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.compute_test_VOC_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_test_VOC_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	  <span class="c"># works for 0-1 loss</span>
+          <span class="n">all_y_pred</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">([])</span>
+	  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span><span class="p">):</span>
+		<span class="p">[</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">test_loss</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_model</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+		    <span class="n">all_y_pred</span> <span class="o">=</span> <span class="n">y_pred</span>
+		<span class="k">else</span><span class="p">:</span>
+         	    <span class="n">all_y_pred</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">all_y_pred</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
+          <span class="k">print</span> <span class="n">all_y_pred</span>
+	  <span class="k">print</span> <span class="n">all_y_pred</span><span class="o">.</span><span class="n">shape</span>
+	  <span class="n">F</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">neq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span><span class="p">,</span> <span class="n">all_y_pred</span><span class="p">))</span>
+          <span class="n">TP</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">all_y_pred</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+	  <span class="n">result</span> <span class="o">=</span>  <span class="n">TP</span><span class="o">/</span><span class="n">T</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">TP</span><span class="o">+</span><span class="n">F</span><span class="p">,</span> <span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">)</span>
+          <span class="k">print</span> <span class="s">&#39;Print result is &#39;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+	  <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span> 
+</div>
+<div class="viewcode-block" id="ConvolutionalNeuralNetworkTrain.save_parameters"><a class="viewcode-back" href="../../src.html#src.convolutional_nnet_train.ConvolutionalNeuralNetworkTrain.save_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">save_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+          <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">borrow</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_params</span><span class="p">]</span>
+          <span class="n">numpy</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cached_weights_file</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, vpetresc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
