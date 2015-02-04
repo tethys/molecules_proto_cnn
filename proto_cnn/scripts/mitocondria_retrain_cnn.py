@@ -14,15 +14,12 @@ import time
 import theano
 import theano.tensor as T
 
-from retrain_voc_cnn import CNNRetrainVOC
-import convolutional_neural_network_settings_pb2 as pb_cnn
+from src.core.retrain_voc_cnn import CNNRetrainVOC
+import src.core.convolutional_neural_network_settings_pb2 as pb_cnn
 from google.protobuf import text_format
-from lenet_conv_pool_layer import LeNetConvPoolLayer
-from load_mitocondria import load_mitocondria
-from load_data_rescaled import load_mnist_data_rescaled
-from load_data import load_mnist_data
-from logistic_sgd import LogisticRegression
-from mlp import HiddenLayer
+from src.core.lenet_conv_pool_layer import LeNetConvPoolLayer
+from src.core.logistic_sgd import LogisticRegression
+from src.core.mlp import HiddenLayer
 
 
 class CNNRetrainVOCMitocondria(CNNRetrainVOC):

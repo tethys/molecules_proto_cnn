@@ -6,11 +6,11 @@ Created on Mon Nov 24 14:39:22 2014
 """
 
 import numpy as np
-import misc
-import patches
+from src.tools import misc
+from src.tools import patches
 
 
-from test_voc_cnn import CNNTestVOC
+from src.core.test_voc_cnn import CNNTestVOC
 
 class CNNTestVOCMitocondria(CNNTestVOC):
     """ Loads the mitocondria data"""

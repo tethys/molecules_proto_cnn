@@ -5,7 +5,7 @@ Created on Tue Oct 21 15:27:51 2014
 """
 
 import numpy as np
-from core.train_voc_cnn import CNNTrainVOC
+from src.core.train_voc_cnn import CNNTrainVOC
 
 class CNNTrainVOCMitocondria(CNNTrainVOC):
     """ The class takes a proto bufer as input, setups a CNN according to the
