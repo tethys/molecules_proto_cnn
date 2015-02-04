@@ -1,3 +1,15 @@
+# Compiled  source
 *.pyc
+
+# images and numpy data
 *.tif
-*_51.npy
+*.png
+*.npy
+
+# Logs
+*.log
+*experiments*
+
+# Matlab files and data
+*.mat
+*.m

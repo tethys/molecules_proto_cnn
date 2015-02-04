@@ -19,9 +19,9 @@ def main():
     image = np.random.rand(1,28,28)* 10;
     sys.path.append('')
     ## Load filter 1
-    original_weights = np.load('experiments/test_separable_decomposition/cnn_model_original2.npy')
+    original_weights = np.load('experiments/test_one_layer/cnn_model_original2.npy')
     ## Load separable filter 2
-    separable_weights = np.load('experiments/test_separable_decomposition/separable_filters_model_original.npy');
+    separable_weights = np.load('experiments/test_one_layer/separable_filters_model_original.npy');
 
     ## use convolution mode 1
     origw = original_weights[6][0,0,:,:];
@@ -76,7 +76,7 @@ def main():
                               filter_shape = vertical_filter_shape, image_shape = new_image_shape)
 
 #        ## numberof images, number of filters, image width, image height
-    batch_size = 1;
+ 
     n_rows = img_shape[1]- fwidth + 1
     n_cols = img_shape[2] - fheight + 1
 

@@ -6,7 +6,7 @@ poolsize: 2
 conv_layer {
 	num_filters: 6
 	filter_w: 9
-	rank:4
+	rank:3
 }
 conv_layer {
 	num_filters: 12
