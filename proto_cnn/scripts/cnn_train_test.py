@@ -12,15 +12,15 @@ import src.core
 
 from mitocondria_train_cnn  import CNNTrainVOCMitocondria
 from mitocondria_retrain_cnn import CNNRetrainVOCMitocondria
-from scripts.mitocondria_test_cnn import CNNTestVOCMitocondria
+from mitocondria_test_cnn import CNNTestVOCMitocondria
 from src.core.cnn_separable_non_symbolic import ConvolutionalNeuralNetworkNonSymbolic;
 from src.core.convolutional_nnet_train import ConvolutionalNeuralNetworkTrain;
 from src.core.convolutional_nnet_test import ConvolutionalNeuralNetworkTest;
 from src.core.convolutional_neural_network_separable import ConvolutionalNeuralNetworkSeparableTest;
 def main():
-    sys.path.append('/Users/vivianapetrescu/Documents/theano_tut/convolutional-neural-net/');
-    sys.path.append('/Users/vivianapetrescu/Documents/theano_tut/convolutional-neural-net/proto_cnn/');
-    sys.path.append('/Users/vivianapetrescu/Documents/theano_tut/convolutional-neural-net/proto_cnn/src');
+#    sys.path.append('/Users/vivianapetrescu/Documents/theano_tut/convolutional-neural-net/');
+#    sys.path.append('/Users/vivianapetrescu/Documents/theano_tut/convolutional-neural-net/proto_cnn/');
+#    sys.path.append('/Users/vivianapetrescu/Documents/theano_tut/convolutional-neural-net/proto_cnn/src');
     print 'Number of arguments:', len(sys.argv)
     print 'Arguments list:', str(sys.argv)
 

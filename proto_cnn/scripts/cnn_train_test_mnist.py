@@ -13,10 +13,6 @@ import src.core
 from mnist_train_cnn  import CNNTrainTPmnist
 from mnist_retrain_cnn import CNNRetrainTPmnist
 from mnist_test_cnn import CNNTestTPmnist
-from src.core.cnn_separable_non_symbolic import ConvolutionalNeuralNetworkNonSymbolic;
-from src.core.convolutional_nnet_train import ConvolutionalNeuralNetworkTrain;
-from src.core.convolutional_nnet_test import ConvolutionalNeuralNetworkTest;
-from src.core.convolutional_neural_network_separable import ConvolutionalNeuralNetworkSeparableTest;
 
 def main():
     print 'Number of arguments:', len(sys.argv)
@@ -32,11 +28,11 @@ def main():
     print 'weights file is', results.cached_weights_file
     print 'run mode', results.mode
 
-    if results.mode == 0 or results.mode == 2
+    if results.mode == 0 or results.mode == 2:
     	cnn = CNNTrainTPmnist(results.prototxt_file, results.cached_weights_file)
     	cnn.build_model()
     	cnn.train_model()
-    if results.mode == 1 or results.mode == 2
+    if results.mode == 1 or results.mode == 2:
     	cnn = CNNTrainTPmnist(results.prototxt_file, results.cached_weights_file)
     	cnn.build_model()
     	cnn.test_model()

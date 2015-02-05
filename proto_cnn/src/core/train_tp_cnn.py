@@ -10,7 +10,7 @@ import time
 import theano
 import theano.tensor as T
 
-from core.train_cnn import CNNTrain
+from src.core.train_cnn import CNNTrain
 
 
 class CNNTrainTP(CNNTrain):
@@ -23,10 +23,11 @@ class CNNTrainTP(CNNTrain):
 
     """
     def __init__(self, cnn_settings_protofile, cached_weights_file):
+        self.batch_size = 0
         super(CNNTrainTP, self).__init__(cnn_settings_protofile, cached_weights_file)
         self.test_model = None
         self.validate_model = None
-        self.best_params = None
+        self.best_params = [] 
 
     def train_model(self):
         """The actual training method"""
@@ -39,23 +40,18 @@ class CNNTrainTP(CNNTrain):
         for param_i, grad_i in zip(self.params, self.grads):
             updates.append((param_i, param_i - self.learning_rate * grad_i))
 
-        train_model = theano.function([self.index], [self.cost], updates=updates,
+        train_model = theano.function([self.index], [self.cost, self.output_layer.errors(self.y)], updates=updates,
                     givens={
                     self.x: self.train_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
-                    self.y: self.train_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
-                    name='train_model')
+                    self.y: self.train_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
 
         # create a function to compute the mistakes that are made by the model
         self.test_model = theano.function([self.index], [self.output_layer.y_pred],
                         givens={
-                        self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
-                        self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
-                        name='test_model')
+                        self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
         self.validate_model = theano.function([self.index], [self.output_layer.y_pred],
                             givens={
-                            self.x: self.valid_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
-                            self.y: self.valid_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
-                            name='validate_model')
+                            self.x: self.valid_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
             ###############
             # TRAIN MODEL #
             ###############
@@ -68,7 +64,6 @@ class CNNTrainTP(CNNTrain):
                                   # on the validation set; in this case we
                                   # check every epoch
 
-        self.best_params = None
         best_validation_loss = 0
         test_score = 0.
         epoch = 0
@@ -118,8 +113,6 @@ class CNNTrainTP(CNNTrain):
                     if patience <= iteration:
                         done_looping = True
                         break
-                print 'Saving best parameters'
-                self.save_parameters()
                 mean_training_time /= cnt_times
             print 'running_times %f', mean_training_time
             logging.info(('running time %f' % (mean_training_time)))
@@ -145,7 +138,7 @@ class CNNTrainTP(CNNTrain):
         # works for 0-1 loss
         all_y_pred = numpy.empty([])
         for i in xrange(self.n_test_batches):
-            y_pred = self.test_model(i)[0]
+            y_pred = self.test_model(i)
             if i == 0:
                 all_y_pred = y_pred
             else:

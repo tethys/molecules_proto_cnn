@@ -28,6 +28,7 @@ class CNNBase(object):
         self.cached_weights_file = cached_weights_file
         self.initialize_logger()
         self.cached_weights = []
+        self.rng = np.random.RandomState(23455)
         # Create protobuff empty object
         settings = pb_cnn.CNNSettings()
         try:
@@ -43,16 +44,15 @@ class CNNBase(object):
             proto_file.close()
         except IOError:
             print "Could not open file " + cnn_settings_protofile
-            self.rng = np.random.RandomState(23455)
+        self.learning_rate = 0.1
+        self.n_epochs = 100
+        self.batch_size = 100
+        self.poolsize = 2
 
     def create_layers_from_settings(self, settings):
         """ Takes as input the settings parsed from the proto file
             and sets up the CNN configuration."""
         # Default values for optional parameters
-        self.learning_rate = 0.1
-        self.n_epochs = 100
-        self.batch_size = 100
-        self.poolsize = 2
         # This fields are optional
         ##TODO add colored warning if default value is used
         if settings.HasField('learning_rate'):

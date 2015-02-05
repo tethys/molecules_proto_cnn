@@ -3,10 +3,12 @@
 Created on Tue Oct 21 15:27:51 2014
 @author: vpetresc
 """
+import cPickle
+import gzip
 import numpy as np
 import os
 import scipy
-from train_tp_cnn import CNNTrainTP
+from src.core.train_tp_cnn import CNNTrainTP
 
 
 class CNNTrainTPmnist(CNNTrainTP):
@@ -44,7 +46,7 @@ class CNNTrainTPmnist(CNNTrainTP):
         #train_set, valid_set, test_set format: tuple(input, target)
         #input is an numpy.ndarray of 2 dimensions (a matrix)
         #witch row's correspond to an example. target is a
-        if self.small_data == False:
+        if self.small_set == False:
             # Upscale the data
             N = 10000
             tmp_images = np.zeros((N, 56, 56))

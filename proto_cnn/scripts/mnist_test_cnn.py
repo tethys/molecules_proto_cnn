@@ -9,7 +9,7 @@ import numpy as np
 import os
 import scipy
 
-from test_tp_cnn import CNNTestTP
+from src.core.test_tp_cnn import CNNTestTP
 
 class CNNTestTPmnist(CNNTestTP):
     """ Loads the MNIST data set"""

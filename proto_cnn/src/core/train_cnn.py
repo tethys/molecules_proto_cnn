@@ -43,8 +43,9 @@ class CNNTrain(CNNBase):
         self.output_layer = None
         self.index = 0
         self.input_shape = None
-        self.x = None
-        self.y = None
+        self.index = T.lscalar()  # index to a [mini]batch
+        self.x = T.matrix('x')   # the data is presented as rasterized images
+        self.y = T.ivector('y')  # the labels are presented as 1D vector of
 
     def build_model(self):
         """Creates the actual model from the model settings."""
@@ -75,9 +76,6 @@ class CNNTrain(CNNBase):
         print 'Size train_batches %d, n_valid_batches %d, n_test_batches %d' % (self.n_train_batches, self.n_valid_batches, self.n_test_batches)
 
         # allocate symbolic variables for the data
-        self.index = T.lscalar()  # index to a [mini]batch
-        self.x = T.matrix('x')   # the data is presented as rasterized images
-        self.y = T.ivector('y')  # the labels are presented as 1D vector of
                                # [int] labels
 
         ######################
