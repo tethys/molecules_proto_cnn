@@ -1,0 +1,386 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>core.test_cnn &mdash; proto_cnn 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="proto_cnn 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for core.test_cnn</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon Nov 24 14:39:22 2014</span>
+
+<span class="sd">@author: vpetresc</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="kn">as</span> <span class="nn">T</span>
+
+<span class="kn">from</span> <span class="nn">base_cnn</span> <span class="kn">import</span> <span class="n">CNNBase</span>
+<span class="kn">from</span> <span class="nn">lenet_conv_pool_layer</span> <span class="kn">import</span> <span class="n">LeNetConvPoolLayer</span>
+<span class="kn">from</span> <span class="nn">lenet_layer_conv_pool_non_symbolic</span> <span class="kn">import</span> <span class="n">LeNetLayerConvPoolNonSymbolic</span>
+<span class="kn">from</span> <span class="nn">lenet_layer_conv_pool_separable_non_symbolic</span> <span class="kn">import</span> <span class="n">LeNetLayerConvPoolSeparableNonSymbolic</span>
+<span class="kn">from</span> <span class="nn">logistic_sgd</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="kn">from</span> <span class="nn">mlp</span> <span class="kn">import</span> <span class="n">HiddenLayer</span>
+
+<div class="viewcode-block" id="CNNTest"><a class="viewcode-back" href="../../core.html#core.test_cnn.CNNTest">[docs]</a><span class="k">class</span> <span class="nc">CNNTest</span><span class="p">(</span><span class="n">CNNBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The class is responsible for creating the layers of the network.</span>
+<span class="sd">        The loading of the data and the type of the error used is defined in</span>
+<span class="sd">        derived classes.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cnn_settings_protofile</span><span class="p">,</span> <span class="n">cached_weights_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Update parameters from protobuffer file&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cnntype</span> <span class="o">=</span> <span class="s">&#39;TEST&#39;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CNNTest</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">cnn_settings_protofile</span><span class="p">,</span> <span class="n">cached_weights_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_weights</span><span class="p">()</span>
+        <span class="c">## Create Layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="CNNTest.compute_test_error"><a class="viewcode-back" href="../../core.html#core.test_cnn.CNNTest.compute_test_error">[docs]</a>    <span class="k">def</span> <span class="nf">compute_test_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loop through the batches and run process_batch&quot;&quot;&quot;</span>
+
+        <span class="c"># Load the data</span>
+        <span class="n">datasets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_samples</span><span class="p">()</span>
+
+        <span class="c"># Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784</span>
+        <span class="n">test_set_x</span><span class="p">,</span> <span class="n">test_set_y</span> <span class="o">=</span> <span class="n">datasets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span> <span class="o">=</span> <span class="n">test_set_x</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span> <span class="o">=</span> <span class="n">test_set_y</span>
+
+        <span class="c">#&quot;Image width is the square root of the x dimenstion of the test x data&quot;</span>
+        <span class="n">image_width_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">test_set_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">image_width_size</span><span class="p">,</span> <span class="n">image_width_size</span><span class="p">)</span>
+
+        <span class="c"># compute number of minibatches for training, validation and testing</span>
+        <span class="c"># 50000/50 = 1000, 10000/50 = 200</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;nbr batches </span><span class="si">%d</span><span class="s">, batch size </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">))</span>
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span>
+
+        <span class="k">print</span> <span class="s">&#39;Running test&#39;</span>
+        <span class="n">timings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">resultlist</span> <span class="o">=</span> <span class="p">[</span><span class="nb">dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">batch_index</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s">&#39;batch nr&#39;</span><span class="p">,</span> <span class="n">batch_index</span>
+            <span class="c"># Create tine object</span>
+            <span class="n">cnn_time</span> <span class="o">=</span> <span class="n">CNNTime</span><span class="p">()</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">resultlist</span><span class="p">[</span><span class="n">batch_index</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_batch</span><span class="p">(</span><span class="n">batch_index</span><span class="p">,</span> <span class="n">cnn_time</span><span class="p">)</span>
+            <span class="n">endt</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+            <span class="n">cnn_time</span><span class="o">.</span><span class="n">t_total</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">endt</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">print</span> <span class="s">&#39;Batch time &#39;</span><span class="p">,</span> <span class="n">cnn_time</span><span class="o">.</span><span class="n">to_string</span><span class="p">()</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">cnn_time</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+            <span class="n">timings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cnn_time</span><span class="p">)</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_batch_error</span><span class="p">(</span><span class="n">resultlist</span><span class="p">[</span><span class="n">batch_index</span><span class="p">])</span>
+            <span class="k">print</span> <span class="s">&#39;Batch error &#39;</span><span class="p">,</span> <span class="n">err</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_cnn_time_summary</span><span class="p">(</span><span class="n">timings</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_fit_info</span><span class="p">()</span>
+        <span class="n">test_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_all_saples_error</span><span class="p">(</span><span class="n">resultlist</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&#39; Test error of best &#39;</span><span class="p">,</span> <span class="n">test_score</span><span class="o">*</span><span class="mi">100</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Test error: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">test_score</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">test_score</span>
+</div>
+<div class="viewcode-block" id="CNNTest.process_batch"><a class="viewcode-back" href="../../core.html#core.test_cnn.CNNTest.process_batch">[docs]</a>    <span class="k">def</span> <span class="nf">process_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_index</span><span class="p">,</span> <span class="n">cnn_time</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Process one single batch</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          batch_index: </span>
+<span class="sd">          cnn_time: </span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span><span class="p">[</span><span class="n">batch_index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="n">batch_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span><span class="p">[</span><span class="n">batch_index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span> <span class="p">(</span><span class="n">batch_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">]</span>
+
+        <span class="n">nbr_feature_maps</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">layer_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+                                      <span class="n">nbr_feature_maps</span><span class="p">,</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">pooled_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pooled_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">idx_weight</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">clayer_params</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">convolutional_layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">clayer_params</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s">&#39;rank&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="n">startl</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="n">layer_convolutional</span> <span class="o">=</span> <span class="n">LeNetLayerConvPoolNonSymbolic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">)</span>
+                <span class="c">#self.layer_separable_convolutional =</span>
+                <span class="c">#LeNetLayerConvPoolSeparableNonSymbolic(self.rng)</span>
+                <span class="n">layer_output</span> <span class="o">=</span> <span class="n">layer_convolutional</span><span class="o">.</span><span class="n">run_batch</span><span class="p">(</span>
+                               <span class="n">layer_input</span><span class="p">,</span>
+                                <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">nbr_feature_maps</span><span class="p">,</span> <span class="n">pooled_width</span><span class="p">,</span> <span class="n">pooled_height</span><span class="p">),</span>
+                                 <span class="n">filter_shape</span><span class="o">=</span><span class="p">(</span><span class="n">clayer_params</span><span class="o">.</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">nbr_feature_maps</span><span class="p">,</span>
+                                                     <span class="n">clayer_params</span><span class="o">.</span><span class="n">filter_w</span><span class="p">,</span> <span class="n">clayer_params</span><span class="o">.</span><span class="n">filter_w</span><span class="p">),</span>
+                                 <span class="n">W</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">idx_weight</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+                                 <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">idx_weight</span><span class="p">],</span>
+                                 <span class="n">poolsize</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span><span class="p">))</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="c">#                layer_output = LeNetConvPoolLayer(self.rng, input = layer_input,</span>
+<span class="c">#                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),</span>
+<span class="c">#                                       filter_shape=(clayer_params.num_filters, nbr_feature_maps,</span>
+<span class="c">#                                                     clayer_params.filter_w, clayer_params.filter_w),</span>
+<span class="c">#                                       poolsize=(self.poolsize, self.poolsize),</span>
+<span class="c">#                                        W = self.cached_weights[iter + 1],</span>
+<span class="c">#                                        b = theano.shared(self.cached_weights[iter]))</span>
+              <span class="c">#  print &#39;LAYER OUTPUT IS&#39;</span>
+              <span class="c">#  print layer_output</span>
+                <span class="n">cnn_time</span><span class="o">.</span><span class="n">t_convolution</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">layer_convolutional</span><span class="o">.</span><span class="n">convolutional_time</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+                <span class="n">cnn_time</span><span class="o">.</span><span class="n">t_downsample_activation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">layer_convolutional</span><span class="o">.</span><span class="n">downsample_time</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+                <span class="n">endt</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">startl</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+                <span class="k">print</span> <span class="s">&#39;layer time </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">endt</span>
+            <span class="k">else</span><span class="p">:</span>
+         <span class="c">#       print &#39;Separable &#39;, iter</span>
+                <span class="n">layer_separable_convolutional</span> <span class="o">=</span> <span class="n">LeNetLayerConvPoolSeparableNonSymbolic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">)</span>
+                <span class="n">layer_output</span> <span class="o">=</span> <span class="n">layer_separable_convolutional</span><span class="o">.</span><span class="n">run_batch</span><span class="p">(</span>
+                                                    <span class="n">layer_input</span><span class="p">,</span>
+                                       <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">nbr_feature_maps</span><span class="p">,</span> <span class="n">pooled_width</span><span class="p">,</span> <span class="n">pooled_height</span><span class="p">),</span>
+                                       <span class="n">filter_shape</span><span class="o">=</span><span class="p">(</span><span class="n">clayer_params</span><span class="o">.</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">nbr_feature_maps</span><span class="p">,</span>
+                                                     <span class="n">clayer_params</span><span class="o">.</span><span class="n">filter_w</span><span class="p">,</span> <span class="n">clayer_params</span><span class="o">.</span><span class="n">filter_w</span><span class="p">),</span>
+                                       <span class="n">Pstruct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">idx_weight</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+                                       <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">idx_weight</span><span class="p">],</span>
+                                       <span class="n">poolsize</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span><span class="p">))</span>
+                <span class="n">cnn_time</span><span class="o">.</span><span class="n">t_convolution</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">layer_separable_convolutional</span><span class="o">.</span><span class="n">t_conv</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+                <span class="n">cnn_time</span><span class="o">.</span><span class="n">t_downsample_activation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">layer_separable_convolutional</span><span class="o">.</span><span class="n">t_downsample_activ</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="c">#   print &#39;image_shape &#39;, self.batch_size, nbr_feature_maps, pooled_width, pooled_height</span>
+        <span class="c">#   print &#39;filter_shape &#39;, clayer_params.num_filters, nbr_feature_maps, clayer_params.filter_w, clayer_params.filter_w</span>
+            <span class="n">pooled_width</span> <span class="o">=</span> <span class="p">(</span><span class="n">pooled_width</span> <span class="o">-</span> <span class="n">clayer_params</span><span class="o">.</span><span class="n">filter_w</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span>
+            <span class="n">pooled_height</span> <span class="o">=</span> <span class="p">(</span><span class="n">pooled_height</span> <span class="o">-</span> <span class="n">clayer_params</span><span class="o">.</span><span class="n">filter_w</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span>
+            <span class="n">layer_input</span> <span class="o">=</span> <span class="n">layer_output</span>
+            <span class="n">nbr_feature_maps</span> <span class="o">=</span> <span class="n">clayer_params</span><span class="o">.</span><span class="n">num_filters</span>
+            <span class="n">idx_weight</span> <span class="o">+=</span> <span class="mi">2</span>
+        <span class="n">endt</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="k">print</span> <span class="s">&#39;total layers time </span><span class="si">%.2f</span><span class="s"> in ms &#39;</span> <span class="o">%</span> <span class="n">endt</span>
+
+        <span class="c"># construct a fully-connected sigmoidal layer</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">nbr_input</span> <span class="o">=</span> <span class="n">nbr_feature_maps</span> <span class="o">*</span> <span class="n">pooled_width</span> <span class="o">*</span> <span class="n">pooled_height</span> <span class="c">## Why is this SO??</span>
+        <span class="n">layer_input</span> <span class="o">=</span> <span class="n">layer_input</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">nbr_input</span><span class="p">))</span>
+        <span class="n">hlayers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">hlayer_params</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span><span class="p">:</span>
+            <span class="n">layer</span> <span class="o">=</span> <span class="n">HiddenLayer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="n">layer_input</span><span class="p">,</span> <span class="n">n_in</span><span class="o">=</span><span class="n">nbr_input</span><span class="p">,</span>
+                         <span class="n">n_out</span><span class="o">=</span><span class="n">hlayer_params</span><span class="o">.</span><span class="n">num_outputs</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">tanh</span><span class="p">,</span>
+                         <span class="n">W</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">idx_weight</span> <span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">b</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">idx_weight</span><span class="p">])</span>
+            <span class="n">nbr_input</span> <span class="o">=</span> <span class="n">hlayer_params</span><span class="o">.</span><span class="n">num_outputs</span>
+            <span class="n">layer_input</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">output</span>
+            <span class="n">hlayers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+            <span class="n">idx_weight</span> <span class="o">+=</span> <span class="mi">2</span>
+
+        <span class="c"># classify the values of the fully-connected sigmoidal layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">layer_input</span><span class="p">,</span> <span class="n">n_in</span><span class="o">=</span><span class="n">nbr_input</span><span class="p">,</span>
+                                               <span class="n">n_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">last_layer</span><span class="o">.</span><span class="n">num_outputs</span><span class="p">,</span>
+                                               <span class="n">W</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">idx_weight</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+                                               <span class="n">b</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">idx_weight</span><span class="p">])</span>
+        <span class="n">cnn_time</span><span class="o">.</span><span class="n">t_non_conv_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="n">cnn_time</span><span class="o">.</span><span class="n">t_non_conv_layers</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">cnn_time</span><span class="o">.</span><span class="n">t_non_conv_layers</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">result_count_dictionary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CNNTest.log_fit_info"><a class="viewcode-back" href="../../core.html#core.test_cnn.CNNTest.log_fit_info">[docs]</a>    <span class="k">def</span> <span class="nf">log_fit_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Logs the fit of the separable filters for the separable layers.</span>
+<span class="sd">            The information is stored in the numpy arrays</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">clayer_params</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">convolutional_layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">clayer_params</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s">&#39;rank&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c">## log mean and std of fit per chanel</span>
+                <span class="n">sep_filters_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_weights</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sep_filters_struct</span><span class="p">)</span>
+                <span class="n">fitarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">chanel</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                    <span class="k">print</span> <span class="n">sep_filters_struct</span><span class="p">[</span><span class="n">chanel</span><span class="p">][</span><span class="s">&#39;fit&#39;</span><span class="p">]</span>
+                    <span class="n">fitarray</span><span class="p">[</span><span class="n">chanel</span><span class="p">]</span> <span class="o">=</span> <span class="n">sep_filters_struct</span><span class="p">[</span><span class="n">chanel</span><span class="p">][</span><span class="s">&#39;fit&#39;</span><span class="p">]</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Fit mean {0}, std {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">fitarray</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">fitarray</span><span class="p">)))</span>
+            <span class="n">idx</span> <span class="o">+=</span> <span class="mi">2</span>
+</div>
+<div class="viewcode-block" id="CNNTest.log_cnn_time_summary"><a class="viewcode-back" href="../../core.html#core.test_cnn.CNNTest.log_cnn_time_summary">[docs]</a>    <span class="k">def</span> <span class="nf">log_cnn_time_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timings</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The method takes as input a vector of timings</span>
+<span class="sd">            and aggregates the results</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          timings: </span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t_convolution</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">t_downsample_activation</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">t_non_conv_layers</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">t_total</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">timings</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">t_convolution</span><span class="p">)</span>
+        <span class="n">t_convolution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">t_downsample_activation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">cnn_time</span> <span class="ow">in</span> <span class="n">timings</span><span class="p">:</span>
+            <span class="n">t_total</span> <span class="o">+=</span> <span class="n">cnn_time</span><span class="o">.</span><span class="n">t_total</span>
+            <span class="n">t_non_conv_layers</span> <span class="o">+=</span> <span class="n">cnn_time</span><span class="o">.</span><span class="n">t_non_conv_layers</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">t_convolution</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cnn_time</span><span class="o">.</span><span class="n">t_convolution</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">t_downsample_activation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cnn_time</span><span class="o">.</span><span class="n">t_downsample_activation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">t_convolution</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span>
+            <span class="n">t_downsample_activation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span>
+        <span class="n">t_total</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span>
+        <span class="n">t_non_conv_layers</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Final average results&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39; convolution &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; : &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">t_convolution</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39; downs + activ &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; : &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">t_downsample_activation</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39; non conv layers : &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">t_non_conv_layers</span><span class="p">))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39; total avg image time : &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">t_total</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="CNNTest.compute_batch_error"><a class="viewcode-back" href="../../core.html#core.test_cnn.CNNTest.compute_batch_error">[docs]</a>    <span class="k">def</span> <span class="nf">compute_batch_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_result_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Abstract method for computing the error per batch (VOC or error rate)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          batch_result_dict: </span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+<div class="viewcode-block" id="CNNTest.compute_all_samples_error"><a class="viewcode-back" href="../../core.html#core.test_cnn.CNNTest.compute_all_samples_error">[docs]</a>    <span class="k">def</span> <span class="nf">compute_all_samples_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_samples_result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Abstract method for computing the error on all test samples</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          all_samples_result: </span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+
+<span class="c">## Store average timing per batch</span></div></div>
+<div class="viewcode-block" id="CNNTime"><a class="viewcode-back" href="../../core.html#core.test_cnn.CNNTime">[docs]</a><span class="k">class</span> <span class="nc">CNNTime</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The class holds the timings for every layer,</span>
+<span class="sd">        (e.g. convolutional, hidden) etc</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; For every type of layer there is an array</span>
+<span class="sd">            where the timings are added &quot;&quot;&quot;</span>
+        <span class="c">## Convolution time per layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_convolution</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c">## Downsampling time per layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_downsample_activation</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_non_conv_layers</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_total</span> <span class="o">=</span> <span class="mi">0</span>
+<div class="viewcode-block" id="CNNTime.to_string"><a class="viewcode-back" href="../../core.html#core.test_cnn.CNNTime.to_string">[docs]</a>    <span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Printable version the the class contents&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&quot;Time :</span><span class="si">%s</span><span class="s"> :</span><span class="si">%s</span><span class="s"> </span><span class="si">%5.2f</span><span class="s"> </span><span class="si">%5.2f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_convolution</span><span class="p">),</span>
+                                             <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_downsample_activation</span><span class="p">),</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">t_non_conv_layers</span><span class="p">,</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">t_total</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, vpetresc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tools package &mdash; proto_cnn 0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="proto_cnn 0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">proto_cnn 0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="tools-package">
+<h1>tools package<a class="headerlink" href="#tools-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tools.misc">
+<span id="tools-misc-module"></span><h2>tools.misc module<a class="headerlink" href="#module-tools.misc" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="misc">
+<h3>misc<a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h3>
+<p>This module implements functions which do not have another home.</p>
+<dl class="function">
+<dt id="tools.misc.colorzoom">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">colorzoom</tt><big>(</big><em>img</em>, <em>zoom</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#colorzoom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.colorzoom" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.detect_peaks">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">detect_peaks</tt><big>(</big><em>img</em>, <em>minimum_distance=None</em>, <em>window_size=3</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#detect_peaks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.detect_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detect prominent peaks in an image.</p>
+<p>If given, <tt class="docutils literal"><span class="pre">minimum_distance</span></tt> indicates the minimum distance
+that each detected peak is from its nearest neighbor.</p>
+<p><tt class="docutils literal"><span class="pre">window_size</span></tt> indicates the size of the window
+for the non-maxima suppression algorithm. The default is (3,3).</p>
+<p>From Yanxi Liu, Robert T. Collins, 
+&#8220;A Computational Model for Repeated Pattern Perception using
+Frieze and Wallpaper Groups&#8221;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.grouper">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">grouper</tt><big>(</big><em>n</em>, <em>iterable</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#grouper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.grouper" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.loadz">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">loadz</tt><big>(</big><em>filename</em>, <em>destdict=None</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#loadz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.loadz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a .npz file and insert its contents into a namespace.</p>
+<p>If destdict is not given, the contents will be inserted
+in the global namespace of the calling frame.</p>
+<p>Example:
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; A = np.array([1,2,3])
+&gt;&gt;&gt; b = np.array([[1,2],[3,4]])
+&gt;&gt;&gt; np.savez(&#8220;test&#8221;, A=A, b=b)
+&gt;&gt;&gt; del A, b
+&gt;&gt;&gt; loadz(&#8220;test.npz&#8221;)
+&gt;&gt;&gt; A
+array([1, 2, 3])
+&gt;&gt;&gt; b
+array([[1, 2],</p>
+<blockquote>
+<div>[3, 4]])</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.matarray">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">matarray</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#matarray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.matarray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a 2D array using a Matlab-like notation.
+You can specify the separator element using the keyword
+argument &#8216;sep&#8217;. By default, it is &#8216;None&#8217;. This is
+useful when creating block matrices.</p>
+<p>When the resulting matrix has only one element, matarray
+will return the element.</p>
+<p>Examples:
+&gt;&gt;&gt; matarray(1,2,None,3,4)
+array([[1, 2],</p>
+<blockquote>
+<div>[3, 4]])</div></blockquote>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">matarray</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+<span class="go">array([[1, 2],</span>
+<span class="go">       [3, 4]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matarray</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">array([[ 1.,  1.,  1.,  0.],</span>
+<span class="go">       [ 1.,  1.,  1.,  0.],</span>
+<span class="go">       [ 1.,  1.,  1.,  0.],</span>
+<span class="go">       [ 0.,  0.,  0.,  1.]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matarray</span><span class="p">([</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.mklist">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">mklist</tt><big>(</big><em>lst</em>, <em>dim</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#mklist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.mklist" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <em>lst</em> is a scalar value or a sequence with one element, returns a list
+of that element repeated <em>dim</em> times.</p>
+<p>If <em>lst</em> is a sequence of length <em>dim</em>, returns <em>lst</em>.</p>
+<p>Otherwise, it raises a ValueError exception.</p>
+<p>Examples:
+&gt;&gt;&gt; mklist(1, 4)
+[1, 1, 1, 1]
+&gt;&gt;&gt; mklist([2], 4)
+[2, 2, 2, 2]
+&gt;&gt;&gt; mklist([1, 2, 3, 4], 4)
+[1, 2, 3, 4]
+&gt;&gt;&gt; mklist([1, 2, 3], 4)
+ValueError: lst has an invalid length</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.normalize_data">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">normalize_data</tt><big>(</big><em>data</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#normalize_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.normalize_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.npz2dict">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">npz2dict</tt><big>(</big><em>npz</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#npz2dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.npz2dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a npz structure in a Python dictionary.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.plot_grid">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">plot_grid</tt><big>(</big><em>elements</em>, <em>plotfun</em>, <em>width=None</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#plot_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.plot_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a set of elements in a grid of subplots.</p>
+<dl class="docutils">
+<dt>elements <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>List of any type.</dd>
+<dt>plotfun <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
+<dd>The function <em>plotfun</em> should accept two parameters:
+plotfun(axes, element). <em>axes</em> is a instance of matplotlib
+AxesSubplot, and <em>element</em> is an element of the list <em>elements</em>.
+<em>plotfun</em> should plot the element in the given AxesSubplot.</dd>
+<dt>width <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>If given, it determines the width of the plot grid. If not given,
+the width of the grid is the square root of the length of <em>elements</em>.</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="tools.misc.redict">
+<em class="property">class </em><tt class="descclassname">tools.misc.</tt><tt class="descname">redict</tt><a class="reference internal" href="_modules/tools/misc.html#redict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.redict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></p>
+<p>Dictionary indexed by regular expressions.</p>
+<dl class="attribute">
+<dt id="tools.misc.redict.re">
+<tt class="descname">re</tt><em class="property"> = &lt;module 're' from '//anaconda/lib/python2.7/re.pyc'&gt;</em><a class="headerlink" href="#tools.misc.redict.re" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.rgb2gray">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">rgb2gray</tt><big>(</big><em>img</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#rgb2gray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.rgb2gray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a RGB image to gray scale.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.sort_nicely">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">sort_nicely</tt><big>(</big><em>l</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#sort_nicely"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.sort_nicely" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort the given list in the way that humans expect.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.srgb2cielab">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">srgb2cielab</tt><big>(</big><em>img</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#srgb2cielab"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.srgb2cielab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.srgb2ciexyz">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">srgb2ciexyz</tt><big>(</big><em>img</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#srgb2ciexyz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.srgb2ciexyz" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.tiffread">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">tiffread</tt><big>(</big><em>fname</em>, <em>strip=False</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#tiffread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.tiffread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a multi-page TIFF image to a three-dimensional array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.unique_rows">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">unique_rows</tt><big>(</big><em>a</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#unique_rows"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.unique_rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove duplicated rows in a 2D array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.misc.whiten">
+<tt class="descclassname">tools.misc.</tt><tt class="descname">whiten</tt><big>(</big><em>data</em>, <em>epsilon=0.001</em><big>)</big><a class="reference internal" href="_modules/tools/misc.html#whiten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.misc.whiten" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-tools.patches">
+<span id="tools-patches-module"></span><h2>tools.patches module<a class="headerlink" href="#module-tools.patches" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="tools.patches.get_grid_patches">
+<tt class="descclassname">tools.patches.</tt><tt class="descname">get_grid_patches</tt><big>(</big><em>image</em>, <em>patch_shape</em>, <em>step=1</em>, <em>flat=True</em><big>)</big><a class="reference internal" href="_modules/tools/patches.html#get_grid_patches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.patches.get_grid_patches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all the patches in a grid</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.patches.get_many_patches">
+<tt class="descclassname">tools.patches.</tt><tt class="descname">get_many_patches</tt><big>(</big><em>image</em>, <em>patch_shape</em>, <em>centers</em>, <em>flat=True</em><big>)</big><a class="reference internal" href="_modules/tools/patches.html#get_many_patches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.patches.get_many_patches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the patches at given centers</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.patches.get_patch">
+<tt class="descclassname">tools.patches.</tt><tt class="descname">get_patch</tt><big>(</big><em>image</em>, <em>patch_shape</em>, <em>center</em><big>)</big><a class="reference internal" href="_modules/tools/patches.html#get_patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.patches.get_patch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a single patch with the given shape and center</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tools.patches.grid_patches_centers">
+<tt class="descclassname">tools.patches.</tt><tt class="descname">grid_patches_centers</tt><big>(</big><em>img_shape</em>, <em>patch_shape</em>, <em>step=1</em><big>)</big><a class="reference internal" href="_modules/tools/patches.html#grid_patches_centers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tools.patches.grid_patches_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the centers of a grid of patches with given shape</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tools">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tools" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">tools package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-tools.misc">tools.misc module</a><ul>
+<li><a class="reference internal" href="#misc">misc</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-tools.patches">tools.patches module</a></li>
+<li><a class="reference internal" href="#module-tools">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tools.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">proto_cnn 0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, vpetresc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

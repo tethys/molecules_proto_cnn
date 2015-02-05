@@ -1,0 +1,210 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>core.lenet_conv_pool_layer &mdash; proto_cnn 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="proto_cnn 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for core.lenet_conv_pool_layer</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;This tutorial introduces the LeNet5 neural network architecture</span>
+<span class="sd">using Theano.  LeNet5 is a convolutional neural network, good for</span>
+<span class="sd">classifying images. This tutorial shows how to build the architecture,</span>
+<span class="sd">and comes with all the hyper-parameters you need to reproduce the</span>
+<span class="sd">paper&#39;s MNIST results.</span>
+
+
+<span class="sd">This implementation simplifies the model in the following ways:</span>
+
+<span class="sd"> - LeNetConvPool doesn&#39;t implement location-specific gain and bias parameters</span>
+<span class="sd"> - LeNetConvPool doesn&#39;t implement pooling by average, it implements pooling</span>
+<span class="sd">   by max.</span>
+<span class="sd"> - Digit classification is implemented with a logistic regression rather than</span>
+<span class="sd">   an RBF network</span>
+<span class="sd"> - LeNet5 was not fully-connected convolutions at second layer</span>
+
+<span class="sd">References:</span>
+<span class="sd"> - Y. LeCun, L. Bottou, Y. Bengio and P. Haffner:</span>
+<span class="sd">   Gradient-Based Learning Applied to Document</span>
+<span class="sd">   Recognition, Proceedings of the IEEE, 86(11):2278-2324, November 1998.</span>
+<span class="sd">   http://yann.lecun.com/exdb/publis/pdf/lecun-98.pdf</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">scipy.io</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">theano</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="kn">as</span> <span class="nn">T</span>
+<span class="kn">from</span> <span class="nn">theano.tensor.signal</span> <span class="kn">import</span> <span class="n">downsample</span>
+<span class="kn">from</span> <span class="nn">theano.tensor.nnet</span> <span class="kn">import</span> <span class="n">conv</span>
+
+
+<div class="viewcode-block" id="LeNetConvPoolLayer"><a class="viewcode-back" href="../../core.html#core.lenet_conv_pool_layer.LeNetConvPoolLayer">[docs]</a><span class="k">class</span> <span class="nc">LeNetConvPoolLayer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pool Layer of a convolutional network &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">filter_shape</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">poolsize</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>  <span class="n">W</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allocate a LeNetConvPoolLayer with shared variable internal parameters.</span>
+
+<span class="sd">        :type rng: numpy.random.RandomState</span>
+<span class="sd">        :param rng: a random number generator used to initialize weights</span>
+
+<span class="sd">        :type input: theano.tensor.dtensor4</span>
+<span class="sd">        :param input: symbolic image tensor, of shape image_shape</span>
+
+<span class="sd">        :type filter_shape: tuple or list of length 4</span>
+<span class="sd">        :param filter_shape: (number of filters, num input feature maps,</span>
+<span class="sd">                              filter height,filter width)</span>
+
+<span class="sd">        :type image_shape: tuple or list of length 4</span>
+<span class="sd">        :param image_shape: (batch size, num input feature maps,</span>
+<span class="sd">                             image height, image width)</span>
+
+<span class="sd">        :type poolsize: tuple or list of length 2</span>
+<span class="sd">        :param poolsize: the downsampling (pooling) factor (#rows,#cols)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c"># there are &quot;num input feature maps * filter height * filter width&quot;</span>
+        <span class="c"># inputs to each hidden unit</span>
+        <span class="n">fan_in</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">filter_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="c"># each unit in the lower layer receives a gradient from:</span>
+        <span class="c"># &quot;num output feature maps * filter height * filter width&quot; /</span>
+        <span class="c">#   pooling size</span>
+        <span class="n">fan_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">filter_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">filter_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span> <span class="o">/</span>
+                   <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">poolsize</span><span class="p">))</span>
+        <span class="c"># initialize weights with random weights</span>
+        <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">W_bound</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">6.</span> <span class="o">/</span> <span class="p">(</span><span class="n">fan_in</span> <span class="o">+</span> <span class="n">fan_out</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="n">W_bound</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">W_bound</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">filter_shape</span><span class="p">),</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">),</span>
+                               <span class="n">borrow</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">W</span>
+
+        <span class="c"># the bias is a 1D tensor -- one bias per output feature map</span>
+        <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">b_values</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">filter_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">b_values</span><span class="p">,</span> <span class="n">borrow</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_conv_pool</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">filter_shape</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">poolsize</span><span class="p">)</span>
+       <span class="c"># self.run_separable_conv_pool(filter_shape, image_shape, poolsize)</span>
+        
+        
+<div class="viewcode-block" id="LeNetConvPoolLayer.run_conv_pool"><a class="viewcode-back" href="../../core.html#core.lenet_conv_pool_layer.LeNetConvPoolLayer.run_conv_pool">[docs]</a>    <span class="k">def</span> <span class="nf">run_conv_pool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">filter_shape</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">poolsize</span><span class="p">):</span>    
+        <span class="c"># convolve input feature maps with filters</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">print</span> <span class="s">&#39;W &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">print</span> <span class="s">&#39;filter shape  &#39;</span><span class="p">,</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">print</span> <span class="s">&#39;image shape &#39;</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>  
+        <span class="n">conv_out</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">,</span>
+                <span class="n">filter_shape</span><span class="o">=</span><span class="n">filter_shape</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="n">image_shape</span><span class="p">)</span>
+        
+        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convolutional_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="o">/</span><span class="n">image_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>                
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">pooled_out</span> <span class="o">=</span> <span class="n">downsample</span><span class="o">.</span><span class="n">max_pool_2d</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">conv_out</span><span class="p">,</span>
+                                            <span class="n">ds</span><span class="o">=</span><span class="n">poolsize</span><span class="p">,</span> <span class="n">ignore_border</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="o">/</span> <span class="n">image_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="k">print</span> <span class="s">&#39;conv {0}, {1} ms&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">convolutional_time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample_time</span><span class="p">)</span>
+        <span class="c"># add the bias term. Since the bias is a vector (1D array), we first</span>
+        <span class="c"># reshape it to a tensor of shape (1,n_filters,1,1). Each bias will</span>
+        <span class="c"># thus be broadcasted across mini-batches and feature map</span>
+        <span class="c"># width &amp; height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">pooled_out</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">dimshuffle</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">))</span>
+
+        <span class="c"># store parameters of this layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_params</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">]</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, vpetresc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>core.base_cnn &mdash; proto_cnn 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="proto_cnn 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for core.base_cnn</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Oct 21 15:27:51 2014</span>
+<span class="sd">@author: vpetresc</span>
+
+<span class="sd">TODO consider using abstract base class</span>
+<span class="sd">http://zaiste.net/2013/01/abstract_classes_in_python/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">theano</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="kn">as</span> <span class="nn">T</span>
+
+<span class="kn">import</span> <span class="nn">convolutional_neural_network_settings_pb2</span> <span class="kn">as</span> <span class="nn">pb_cnn</span>
+<span class="kn">from</span> <span class="nn">google.protobuf</span> <span class="kn">import</span> <span class="n">text_format</span>
+
+
+<div class="viewcode-block" id="CNNBase"><a class="viewcode-back" href="../../core.html#core.base_cnn.CNNBase">[docs]</a><span class="k">class</span> <span class="nc">CNNBase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The class takes a proto bufer as input, setups a CNN according to the</span>
+<span class="sd">        settings, trains the network and saves the weights in a file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cnn_settings_protofile</span><span class="p">,</span> <span class="n">cached_weights_file</span><span class="p">):</span>
+        <span class="c"># Filename of the .npy file where the trained weights will be saved.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cached_weights_file</span> <span class="o">=</span> <span class="n">cached_weights_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_logger</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cached_weights</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c"># Create protobuff empty object</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">pb_cnn</span><span class="o">.</span><span class="n">CNNSettings</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">proto_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">cnn_settings_protofile</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">proto_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">text_format</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+            <span class="k">print</span> <span class="s">&quot;Network settings are </span><span class="se">\n</span><span class="s">&quot;</span>
+            <span class="k">print</span> <span class="n">data</span>
+            <span class="k">print</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="c"># Build up the ConvolutionalNeuralNetworkTrain model from the layers description</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_layers_from_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+            <span class="n">proto_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;Could not open file &quot;</span> <span class="o">+</span> <span class="n">cnn_settings_protofile</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">23455</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CNNBase.create_layers_from_settings"><a class="viewcode-back" href="../../core.html#core.base_cnn.CNNBase.create_layers_from_settings">[docs]</a>    <span class="k">def</span> <span class="nf">create_layers_from_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Takes as input the settings parsed from the proto file</span>
+<span class="sd">            and sets up the CNN configuration.&quot;&quot;&quot;</span>
+        <span class="c"># Default values for optional parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_epochs</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="c"># This fields are optional</span>
+        <span class="c">##TODO add colored warning if default value is used</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s">&#39;learning_rate&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">learning_rate</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Warning - default learning rate &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s">&#39;n_epochs&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_epochs</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">n_epochs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Warning - default number of epochs &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_epochs</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s">&#39;batch_size&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Warning - default number of batch size &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s">&#39;poolsize&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">poolsize</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Warning - default number of poolsize &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poolsize</span>
+        <span class="c"># This fields are required</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="s">&#39;mnist.pkl.gz&#39;</span> <span class="c">#settings.dataset</span>
+
+        <span class="c"># Add every convolutional layer to an array. Similarly for hidden layers.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convolutional_layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">conv_layer</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">convolutional_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">hidden_layer</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hidden_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+
+        <span class="c"># required at least one layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_layer</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">last_layer</span>
+
+        <span class="c"># Required parameters TODO still needed?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost_function</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">cost_function</span>
+</div>
+<div class="viewcode-block" id="CNNBase.initialize_logger"><a class="viewcode-back" href="../../core.html#core.base_cnn.CNNBase.initialize_logger">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializes the logging level and the logger</span>
+<span class="sd">            name based on the path of the weights file&quot;&quot;&quot;</span>
+        <span class="c"># The log file is saved in the same folder of the cached weights file</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cached_weights_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">current_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="c"># add calendar day information</span>
+        <span class="c"># add hour information</span>
+        <span class="c"># add extension</span>
+        <span class="n">logger_filename</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">_</span><span class="si">%d</span><span class="s">_</span><span class="si">%d</span><span class="s">_</span><span class="si">%d</span><span class="s">_</span><span class="si">%d</span><span class="s">_</span><span class="si">%d</span><span class="s">_</span><span class="si">%d</span><span class="s">.log&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cnntype</span><span class="p">,</span> 
+                            <span class="n">current_time</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="n">current_time</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">current_time</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+                            <span class="n">current_time</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span> <span class="n">current_time</span><span class="o">.</span><span class="n">minute</span><span class="p">,</span> <span class="n">current_time</span><span class="o">.</span><span class="n">second</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">logger_filename</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CNNBase.shared_dataset"><a class="viewcode-back" href="../../core.html#core.base_cnn.CNNBase.shared_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">shared_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_xy</span><span class="p">,</span> <span class="n">borrow</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Function that loads the dataset into shared variables</span>
+<span class="sd">        The reason we store our dataset in shared variables is to allow</span>
+<span class="sd">        Theano to copy it into the GPU memory (when code is run on GPU).</span>
+<span class="sd">        Since copying data into the GPU is slow, copying a minibatch everytime</span>
+<span class="sd">        is needed (the default behaviour if the data is not in a shared</span>
+<span class="sd">        variable) would lead to a large decrease in performance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data_x</span><span class="p">,</span> <span class="n">data_y</span> <span class="o">=</span> <span class="n">data_xy</span>
+        <span class="n">shared_x</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data_x</span><span class="p">,</span>
+                                            <span class="n">dtype</span><span class="o">=</span><span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">),</span>
+                                 <span class="n">borrow</span><span class="o">=</span><span class="n">borrow</span><span class="p">)</span>
+        <span class="n">shared_y</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data_y</span><span class="p">,</span>
+                                            <span class="n">dtype</span><span class="o">=</span><span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">),</span>
+                                 <span class="n">borrow</span><span class="o">=</span><span class="n">borrow</span><span class="p">)</span>
+            <span class="c"># When storing data on the GPU it has to be stored as floats</span>
+            <span class="c"># therefore we will store the labels as ``floatX`` as well</span>
+            <span class="c"># (``shared_y`` does exactly that). But during our computations</span>
+            <span class="c"># we need them as ints (we use labels as index, and if they are</span>
+            <span class="c"># (``shared_y`` does exactly that). But during our computations</span>
+            <span class="c"># we need them as ints (we use labels as index, and if they are</span>
+            <span class="c"># floats it doesn&#39;t make sense) therefore instead of returning</span>
+            <span class="c"># ``shared_y`` we will have to cast it to int. This little hack</span>
+            <span class="c"># lets ous get around this issue</span>
+        <span class="k">return</span> <span class="n">shared_x</span><span class="p">,</span> <span class="n">T</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">shared_y</span><span class="p">,</span> <span class="s">&#39;int32&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CNNBase.load_weights"><a class="viewcode-back" href="../../core.html#core.base_cnn.CNNBase.load_weights">[docs]</a>    <span class="k">def</span> <span class="nf">load_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Load weights from .npy file. The weights are stored in reverse order:</span>
+<span class="sd">            b3 W3, b2 W2, b1 W1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cached_weights_file</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">weight</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">all_weights</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cached_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+            <span class="k">print</span> <span class="s">&#39;weight array size &#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&#39;cached weights size is &#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cached_weights</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CNNBase.load_samples"><a class="viewcode-back" href="../../core.html#core.base_cnn.CNNBase.load_samples">[docs]</a>    <span class="k">def</span> <span class="nf">load_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Abstract method which is implemented by derived classes.</span>
+<span class="sd">            Loads trin, test and validation samples</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, vpetresc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

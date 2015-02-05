@@ -1,0 +1,195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>core.mlp &mdash; proto_cnn 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="proto_cnn 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for core.mlp</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This tutorial introduces the multilayer perceptron using Theano.</span>
+
+<span class="sd"> A multilayer perceptron is a logistic regressor where</span>
+<span class="sd">instead of feeding the input to the logistic regression you insert a</span>
+<span class="sd">intermediate layer, called the hidden layer, that has a nonlinear</span>
+<span class="sd">activation function (usually tanh or sigmoid) . One can use many such</span>
+<span class="sd">hidden layers making the architecture deep. The tutorial will also tackle</span>
+<span class="sd">the problem of MNIST digit classification.</span>
+
+<span class="sd">.. math::</span>
+
+<span class="sd">    f(x) = G( b^{(2)} + W^{(2)}( s( b^{(1)} + W^{(1)} x))),</span>
+
+<span class="sd">References:</span>
+
+<span class="sd">    - textbooks: &quot;Pattern Recognition and Machine Learning&quot; -</span>
+<span class="sd">                 Christopher M. Bishop, section 5</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&#39;restructedtext en&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">cPickle</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="kn">import</span> <span class="nn">theano</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="kn">as</span> <span class="nn">T</span>
+
+
+<span class="kn">from</span> <span class="nn">logistic_sgd</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
+
+
+<div class="viewcode-block" id="HiddenLayer"><a class="viewcode-back" href="../../core.html#core.mlp.HiddenLayer">[docs]</a><span class="k">class</span> <span class="nc">HiddenLayer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">activation</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">tanh</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Typical hidden layer of a MLP: units are fully-connected and have</span>
+<span class="sd">        sigmoidal activation function. Weight matrix W is of shape (n_in,n_out)</span>
+<span class="sd">        and the bias vector b is of shape (n_out,).</span>
+
+<span class="sd">        NOTE : The nonlinearity used here is tanh</span>
+
+<span class="sd">        Hidden unit activation is given by: tanh(dot(input,W) + b)</span>
+
+<span class="sd">        :type rng: numpy.random.RandomState</span>
+<span class="sd">        :param rng: a random number generator used to initialize weights</span>
+
+<span class="sd">        :type input: theano.tensor.dmatrix</span>
+<span class="sd">        :param input: a symbolic tensor of shape (n_examples, n_in)</span>
+
+<span class="sd">        :type n_in: int</span>
+<span class="sd">        :param n_in: dimensionality of input</span>
+
+<span class="sd">        :type n_out: int</span>
+<span class="sd">        :param n_out: number of hidden units</span>
+
+<span class="sd">        :type activation: theano.Op or function</span>
+<span class="sd">        :param activation: Non linearity to be applied in the hidden</span>
+<span class="sd">                           layer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="nb">input</span>
+
+        <span class="c"># `W` is initialized with `W_values` which is uniformely sampled</span>
+        <span class="c"># from sqrt(-6./(n_in+n_hidden)) and sqrt(6./(n_in+n_hidden))</span>
+        <span class="c"># for tanh activation function</span>
+        <span class="c"># the output of uniform if converted using asarray to dtype</span>
+        <span class="c"># theano.config.floatX so that the code is runable on GPU</span>
+        <span class="c"># Note : optimal initialization of weights is dependent on the</span>
+        <span class="c">#        activation function used (among other things).</span>
+        <span class="c">#        For example, results presented in [Xavier10] suggest that you</span>
+        <span class="c">#        should use 4 times larger initial weights for sigmoid</span>
+        <span class="c">#        compared to tanh</span>
+        <span class="c">#        We have no info for other function, so we use the same as</span>
+        <span class="c">#        tanh.</span>
+        <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">W_values</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span>
+                    <span class="n">low</span><span class="o">=-</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">6.</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_in</span> <span class="o">+</span> <span class="n">n_out</span><span class="p">)),</span>
+                    <span class="n">high</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">6.</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_in</span> <span class="o">+</span> <span class="n">n_out</span><span class="p">)),</span>
+                    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">activation</span> <span class="o">==</span> <span class="n">theano</span><span class="o">.</span><span class="n">tensor</span><span class="o">.</span><span class="n">nnet</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">:</span>
+                <span class="n">W_values</span> <span class="o">*=</span> <span class="mi">4</span>
+
+            <span class="n">W</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">W_values</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;W&#39;</span><span class="p">,</span> <span class="n">borrow</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">b_values</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_out</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">b_values</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="n">borrow</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">W</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+
+        <span class="n">lin_output</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">lin_output</span> <span class="k">if</span> <span class="n">activation</span> <span class="ow">is</span> <span class="bp">None</span>
+                       <span class="k">else</span> <span class="n">activation</span><span class="p">(</span><span class="n">lin_output</span><span class="p">))</span>
+        <span class="c"># parameters of the model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">]</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">proto_cnn 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, vpetresc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
