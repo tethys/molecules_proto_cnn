@@ -5,6 +5,8 @@ Created on Mon Nov 24 14:39:22 2014
 @author: vivianapetrescu
 """
 
+import cPickle
+import gzip
 import numpy as np
 import os
 import scipy
@@ -13,8 +15,8 @@ from src.core.test_tp_cnn import CNNTestTP
 
 class CNNTestTPmnist(CNNTestTP):
     """ Loads the MNIST data set"""
-    def __init__(self, protofile, cached_weights_file, frame=None):
-        self.frame = frame
+    def __init__(self, protofile, cached_weights_file, small_set=True):
+        self.small_set = small_set
         super(CNNTestTPmnist, self).__init__(protofile, cached_weights_file)
 
     def load_samples(self):
@@ -45,7 +47,7 @@ class CNNTestTPmnist(CNNTestTP):
         #train_set, valid_set, test_set format: tuple(input, target)
         #input is an numpy.ndarray of 2 dimensions (a matrix)
         #witch row's correspond to an example. target is a
-        if self.small_data == False:
+        if self.small_set == False:
         # Upscale the data
             N = 10000
             tmp_images = np.zeros((N, 56, 56))

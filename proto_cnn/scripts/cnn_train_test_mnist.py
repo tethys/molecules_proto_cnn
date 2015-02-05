@@ -33,8 +33,7 @@ def main():
     	cnn.build_model()
     	cnn.train_model()
     if results.mode == 1 or results.mode == 2:
-    	cnn = CNNTrainTPmnist(results.prototxt_file, results.cached_weights_file)
-    	cnn.build_model()
+    	cnn = CNNTestTPmnist(results.prototxt_file, results.cached_weights_file)
     	cnn.test_model()
     if results.mode == 3:
 	cnn = CNNRetrainTPmnist(results.prototxt_file, results.cached_weights_file)
