@@ -81,13 +81,13 @@ class LogisticRegression(object):
         else:
             self.W = W
 
-        # initialize the baises b as a vector of n_out 0s
+        # initialize the baises b as a vector of 0's
         if b is None:
             self.b = theano.shared(value=numpy.zeros((n_out,),
                                                  dtype=theano.config.floatX),
                                name='b', borrow=True)
         else:
-            self.b = b    
+            self.b = b 
 
         # compute vector of class-membership probabilities in symbolic form
         self.p_y_given_x = T.nnet.softmax(T.dot(input, self.W) + self.b)
@@ -148,102 +148,98 @@ class LogisticRegression(object):
         else:
             raise NotImplementedError()
 
-    def VOC_values(self, y):
-        """Return a float representing the number of errors in the minibatch
-        over the total number of examples of the minibatch ; zero one
-        loss over the size of the minibatch
-
-        :type y: theano.tensor.TensorType
-        :param y: corresponds to a vector that gives for each example the
-                  correct label
-        """
-
-        # check if y has same dimension of y_pred
-        if y.ndim != self.y_pred.ndim:
-            raise TypeError('y should have the same shape as self.y_pred',
-                ('y', target.type, 'y_pred', self.y_pred.type))
-        # check if y is of the correct datatype
-        if y.dtype.startswith('int'):
-            # the T.neq operator returns a vector of 0s and 1s, where 1
-            # represents a mistake in prediction
-            F = T.sum(T.neq(self.y_pred, y))
-            TP = T.sum(T.and_(T.eq(self.y_pred, 1), T.eq(y, 1)))
-	    result =  TP/T.cast(TP+F, theano.config.floatX)
-            #if T.isnan(result): #check if division by zero (and thus Jaccard index is 1)
-            #     return T.zeros_like(result) #return value 1
-            #else:
-            return result
-        else:
-            raise NotImplementedError()
     def result_count_dictionary(self, y):
-	result = {}
+	""" Returns a dictionary containing the count
+            of the TP, TN, FP, FN counts. They are
+            needed for aggregating the results over the whole
+            batches.
+        """
+        result = {}
 	result['TP'] = self.true_positives_count(y).eval()
 	result['TN'] = self.true_negatives_count(y).eval()
 	result['FP'] = self.false_positives_count(y).eval()
 	result['FN'] = self.false_negatives_count(y).eval()
         return result
+
     def true_negatives_count(self, y):
-        if y.ndim != self.y_pred.ndim:
-            raise TypeError('y should have the same shape as self.y_pred',
-                ('y', target.type, 'y_pred', self.y_pred.type))
-        # check if y is of the correct datatype
-        if y.dtype.startswith('int'):
-            # the T.neq operator returns a vector of 0s and 1s, where 1
-            # represents a mistake in prediction
-            TP = T.sum(T.and_(T.eq(self.y_pred, 0), T.eq(y, 0)))
-	    return TP
-        else:
-            raise NotImplementedError()
+        """ Compute the number of true negatives.
+            Raises exception if the target value y is not int.
+
+            :param y: array with class index values
+            :type y: tensor int array
+            :returns: the true negatives count
+
+            :raises: NotImplementedError, TypeError
+        """
+        self.valid_target_y(y)
+        TP = T.sum(T.and_(T.eq(self.y_pred, 0), T.eq(y, 0)))
+	return TP
+
     def true_positives_count(self, y):
-        if y.ndim != self.y_pred.ndim:
-            raise TypeError('y should have the same shape as self.y_pred',
-                ('y', target.type, 'y_pred', self.y_pred.type))
-        # check if y is of the correct datatype
-        if y.dtype.startswith('int'):
-            # the T.neq operator returns a vector of 0s and 1s, where 1
-            # represents a mistake in prediction
-            TP = T.sum(T.and_(T.eq(self.y_pred, 1), T.eq(y, 1)))
-	    return TP
-        else:
-            raise NotImplementedError()
+        """ Compute the number of true positives.
+            Raises exception if the target value y is not int.
+
+            :param y: array with class index values
+            :type y: tensor int array
+            :returns: the true positives count
+
+            :raises: NotImplementedError, TypeError
+        """
+        self.valid_target_y(y)
+        TP = T.sum(T.and_(T.eq(self.y_pred, 1), T.eq(y, 1)))
+        return TP
 
     def false_positives_count(self, y):
-        if y.ndim != self.y_pred.ndim:
-            raise TypeError('y should have the same shape as self.y_pred',
-                ('y', target.type, 'y_pred', self.y_pred.type))
-        # check if y is of the correct datatype
-        if y.dtype.startswith('int'):
-            # the T.neq operator returns a vector of 0s and 1s, where 1
-            # represents a mistake in prediction
-            FP = T.sum(T.and_(T.eq(y,0), T.neq(self.y_pred, y)))
-	    return FP
-        else:
-	    raise NotImplementedError()
+        """ Compute the number of false positives.
+            Raises exception if the target value y is not int.
+
+            :param y: array with class index values
+            :type y: tensor int array
+            :returns: the false positives count
+
+            :raises: NotImplementedError, TypeError
+        """
+        self.valid_target_y(y)
+        FP = T.sum(T.and_(T.eq(y,0), T.neq(self.y_pred, y)))
+        return FP
 
     def false_negatives_count(self, y):
-        if y.ndim != self.y_pred.ndim:
-            raise TypeError('y should have the same shape as self.y_pred',
-                ('y', target.type, 'y_pred', self.y_pred.type))
-        # check if y is of the correct datatype
-        if y.dtype.startswith('int'):
-            # the T.neq operator returns a vector of 0s and 1s, where 1
-            # represents a mistake in prediction
-            FN = T.sum(T.and_(T.eq(y,1), T.neq(self.y_pred, y)))
-	    return FN
-        else:
-	    raise NotImplementedError()
+        """ Compute the number of false negatives.
+            Raises exception if the target value y is not int.
+
+            :param y: array with class index values
+            :type y: tensor int array
+            :returns: the false negatives count
+
+            :raises: NotImplementedError, TypeError
+        """
+        self.valid_target_y(y)
+        FN = T.sum(T.and_(T.eq(y,1), T.neq(self.y_pred, y)))
+	return FN
 
     def false_result_count(self, y):
+        """ Compute the number of false negatives.
+            Raises exception if the target value y is not int.
+
+            :param y: array with class index values
+            :type y: tensor int array
+            :returns: the false negatives count
+
+            :raises: NotImplementedError, TypeError
+        """
+        self.valid_target_y(y)
+        F = T.sum(T.neq(self.y_pred, y))
+	return F
+
+    def valid_target_y(self, y):
+        """ Verifies that the target values y are integers
+            and that the array has same size as the input one.
+            :param y: array of target values
+            :type y: array of int
+        """
         if y.ndim != self.y_pred.ndim:
             raise TypeError('y should have the same shape as self.y_pred',
                 ('y', target.type, 'y_pred', self.y_pred.type))
-        # check if y is of the correct datatype
-        if y.dtype.startswith('int'):
-            # the T.neq operator returns a vector of 0s and 1s, where 1
-            # represents a mistake in prediction
-            F = T.sum(T.neq(self.y_pred, y))
-	    return F
-        else:
-	    raise NotImplementedError()
-
+        if not y.dtype.startswith('int'):
+            raise NotImplementedError('Type of target value y must be int')
 
