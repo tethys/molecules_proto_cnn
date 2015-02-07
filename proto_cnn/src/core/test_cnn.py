@@ -40,7 +40,7 @@ class CNNTest(CNNBase):
         self.input_shape = (0, 0)
         self.n_test_batches = 0
 
-    def compute_test_error(self):
+    def test_model(self):
         """Loop through the batches and run process_batch"""
 
         # Load the data

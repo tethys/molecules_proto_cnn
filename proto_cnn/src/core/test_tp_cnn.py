@@ -16,6 +16,8 @@ class CNNTestTP(CNNTest):
     Returns:
 
     """
+    def __init__(self, protofile, cached_weights_file):
+        super(CNNTestTP, self).__init__(protofile, cached_weights_file)
 
     def compute_batch_error(self, batch_result_dict):
         """computes the error rate as the number of correctly

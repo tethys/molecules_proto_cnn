@@ -57,9 +57,13 @@ class CNNBase(object):
             print "Could not open file " + cnn_settings_protofile
         # Default values for parameters in case they are not
         # provided in the prototxt file.
+        #: Default learning rate for stochastic GD
         self.learning_rate = 0.1
+        #: Default nbr of epochs
         self.n_epochs = 100
+        #: Default batch size
         self.batch_size = 100
+        #: Default poolsize
         self.poolsize = 2
 
     def create_layers_from_settings(self, settings):

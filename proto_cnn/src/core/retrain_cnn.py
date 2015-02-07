@@ -2,35 +2,25 @@
 """
 Created on Tue Oct 21 15:27:51 2014
 @author: vpetresc
-
-TODO consider using abstract base class
-http://zaiste.net/2013/01/abstract_classes_in_python/
 """
-
-import numpy
-import time
-
-import theano
-import theano.tensor as T
 
 from base_cnn import CNNBase
 from lenet_conv_pool_layer import LeNetConvPoolLayer
 from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
+import numpy
+import time
+import theano
+import theano.tensor as T
 
 
 class CNNRetrain(CNNBase):
-    """The class takes a proto bufer as input, setups a CNN according to the
-        settings, trains the network and saves the weights in a file
-
-    Args:
-
-    Returns:
-
-    """
+    """ The class is responsbile for retraining the weights of the CNN. The class retrains
+        the biases and the last weights of the network.  """
     def __init__(self, protofile, cached_weights):
         self.cnntype = 'RETRAIN'
         super(CNNRetrain, self).__init__(protofile, cached_weights)
+        #: Overloaded by derived classes
         self.load_weights()
         self.train_set_x = None
         self.train_set_y = None
@@ -43,7 +33,6 @@ class CNNRetrain(CNNBase):
 
     def build_model(self):
         """Create the actual model"""
-        # Fixed rng, make the results repeatable
         datasets = self.load_samples()
         # Train, Validation, Test 100000, 20000, 26... fot Mitocondria set
         # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784 for MNIST dataset
@@ -143,16 +132,20 @@ class CNNRetrain(CNNBase):
         raise NotImplementedError()
 
     def save_parameters(self):
-        """Save best weights"""
+        """Save the retrained weights"""
         weights = [i.get_value(borrow=True) for i in self.best_params]
         ## add here the interleaved convolutional layers
         nbr_hidden_layers = size(hlayers)
+        # Update the output layer and W,b for every hidden layer
         toskip = 1 + nbr_hidden_layers * 2
-        retrainedw = []
-        for i in xrange(toskip):
-            retrainedw.append(weights[i])
+        retrained_weights = []
+        for widx in xrange(toskip):
+            retrained_weights.append(weights[widx])
         for c in xrange(size(clayers)):
-            retrainedw.append(self.cached_weights[2*c + 1])
-            retrainedw.append(weights[toskip])
+            # Add old W weights for conv layers(corresponding to the
+            # filters that were not learned)
+            retrained_weights.append(self.cached_weights[2*c + 1])
+            # Add b for conv layer that was trained
+            retrained_weights.append(weights[toskip])
             toskip += 1
         numpy.save(self.cached_weights_file +'retrain.npy', weights)

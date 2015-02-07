@@ -3,54 +3,62 @@
 Created on Tue Oct 21 15:27:51 2014
 @author: vpetresc
 
-TODO consider using abstract base class
-http://zaiste.net/2013/01/abstract_classes_in_python/
 """
 
-import theano.tensor as T
-import numpy
 
 from base_cnn import CNNBase
 from lenet_conv_pool_layer import LeNetConvPoolLayer
 from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
-
+import numpy
+import theano.tensor as T
 
 class CNNTrain(CNNBase):
     """The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
-
-    Args:
-
-    Returns:
-
     """
     def __init__(self, protofile, cached_weights):
-        self.cnntype = 'TRAIN'
+        """
+        :param protofile: describes the arhitecture of the network
+        :type protofile: string
+        :param cached_weights: filename of the weights
+        :type cached_weights: string
+
+        """
+        self.cnntype = 'TRAIN' #: extension that is added to the logfile name
         super(CNNTrain, self).__init__(protofile, cached_weights)
+        #: Array of train data of size num samples x dimension of sample
         self.train_set_x = None
+        #: Array of target data of size num samples x 1
         self.train_set_y = None
+        #: Array of valid data of size num samples x dimension of sample
         self.valid_set_x = None
         self.valid_set_y = None
         self.test_set_x = None
         self.test_set_y = None
+        #: The number of batches in which train_set_x is divided
         self.n_train_batches = 0
         self.n_valid_batches = 0
         self.n_test_batches = 0
+        #: The cost that is minimized by the algorithm, usually log likelihood
         self.cost = 0
+        #: Array of symbolic gradients of the cost wrt. weights
         self.grads = None
+        #: Array of weights (plus biases) for which the gradient is computed
         self.params = None
+        #: Usually logistic regression
         self.output_layer = None
-        self.index = 0
+        #: The size of the input array that is being passed to the algorithm
+        #: It  has size num samples x num channels x img width x img height
         self.input_shape = None
-        self.index = T.lscalar()  # index to a [mini]batch
-        self.x = T.matrix('x')   # the data is presented as rasterized images
-        self.y = T.ivector('y')  # the labels are presented as 1D vector of
+        self.index = T.lscalar()  #: index to a [mini]batch
+        self.x = T.matrix('x')   #: the data is presented as rasterized images
+        self.y = T.ivector('y')  #: the labels are presented as 1D vector of ints
 
     def build_model(self):
-        """Creates the actual model from the model settings."""
-        # Fixed rng, make the results repeatable
+        """Creates the net's layers from the model settings."""
 
+        # Load the data
         datasets = self.load_samples()
 
         # Train, Validation, Test 100000, 20000, 26... fot Mitocondria set
@@ -59,8 +67,9 @@ class CNNTrain(CNNBase):
         self.valid_set_x, self.valid_set_y = datasets[1]
         self.test_set_x, self.test_set_y = datasets[2]
 
-        # assumes the width equals the height
+        # Assumes the width equals the height
         img_width_size = numpy.sqrt(self.test_set_x.shape[1].eval()).astype(int)
+        assert self.test_set_x.shape[1] == img_width_size * img_width_size, 'input image not square'
         print "Image shape %s x %s" % (img_width_size, img_width_size)
         self.input_shape = (img_width_size, img_width_size)
 
@@ -75,8 +84,6 @@ class CNNTrain(CNNBase):
 
         print 'Size train_batches %d, n_valid_batches %d, n_test_batches %d' % (self.n_train_batches, self.n_valid_batches, self.n_test_batches)
 
-        # allocate symbolic variables for the data
-                               # [int] labels
 
         ######################
         # BUILD ACTUAL MODEL #
@@ -85,6 +92,7 @@ class CNNTrain(CNNBase):
 
         # The input is an 4D array of size, number of images in the batch size, number of channels
         # (or number of feature maps), image width and height.
+        #TODO(vpetresc) make nbr of channels variable (1 or 3)
         nbr_feature_maps = 1
         layer_input = self.x.reshape((self.batch_size, nbr_feature_maps, self.input_shape[0], self.input_shape[1]))
         pooled_width = self.input_shape[0]
@@ -126,13 +134,14 @@ class CNNTrain(CNNBase):
         # the cost we minimize during training is the NLL of the model
         self.cost = self.output_layer.negative_log_likelihood(self.y)
 
-        # create a list of all model parameters to be fit by gradient descent
+        # Create a list of all model parameters to be fit by gradient descent.
+        # The parameters are added in reversed order because ofthe order
+        # in the backpropagation algorithm.
         self.params = self.output_layer.params
         for hidden_layer in reversed(hlayers):
             self.params += hidden_layer.params
         for conv_layer in reversed(clayers):
             self.params += conv_layer.params
-
 
         # create a list of gradients for all model parameters
         self.grads = T.grad(self.cost, self.params)

@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Oct 21 15:27:51 2014
-@author: vivianapetrescu
+@author: vpetrescu
 """
 import logging
 import numpy
 import time
-
 import theano
 import theano.tensor as T
 
@@ -16,18 +15,12 @@ from src.core.train_cnn import CNNTrain
 class CNNTrainTP(CNNTrain):
     """The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
-
-    Args:
-
-    Returns:
-
     """
     def __init__(self, cnn_settings_protofile, cached_weights_file):
-        self.batch_size = 0
         super(CNNTrainTP, self).__init__(cnn_settings_protofile, cached_weights_file)
         self.test_model = None
         self.validate_model = None
-        self.best_params = [] 
+        self.best_params = []
 
     def train_model(self):
         """The actual training method"""
@@ -52,9 +45,9 @@ class CNNTrainTP(CNNTrain):
         self.validate_model = theano.function([self.index], [self.output_layer.y_pred],
                             givens={
                             self.x: self.valid_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size]})
-            ###############
-            # TRAIN MODEL #
-            ###############
+        ###############
+        # TRAIN MODEL #
+        ###############
         print '... training'
         # early-stopping parameters
         patience = 1000000 # look as this many examples regardless
@@ -64,40 +57,33 @@ class CNNTrainTP(CNNTrain):
                                   # on the validation set; in this case we
                                   # check every epoch
 
-        best_validation_loss = 0
-        test_score = 0.
+        best_validation_loss = numpy.inf
+        test_score = 0
         epoch = 0
-        patience_increase = 0.995
-        done_looping = False
         mean_training_time = 0
         cnt_times = 0
-        while (epoch < self.n_epochs) and (not done_looping):
+        while (epoch < self.n_epochs): 
             epoch = epoch + 1
             for minibatch_index in xrange(self.n_train_batches):
-            # The model will process the iter batch
                 iteration = (epoch - 1) * self.n_train_batches + minibatch_index
-
                 if iteration % 100 == 0:
                     print 'training @ iter = ', iteration
                 start = time.time()
-                [train_cost, train_voc_values] = train_model(minibatch_index)
+                [train_cost, train_error_values] = train_model(minibatch_index)
                 end = time.time()
                 mean_training_time += end - start
                 cnt_times += 1
                 logging.info('cost %f, VOC %f', train_cost, train_voc_values)
 
-                if (iteration + 1) % 1000 == 0: #validation_frequency == 0:
-
+                if (iteration + 1) % 1000 == 0:
                     # compute zero-one loss on validation set
-                    this_validation_loss = self.compute_validation_loss() 
+                    this_validation_loss = self.compute_validation_loss()
                     logging.info('epoch %i, minibatch %i/%i, validation error %f %%' % \
                       (epoch, minibatch_index + 1, self.n_train_batches, \
                        this_validation_loss * 100.))
 
                     # if we got the best validation score until now
-                    if this_validation_loss > best_validation_loss:
-                        #improve patience if loss improvement is good enough
-                        patience = max(patience, iter * patience_increase)
+                    if this_validation_loss < best_validation_loss:
 
                         # save best validation score and iteration number
                         best_validation_loss = this_validation_loss
@@ -110,10 +96,7 @@ class CNNTrainTP(CNNTrain):
                              (epoch, minibatch_index + 1, self.n_train_batches,
                              test_score * 100.))
 
-                    if patience <= iteration:
-                        done_looping = True
-                        break
-                mean_training_time /= cnt_times
+            mean_training_time /= cnt_times
             print 'running_times %f', mean_training_time
             logging.info(('running time %f' % (mean_training_time)))
 
@@ -127,8 +110,6 @@ class CNNTrainTP(CNNTrain):
                 all_y_pred = y_pred
             else:
                 all_y_pred = numpy.concatenate((all_y_pred, y_pred))
-        print all_y_pred
-        print all_y_pred.shape
         result = T.mean(T.neq(self.test_set_y, all_y_pred))
         print 'Print result is ', result.eval()
         return 1.0 - result.eval()

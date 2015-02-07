@@ -6,21 +6,14 @@ Created on Tue Oct 21 15:27:51 2014
 
 import logging
 import numpy
-import time
-
 import theano
 import theano.tensor as T
-
+import time
 from retrain_cnn import CNNRetrain
 
 class CNNRetrainTP(CNNRetrain):
     """The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
-
-    Args:
-
-    Returns:
-
     """
     def __init__(self, protofile, cached_weights):
         super(CNNRetrainTP, self).__init__(protofile, cached_weights)
@@ -65,18 +58,15 @@ class CNNRetrainTP(CNNRetrain):
                            # found
 
         self.best_params = None
-        best_validation_loss = 0#numpy.inf
+        best_validation_loss = numpy.inf
         test_score = 0.
-
         epoch = 0
-        done_looping = False
-
         mean_training_time = 0
         cnt_times = 0
-        while (epoch < self.n_epochs) and (not done_looping):
+        while (epoch < self.n_epochs):
             epoch = epoch + 1
             for minibatch_index in xrange(self.n_train_batches):
-          # The model will process the iter batch
+            # The model will process the iter batch
                 iteration = (epoch - 1) * self.n_train_batches + minibatch_index
 
                 if iteration % 100 == 0:
@@ -97,10 +87,7 @@ class CNNRetrainTP(CNNRetrain):
                          this_validation_loss * 100.))
 
                     # if we got the best validation score until now
-                    if this_validation_loss > best_validation_loss:
-                        #improve patience if loss improvement is good enough
-                        patience = max(patience, iteration * patience_increase)
-
+                    if this_validation_loss < best_validation_loss:
                         # save best validation score and iteration number
                         best_validation_loss = this_validation_loss
                         self.best_params = self.params
@@ -112,13 +99,10 @@ class CNNRetrainTP(CNNRetrain):
                              (epoch, minibatch_index + 1, self.n_train_batches,
                              test_score * 100.))
 
-                    if patience <= iteration:
-                        done_looping = True
-                        break
-            print 'Saving best parameters'
-            self.save_parameters()
-            mean_training_time /= cnt_times
-            print 'running_times %f', mean_training_time
+        print 'Saving best parameters'
+        self.save_parameters()
+        mean_training_time /= cnt_times
+        print 'running_times %f', mean_training_time
         logging.info(('running time %f' % (mean_training_time)))
 
     def compute_validation_loss(self):
