@@ -10,7 +10,6 @@ import numpy as np
 import os
 import scipy
 import time
-
 import theano
 import theano.tensor as T
 
@@ -32,7 +31,6 @@ class CNNRetrainVOCMitocondria(CNNRetrainVOC):
 
     def load_samples(self):
 	print 'Value of small set is ', self.small_set
-	
         # Load datasets
         path_to_data = '../data/'
         if self.small_set == True:

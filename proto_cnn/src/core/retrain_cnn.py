@@ -148,4 +148,5 @@ class CNNRetrain(CNNBase):
             # Add b for conv layer that was trained
             retrained_weights.append(weights[toskip])
             toskip += 1
-        numpy.save(self.cached_weights_file +'retrain.npy', weights)
+        file_path = os.path.splitext(self.cached_weights_file)[0]
+        numpy.save(file_path +'_retrain.npy', retrained_weights)

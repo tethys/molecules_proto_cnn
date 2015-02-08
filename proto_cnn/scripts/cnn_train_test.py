@@ -24,13 +24,13 @@ def main():
     print 'Number of arguments:', len(sys.argv)
     print 'Arguments list:', str(sys.argv)
 
-     
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-p','--proto_file', help="path to proto file", dest='prototxt_file', required=True)
     parser.add_argument('-w','--cached_weights_file', help="path to weights file", dest='cached_weights_file', required=True)
     parser.add_argument('-r','--run_mode', help="mode 0 for train\n 1 for test, 2 for train and test", dest='mode', type = int, required=True)
     results = parser.parse_args()
-    
+
     print 'my file is', results.prototxt_file, 'ups'
     print 'weights file is', results.cached_weights_file
     print 'run mode', results.mode
