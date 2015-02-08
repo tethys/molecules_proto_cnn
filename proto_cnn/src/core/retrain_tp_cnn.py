@@ -31,19 +31,19 @@ class CNNRetrainTP(CNNRetrain):
         for param_i, grad_i in zip(self.params, self.grads):
             updates.append((param_i, param_i - self.learning_rate * grad_i))
 
-        train_model = theano.function([self.index], [self.cost, self.output_layer.VOC_values(self.y)], updates=updates,
+        train_model = theano.function([self.index], [self.cost, self.output_layer.errors(self.y)], updates=updates,
                     givens={
                     self.x: self.train_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                     self.y: self.train_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
                     name='train_model')
 
              # create a function to compute the mistakes that are made by the model
-        self.test_model = theano.function([self.index], [self.output_layer.y_pred, self.output_layer.VOC_values(self.y)],
+        self.test_model = theano.function([self.index], [self.output_layer.y_pred, self.output_layer.errors(self.y)],
                         givens={
                         self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                         self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
                         name='test_model')
-        self.validate_model = theano.function([self.index], [self.output_layer.y_pred, self.output_layer.VOC_values(self.y)],
+        self.validate_model = theano.function([self.index], [self.output_layer.y_pred, self.output_layer.errors(self.y)],
                             givens={
                             self.x: self.valid_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                             self.y: self.valid_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
@@ -72,11 +72,11 @@ class CNNRetrainTP(CNNRetrain):
                 if iteration % 100 == 0:
                     print 'training @ iter = ', iteration
                 start = time.time()
-                [train_cost, train_voc_values] = train_model(minibatch_index)
+                [train_cost, train_error_values] = train_model(minibatch_index)
                 end = time.time()
                 mean_training_time += end - start
                 cnt_times += 1
-                logging.info('cost %f, VOC %f' % (train_cost, train_voc_values))
+                logging.info('cost %f, error %f' % (train_cost, train_error_values))
 
                 if (iteration + 1) % 1000 == 0: #validation_frequency == 0:
 
