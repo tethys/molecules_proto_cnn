@@ -15,8 +15,8 @@ class CNNRetrainTP(CNNRetrain):
     """The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
     """
-    def __init__(self, protofile, cached_weights):
-        super(CNNRetrainTP, self).__init__(protofile, cached_weights)
+    def __init__(self, protofile, cached_weights_file):
+        super(CNNRetrainTP, self).__init__(protofile, cached_weights_file)
         self.test_model = None
         self.validate_model = None
 

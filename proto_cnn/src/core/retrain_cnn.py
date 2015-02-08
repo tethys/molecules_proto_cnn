@@ -5,6 +5,8 @@ Created on Tue Oct 21 15:27:51 2014
 """
 
 from base_cnn import CNNBase
+from lenet_layer_conv_pool_non_symbolic import LeNetLayerConvPoolNonSymbolic
+from lenet_layer_conv_pool_separable_non_symbolic import LeNetLayerConvPoolSeparableNonSymbolic
 from lenet_conv_pool_layer import LeNetConvPoolLayer
 from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
@@ -67,35 +69,48 @@ class CNNRetrain(CNNBase):
         # BUILD ACTUAL MODEL #
         ######################
         print 'Building the model ...'
-        for i in xrange(len(self.cached_weights)):
-            self.cached_weights[i] = theano.shared(self.cached_weights[i])
+        #for i in xrange(len(self.cached_weights)):
+        #    self.cached_weights[i] = theano.shared(self.cached_weights[i])
         # The input is an 4D array of size, number of images in the batch size, number of channels
         # (or number of feature maps), image width and height.
         nbr_feature_maps = 1
         layer_input = self.x.reshape((self.batch_size, nbr_feature_maps, self.input_shape[0], self.input_shape[1]))
-        pooled_W = self.input_shape[0];
-        pooled_H = self.input_shape[1];
+        pooled_width = self.input_shape[0];
+        pooled_height = self.input_shape[1];
         # Add convolutional layers followed by pooling
         clayers = []
-        iter = 0
+        idx_weight = 0
         for clayer_params in self.convolutional_layers:
-            print 'Adding conv layer nbr filter %d, Ksize %d' % (clayer_params.num_filters, clayer_params.filter_w)
-            layer = LeNetConvPoolLayer(self.rng, input = layer_input,
-                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_W, pooled_H),
-                                       filter_shape=(clayer_params.num_filters, nbr_feature_maps,
-                                                     clayer_params.filter_w, clayer_params.filter_w),
-                                       poolsize=(self.poolsize, self.poolsize),
-                                       W=self.cached_weights[iter + 1], b=self.cached_weights[iter])
-            iter = iter + 2
-            clayers.append(layer)
-            pooled_W = (pooled_W - clayer_params.filter_w + 1) / self.poolsize
-            pooled_H = (pooled_H - clayer_params.filter_w + 1) / self.poolsize
-            layer_input = layer.output
+            print 'Adding conv layer nbr filter %d, kernel size %d' % (clayer_params.num_filters, clayer_params.filter_w)
+            if clayer_params.HasField('rank') == False:
+                layer_conv = LeNetConvPoolNonSymbolic(self.rng)
+                layer_output = layer_convolutoinal.run_batch(layer_input,
+                                                    image_shape=(self.batch_size, nbr_feature_maps,
+                                                    pooled_width, pooled_height),
+                                                    filter_shape=(clayer_params.num_filters, nbr_feature_maps,
+                                                            clayer_params.filter_w, clayer_params.filter_w),
+                                                    W=self.cached_weights[idx_weight + 1],
+                                                    b=self.cached_weights[idx_weight],
+                                                    poolsize=(self.poolsize, self.poolsize)).eval()
+            else:
+                layer_sep_conv = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
+                print nbr_feature_maps
+                print pooled_width, pooled_height
+                layer_output = layer_sep_conv.run_batch(layer_input,
+                                                        image_shape=(self.batch_size, nbr_feature_maps,
+                                                                pooled_width, pooled_height),
+                                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps,
+                                                                clayer_params.filter_w, clayer_params.filter_w),
+                                                        Pstruct=self.cached_weights[idx_weight+1],
+                                                        b=self.cached_weights[idx_weight],
+                                                        poolsize=(self.poolsize, self.poolsize)).eval()
+            pooled_width = (pooled_width - clayer_params.filter_w + 1) / self.poolsize
+            pooled_height = (pooled_height - clayer_params.filter_w + 1) / self.poolsize
+            layer_input = layer_output
             nbr_feature_maps = clayer_params.num_filters
+            idx_weight += 2
 
-
-        # Flatten the output of the previous layers and add
-        # fully connected sigmoidal layers    
+        # fully connected sigmoidal layers
         layer_input = layer_input.flatten(2);
         nbr_input = nbr_feature_maps * pooled_W * pooled_H
         hlayers = []
@@ -103,16 +118,16 @@ class CNNRetrain(CNNBase):
             print 'Adding hidden layer fully connected %d' % (hlayer_params.num_outputs)
             layer = HiddenLayer(self.rng, input=layer_input, n_in=nbr_input,
                          n_out=hlayer_params.num_outputs, activation=T.tanh,
-                         W=self.cached_weights[iter +1], b=self.cached_weights[iter])
+                         W=self.cached_weights[idx_weight +1], b=self.cached_weights[idx_weight])
             nbr_input = hlayer_params.num_outputs;
             layer_input = layer.output
             hlayers.append(layer)
-            iter+=2
+            idx_weight += 2
 
         # classify the values of the fully-connected sigmoidal layer
-        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input, 
-                        n_out = self.last_layer.num_outputs, W=self.cached_weights[iter+1], 
-                        b=self.cached_weights[iter]) 
+        self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input,
+                        n_out = self.last_layer.num_outputs, W=self.cached_weights[idx_weight + 1],
+                        b=self.cached_weights[idx_weight])
 
         # the cost we minimize during training is the NLL of the model
         self.cost = self.output_layer.negative_log_likelihood(self.y)
