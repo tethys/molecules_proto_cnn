@@ -1,0 +1,65 @@
+INFO:root:learning_rate : 0.1
+n_epochs: 1
+dataset: "mnist.pkl.gz"
+batch_size: 50
+poolsize: 2
+conv_layer {
+	num_filters: 20
+	filter_w: 5
+}
+conv_layer {
+	num_filters: 50
+	filter_w: 5
+}
+hidden_layer {
+	num_outputs: 500
+	activation_function: "tanh"
+}
+last_layer {
+	num_outputs: 10
+	activation_function: "tanh"
+}
+cost_function: "log_likelihood"
+
+INFO:root:cost 0.000053, VOC 1.000000
+INFO:root:cost 0.000268, VOC 1.000000
+INFO:root:cost 0.000081, VOC 1.000000
+INFO:root:cost 0.000160, VOC 1.000000
+INFO:root:cost 0.000185, VOC 1.000000
+INFO:root:cost 0.000156, VOC 1.000000
+INFO:root:cost 0.000045, VOC 1.000000
+INFO:root:cost 0.000060, VOC 1.000000
+INFO:root:cost 0.000063, VOC 1.000000
+INFO:root:cost 0.000181, VOC 1.000000
+INFO:root:cost 0.000168, VOC 1.000000
+INFO:root:cost 0.000105, VOC 1.000000
+INFO:root:cost 0.000129, VOC 1.000000
+INFO:root:cost 0.000154, VOC 1.000000
+INFO:root:cost 0.000129, VOC 1.000000
+INFO:root:cost 0.000057, VOC 1.000000
+INFO:root:cost 0.000163, VOC 1.000000
+INFO:root:cost 0.000074, VOC 1.000000
+INFO:root:cost 0.000038, VOC 1.000000
+INFO:root:cost 0.000096, VOC 1.000000
+INFO:root:cost 0.000085, VOC 1.000000
+INFO:root:cost 0.000054, VOC 1.000000
+INFO:root:cost 0.000162, VOC 1.000000
+INFO:root:cost 0.000061, VOC 1.000000
+INFO:root:cost 0.000231, VOC 1.000000
+INFO:root:cost 0.000091, VOC 1.000000
+INFO:root:cost 0.000125, VOC 1.000000
+INFO:root:cost 0.000149, VOC 1.000000
+INFO:root:cost 0.000071, VOC 1.000000
+INFO:root:cost 0.000159, VOC 1.000000
+INFO:root:cost 0.000053, VOC 1.000000
+INFO:root:cost 0.000087, VOC 1.000000
+INFO:root:cost 0.000086, VOC 1.000000
+INFO:root:cost 0.000056, VOC 1.000000
+INFO:root:cost 0.000145, VOC 1.000000
+INFO:root:cost 0.000153, VOC 1.000000
+INFO:root:cost 0.000137, VOC 1.000000
+INFO:root:cost 0.000119, VOC 1.000000
+INFO:root:cost 0.000113, VOC 1.000000
+INFO:root:cost 0.000054, VOC 1.000000
+INFO:root:cost 0.000107, VOC 1.000000
+INFO:root:cost 0.000143, VOC 1.000000

@@ -1,0 +1,29 @@
+INFO:root:learning_rate : 0.1
+n_epochs: 1
+dataset: "mnist.pkl.gz"
+batch_size: 50
+poolsize: 2
+conv_layer {
+	num_filters: 20
+	filter_w: 5
+}
+conv_layer {
+	num_filters: 50
+	filter_w: 5
+}
+hidden_layer {
+	num_outputs: 500
+	activation_function: "tanh"
+}
+last_layer {
+	num_outputs: 10
+	activation_function: "tanh"
+}
+cost_function: "log_likelihood"
+
+WARNING:theano.gof.cmodule:Deleting (broken cache directory [EOF]): /Users/vivianapetrescu/.theano/compiledir_Darwin-11.4.2-x86_64-i386-64bit-i386-2.7.9-64/tmpYeaYvy
+DEBUG:root:nbr batches 100, batch size 100
+DEBUG:root:Time :[2.12, 38.49] :[1.25, 0.52]  0.71 76.81
+DEBUG:root:Time :[2.31, 40.54] :[1.22, 0.44]  0.64 72.11
+DEBUG:root:Time :[2.21, 39.01] :[1.17, 0.46]  0.64 69.44
+DEBUG:root:Time :[2.08, 38.83] :[1.15, 0.45]  0.65 70.16

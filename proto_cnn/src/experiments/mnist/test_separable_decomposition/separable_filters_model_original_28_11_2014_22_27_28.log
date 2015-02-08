@@ -1,0 +1,13 @@
+DEBUG:root:Time :[4.2, 291.24] :[1.11, 0.49]  0.64 513.90
+DEBUG:root:Time :[4.28, 262.06] :[1.14, 0.43]  0.61 283.87
+DEBUG:root:Time :[4.31, 262.24] :[1.05, 0.41]  0.57 283.79
+DEBUG:root:Time :[4.38, 259.28] :[1.04, 0.42]  0.60 280.90
+DEBUG:root:Time :[4.32, 297.98] :[1.05, 0.43]  0.60 319.74
+DEBUG:root:Final average results
+DEBUG:root: convolution 0 : [ 4.298]
+DEBUG:root: downs + activ 0 : [ 1.078]
+DEBUG:root: convolution 1 : [ 274.56]
+DEBUG:root: downs + activ 1 : [ 0.436]
+DEBUG:root: non conv layers : 0.600878238678
+DEBUG:root: total avg image time : 336.439243793
+DEBUG:root:Test error: 0.4
