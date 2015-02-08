@@ -3,6 +3,8 @@
 Created on Tue Oct 21 15:27:51 2014
 @author: vpetresc
 """
+import cPickle
+import gzip
 import numpy as np
 import os
 import scipy
@@ -18,7 +20,7 @@ class CNNRetrainTPmnist(CNNRetrainTP):
         super(CNNRetrainTPmnist, self).__init__(cnn_settings_protofile, cached_weights_file)
 
     def load_samples(self):
-        print 'Value of small set is ', self.small_set
+        print 'Loading images of small size 28x28 ', self.small_set
         # Load datasets
         dataset = 'mnist.pkl.gz'
         # Download the MNIST dataset if it is not present
@@ -44,7 +46,7 @@ class CNNRetrainTPmnist(CNNRetrainTP):
         #train_set, valid_set, test_set format: tuple(input, target)
         #input is an numpy.ndarray of 2 dimensions (a matrix)
         #witch row's correspond to an example. target is a
-        if self.small_data == False:
+        if self.small_set == False:
             # Upscale the data
             N = 10000
             tmp_images = np.zeros((N, 56, 56))
@@ -67,6 +69,6 @@ class CNNRetrainTPmnist(CNNRetrainTP):
             valid_set_x, valid_set_y = self.shared_dataset(valid_set)
             train_set_x, train_set_y = self.shared_dataset(train_set)
 
-            rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
+        rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
                     (test_set_x, test_set_y)]
-            return rval
+        return rval

@@ -57,5 +57,4 @@ class CNNTestTPmnist(CNNTestTP):
             test_set_x, test_set_y = self.shared_dataset(test_set_2)
         else:
             test_set_x, test_set_y = self.shared_dataset(test_set)
-        rval = (test_set_x, test_set_y)
-        return rval
+        return (test_set_x, test_set_y)
