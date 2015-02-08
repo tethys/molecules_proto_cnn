@@ -41,20 +41,19 @@ def main():
     if results.mode == 1 or results.mode == 2: # test model
         print 'Testing model ...'
     	cnn = CNNTestTPmnist(results.prototxt_file, results.cached_weights_file)
-    	cnn.build_model()
     	cnn.test_model()
     if results.mode == 3:
         print 'Retraining model ...'
         cnn = CNNRetrainTPmnist(results.prototxt_file, results.cached_weights_file)
-        cnn.compute_test_error()
+        cnn.build_model()
+        cnn.retrain_model()
 
         print 'Testing model ...'
-    	cnn = CNNTestTPmnist(results.prototxt_file, results.cached_weights_file)
-    	cnn.build_model()
+        file_retrained_weights = os.path.splitext(results.cached_weights_file)[0]
+        file_retrained_weights.append('_retrained.npy')
+    	cnn = CNNTestTPmnist(results.prototxt_file, file_retrained_weights)
+    	cnn.test_model()
 
 if __name__ == '__main__':
     main()
-
-
-
 
