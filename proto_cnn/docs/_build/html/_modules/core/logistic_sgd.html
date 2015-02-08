@@ -131,13 +131,13 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">W</span>
 
-        <span class="c"># initialize the baises b as a vector of n_out 0s</span>
+        <span class="c"># initialize the baises b as a vector of 0&#39;s</span>
         <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">theano</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_out</span><span class="p">,),</span>
                                                  <span class="n">dtype</span><span class="o">=</span><span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">),</span>
                                <span class="n">name</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="n">borrow</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>    
+            <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span> 
 
         <span class="c"># compute vector of class-membership probabilities in symbolic form</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">p_y_given_x</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">nnet</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
@@ -198,103 +198,100 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 </div>
-<div class="viewcode-block" id="LogisticRegression.VOC_values"><a class="viewcode-back" href="../../core.html#core.logistic_sgd.LogisticRegression.VOC_values">[docs]</a>    <span class="k">def</span> <span class="nf">VOC_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a float representing the number of errors in the minibatch</span>
-<span class="sd">        over the total number of examples of the minibatch ; zero one</span>
-<span class="sd">        loss over the size of the minibatch</span>
-
-<span class="sd">        :type y: theano.tensor.TensorType</span>
-<span class="sd">        :param y: corresponds to a vector that gives for each example the</span>
-<span class="sd">                  correct label</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c"># check if y has same dimension of y_pred</span>
-        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;y should have the same shape as self.y_pred&#39;</span><span class="p">,</span>
-                <span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="s">&#39;y_pred&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
-        <span class="c"># check if y is of the correct datatype</span>
-        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;int&#39;</span><span class="p">):</span>
-            <span class="c"># the T.neq operator returns a vector of 0s and 1s, where 1</span>
-            <span class="c"># represents a mistake in prediction</span>
-            <span class="n">F</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">neq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
-            <span class="n">TP</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
-	    <span class="n">result</span> <span class="o">=</span>  <span class="n">TP</span><span class="o">/</span><span class="n">T</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">TP</span><span class="o">+</span><span class="n">F</span><span class="p">,</span> <span class="n">theano</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">floatX</span><span class="p">)</span>
-            <span class="c">#if T.isnan(result): #check if division by zero (and thus Jaccard index is 1)</span>
-            <span class="c">#     return T.zeros_like(result) #return value 1</span>
-            <span class="c">#else:</span>
-            <span class="k">return</span> <span class="n">result</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
 <div class="viewcode-block" id="LogisticRegression.result_count_dictionary"><a class="viewcode-back" href="../../core.html#core.logistic_sgd.LogisticRegression.result_count_dictionary">[docs]</a>    <span class="k">def</span> <span class="nf">result_count_dictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-	<span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="sd">&quot;&quot;&quot; Returns a dictionary containing the count</span>
+<span class="sd">            of the TP, TN, FP, FN counts. They are</span>
+<span class="sd">            needed for aggregating the results over the whole</span>
+<span class="sd">            batches.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">result</span><span class="p">[</span><span class="s">&#39;TP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_positives_count</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 	<span class="n">result</span><span class="p">[</span><span class="s">&#39;TN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_negatives_count</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 	<span class="n">result</span><span class="p">[</span><span class="s">&#39;FP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">false_positives_count</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 	<span class="n">result</span><span class="p">[</span><span class="s">&#39;FN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">false_negatives_count</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">result</span></div>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
 <div class="viewcode-block" id="LogisticRegression.true_negatives_count"><a class="viewcode-back" href="../../core.html#core.logistic_sgd.LogisticRegression.true_negatives_count">[docs]</a>    <span class="k">def</span> <span class="nf">true_negatives_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;y should have the same shape as self.y_pred&#39;</span><span class="p">,</span>
-                <span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="s">&#39;y_pred&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
-        <span class="c"># check if y is of the correct datatype</span>
-        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;int&#39;</span><span class="p">):</span>
-            <span class="c"># the T.neq operator returns a vector of 0s and 1s, where 1</span>
-            <span class="c"># represents a mistake in prediction</span>
-            <span class="n">TP</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
-	    <span class="k">return</span> <span class="n">TP</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+        <span class="sd">&quot;&quot;&quot; Compute the number of true negatives.</span>
+<span class="sd">            Raises exception if the target value y is not int.</span>
+
+<span class="sd">            :param y: array with class index values</span>
+<span class="sd">            :type y: tensor int array</span>
+<span class="sd">            :returns: the true negatives count</span>
+
+<span class="sd">            :raises: NotImplementedError, TypeError</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_target_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">TP</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+	<span class="k">return</span> <span class="n">TP</span>
+</div>
 <div class="viewcode-block" id="LogisticRegression.true_positives_count"><a class="viewcode-back" href="../../core.html#core.logistic_sgd.LogisticRegression.true_positives_count">[docs]</a>    <span class="k">def</span> <span class="nf">true_positives_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;y should have the same shape as self.y_pred&#39;</span><span class="p">,</span>
-                <span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="s">&#39;y_pred&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
-        <span class="c"># check if y is of the correct datatype</span>
-        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;int&#39;</span><span class="p">):</span>
-            <span class="c"># the T.neq operator returns a vector of 0s and 1s, where 1</span>
-            <span class="c"># represents a mistake in prediction</span>
-            <span class="n">TP</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
-	    <span class="k">return</span> <span class="n">TP</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot; Compute the number of true positives.</span>
+<span class="sd">            Raises exception if the target value y is not int.</span>
+
+<span class="sd">            :param y: array with class index values</span>
+<span class="sd">            :type y: tensor int array</span>
+<span class="sd">            :returns: the true positives count</span>
+
+<span class="sd">            :raises: NotImplementedError, TypeError</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_target_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">TP</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">TP</span>
 </div>
 <div class="viewcode-block" id="LogisticRegression.false_positives_count"><a class="viewcode-back" href="../../core.html#core.logistic_sgd.LogisticRegression.false_positives_count">[docs]</a>    <span class="k">def</span> <span class="nf">false_positives_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;y should have the same shape as self.y_pred&#39;</span><span class="p">,</span>
-                <span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="s">&#39;y_pred&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
-        <span class="c"># check if y is of the correct datatype</span>
-        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;int&#39;</span><span class="p">):</span>
-            <span class="c"># the T.neq operator returns a vector of 0s and 1s, where 1</span>
-            <span class="c"># represents a mistake in prediction</span>
-            <span class="n">FP</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">T</span><span class="o">.</span><span class="n">neq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y</span><span class="p">)))</span>
-	    <span class="k">return</span> <span class="n">FP</span>
-        <span class="k">else</span><span class="p">:</span>
-	    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot; Compute the number of false positives.</span>
+<span class="sd">            Raises exception if the target value y is not int.</span>
+
+<span class="sd">            :param y: array with class index values</span>
+<span class="sd">            :type y: tensor int array</span>
+<span class="sd">            :returns: the false positives count</span>
+
+<span class="sd">            :raises: NotImplementedError, TypeError</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_target_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">FP</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">T</span><span class="o">.</span><span class="n">neq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">FP</span>
 </div>
 <div class="viewcode-block" id="LogisticRegression.false_negatives_count"><a class="viewcode-back" href="../../core.html#core.logistic_sgd.LogisticRegression.false_negatives_count">[docs]</a>    <span class="k">def</span> <span class="nf">false_negatives_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;y should have the same shape as self.y_pred&#39;</span><span class="p">,</span>
-                <span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="s">&#39;y_pred&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
-        <span class="c"># check if y is of the correct datatype</span>
-        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;int&#39;</span><span class="p">):</span>
-            <span class="c"># the T.neq operator returns a vector of 0s and 1s, where 1</span>
-            <span class="c"># represents a mistake in prediction</span>
-            <span class="n">FN</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">T</span><span class="o">.</span><span class="n">neq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y</span><span class="p">)))</span>
-	    <span class="k">return</span> <span class="n">FN</span>
-        <span class="k">else</span><span class="p">:</span>
-	    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot; Compute the number of false negatives.</span>
+<span class="sd">            Raises exception if the target value y is not int.</span>
+
+<span class="sd">            :param y: array with class index values</span>
+<span class="sd">            :type y: tensor int array</span>
+<span class="sd">            :returns: the false negatives count</span>
+
+<span class="sd">            :raises: NotImplementedError, TypeError</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_target_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">FN</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">T</span><span class="o">.</span><span class="n">neq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y</span><span class="p">)))</span>
+	<span class="k">return</span> <span class="n">FN</span>
 </div>
 <div class="viewcode-block" id="LogisticRegression.false_result_count"><a class="viewcode-back" href="../../core.html#core.logistic_sgd.LogisticRegression.false_result_count">[docs]</a>    <span class="k">def</span> <span class="nf">false_result_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Compute the number of false negatives.</span>
+<span class="sd">            Raises exception if the target value y is not int.</span>
+
+<span class="sd">            :param y: array with class index values</span>
+<span class="sd">            :type y: tensor int array</span>
+<span class="sd">            :returns: the false negatives count</span>
+
+<span class="sd">            :raises: NotImplementedError, TypeError</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_target_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">neq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+	<span class="k">return</span> <span class="n">F</span>
+</div>
+<div class="viewcode-block" id="LogisticRegression.valid_target_y"><a class="viewcode-back" href="../../core.html#core.logistic_sgd.LogisticRegression.valid_target_y">[docs]</a>    <span class="k">def</span> <span class="nf">valid_target_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Verifies that the target values y are integers</span>
+<span class="sd">            and that the array has same size as the input one.</span>
+<span class="sd">            :param y: array of target values</span>
+<span class="sd">            :type y: array of int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;y should have the same shape as self.y_pred&#39;</span><span class="p">,</span>
                 <span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="s">&#39;y_pred&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
-        <span class="c"># check if y is of the correct datatype</span>
-        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;int&#39;</span><span class="p">):</span>
-            <span class="c"># the T.neq operator returns a vector of 0s and 1s, where 1</span>
-            <span class="c"># represents a mistake in prediction</span>
-            <span class="n">F</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">neq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
-	    <span class="k">return</span> <span class="n">F</span>
-        <span class="k">else</span><span class="p">:</span>
-	    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;int&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Type of target value y must be int&#39;</span><span class="p">)</span>
 </pre></div></div></div>
 
           </div>

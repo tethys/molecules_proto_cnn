@@ -53,53 +53,62 @@
 <span class="sd">Created on Tue Oct 21 15:27:51 2014</span>
 <span class="sd">@author: vpetresc</span>
 
-<span class="sd">TODO consider using abstract base class</span>
-<span class="sd">http://zaiste.net/2013/01/abstract_classes_in_python/</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="kn">as</span> <span class="nn">T</span>
-<span class="kn">import</span> <span class="nn">numpy</span>
 
 <span class="kn">from</span> <span class="nn">base_cnn</span> <span class="kn">import</span> <span class="n">CNNBase</span>
 <span class="kn">from</span> <span class="nn">lenet_conv_pool_layer</span> <span class="kn">import</span> <span class="n">LeNetConvPoolLayer</span>
 <span class="kn">from</span> <span class="nn">logistic_sgd</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
 <span class="kn">from</span> <span class="nn">mlp</span> <span class="kn">import</span> <span class="n">HiddenLayer</span>
-
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">theano.tensor</span> <span class="kn">as</span> <span class="nn">T</span>
 
 <div class="viewcode-block" id="CNNTrain"><a class="viewcode-back" href="../../core.html#core.train_cnn.CNNTrain">[docs]</a><span class="k">class</span> <span class="nc">CNNTrain</span><span class="p">(</span><span class="n">CNNBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The class takes a proto bufer as input, setups a CNN according to the</span>
 <span class="sd">        settings, trains the network and saves the weights in a file</span>
-
-<span class="sd">    Args:</span>
-
-<span class="sd">    Returns:</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protofile</span><span class="p">,</span> <span class="n">cached_weights</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cnntype</span> <span class="o">=</span> <span class="s">&#39;TRAIN&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param protofile: describes the arhitecture of the network</span>
+<span class="sd">        :type protofile: string</span>
+<span class="sd">        :param cached_weights: filename of the weights</span>
+<span class="sd">        :type cached_weights: string</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cnntype</span> <span class="o">=</span> <span class="s">&#39;TRAIN&#39;</span> <span class="c">#: extension that is added to the logfile name</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">CNNTrain</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">protofile</span><span class="p">,</span> <span class="n">cached_weights</span><span class="p">)</span>
+        <span class="c">#: Array of train data of size num samples x dimension of sample</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">train_set_x</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="c">#: Array of target data of size num samples x 1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">train_set_y</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="c">#: Array of valid data of size num samples x dimension of sample</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">valid_set_x</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">valid_set_y</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="c">#: The number of batches in which train_set_x is divided</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_valid_batches</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c">#: The cost that is minimized by the algorithm, usually log likelihood</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c">#: Array of symbolic gradients of the cost wrt. weights</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">grads</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="c">#: Array of weights (plus biases) for which the gradient is computed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="c">#: Usually logistic regression</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c">#: The size of the input array that is being passed to the algorithm</span>
+        <span class="c">#: It  has size num samples x num channels x img width x img height</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">lscalar</span><span class="p">()</span>  <span class="c">#: index to a [mini]batch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>   <span class="c">#: the data is presented as rasterized images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">ivector</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span>  <span class="c">#: the labels are presented as 1D vector of ints</span>
 
 <div class="viewcode-block" id="CNNTrain.build_model"><a class="viewcode-back" href="../../core.html#core.train_cnn.CNNTrain.build_model">[docs]</a>    <span class="k">def</span> <span class="nf">build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Creates the actual model from the model settings.&quot;&quot;&quot;</span>
-        <span class="c"># Fixed rng, make the results repeatable</span>
+        <span class="sd">&quot;&quot;&quot;Creates the net&#39;s layers from the model settings.&quot;&quot;&quot;</span>
 
+        <span class="c"># Load the data</span>
         <span class="n">datasets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_samples</span><span class="p">()</span>
 
         <span class="c"># Train, Validation, Test 100000, 20000, 26... fot Mitocondria set</span>
@@ -108,8 +117,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">valid_set_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_set_y</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set_y</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 
-        <span class="c"># assumes the width equals the height</span>
+        <span class="c"># Assumes the width equals the height</span>
         <span class="n">img_width_size</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">img_width_size</span> <span class="o">*</span> <span class="n">img_width_size</span><span class="p">,</span> <span class="s">&#39;input image not square&#39;</span>
         <span class="k">print</span> <span class="s">&quot;Image shape </span><span class="si">%s</span><span class="s"> x </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">img_width_size</span><span class="p">,</span> <span class="n">img_width_size</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">img_width_size</span><span class="p">,</span> <span class="n">img_width_size</span><span class="p">)</span>
 
@@ -124,11 +134,6 @@
 
         <span class="k">print</span> <span class="s">&#39;Size train_batches </span><span class="si">%d</span><span class="s">, n_valid_batches </span><span class="si">%d</span><span class="s">, n_test_batches </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_train_batches</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_valid_batches</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_test_batches</span><span class="p">)</span>
 
-        <span class="c"># allocate symbolic variables for the data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">lscalar</span><span class="p">()</span>  <span class="c"># index to a [mini]batch</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>   <span class="c"># the data is presented as rasterized images</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">ivector</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span>  <span class="c"># the labels are presented as 1D vector of</span>
-                               <span class="c"># [int] labels</span>
 
         <span class="c">######################</span>
         <span class="c"># BUILD ACTUAL MODEL #</span>
@@ -137,6 +142,7 @@
 
         <span class="c"># The input is an 4D array of size, number of images in the batch size, number of channels</span>
         <span class="c"># (or number of feature maps), image width and height.</span>
+        <span class="c">#TODO(vpetresc) make nbr of channels variable (1 or 3)</span>
         <span class="n">nbr_feature_maps</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">layer_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">nbr_feature_maps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
         <span class="n">pooled_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -178,13 +184,14 @@
         <span class="c"># the cost we minimize during training is the NLL of the model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">negative_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
 
-        <span class="c"># create a list of all model parameters to be fit by gradient descent</span>
+        <span class="c"># Create a list of all model parameters to be fit by gradient descent.</span>
+        <span class="c"># The parameters are added in reversed order because ofthe order</span>
+        <span class="c"># in the backpropagation algorithm.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="o">.</span><span class="n">params</span>
         <span class="k">for</span> <span class="n">hidden_layer</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">hlayers</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">+=</span> <span class="n">hidden_layer</span><span class="o">.</span><span class="n">params</span>
         <span class="k">for</span> <span class="n">conv_layer</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">clayers</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">+=</span> <span class="n">conv_layer</span><span class="o">.</span><span class="n">params</span>
-
 
         <span class="c"># create a list of gradients for all model parameters</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">grads</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>

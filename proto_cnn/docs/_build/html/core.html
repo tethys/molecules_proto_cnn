@@ -24,7 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="proto_cnn 0 documentation" href="index.html" /> 
+    <link rel="top" title="proto_cnn 0 documentation" href="index.html" />
+    <link rel="next" title="src" href="modules.html" />
+    <link rel="prev" title="Welcome to proto_cnn’s documentation!" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -36,6 +38,12 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="src"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to proto_cnn’s documentation!"
+             accesskey="P">previous</a> |</li>
         <li><a href="index.html">proto_cnn 0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -54,40 +62,81 @@
 <span id="core-base-cnn-module"></span><h2>core.base_cnn module<a class="headerlink" href="#module-core.base_cnn" title="Permalink to this headline">¶</a></h2>
 <p>Created on Tue Oct 21 15:27:51 2014
 &#64;author: vpetresc</p>
-<p>TODO consider using abstract base class
-<a class="reference external" href="http://zaiste.net/2013/01/abstract_classes_in_python/">http://zaiste.net/2013/01/abstract_classes_in_python/</a></p>
 <dl class="class">
 <dt id="core.base_cnn.CNNBase">
 <em class="property">class </em><tt class="descclassname">core.base_cnn.</tt><tt class="descname">CNNBase</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/core/base_cnn.html#CNNBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.base_cnn.CNNBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
-<p>The class takes a proto bufer as input, setups a CNN according to the
-settings, trains the network and saves the weights in a file</p>
+<p>The class sets up its internal layers configuration
+based on an input .prototxt and the name of the
+weights file</p>
+<dl class="attribute">
+<dt id="core.base_cnn.CNNBase.batch_size">
+<tt class="descname">batch_size</tt><em class="property"> = None</em><a class="headerlink" href="#core.base_cnn.CNNBase.batch_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default batch size</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="core.base_cnn.CNNBase.create_layers_from_settings">
 <tt class="descname">create_layers_from_settings</tt><big>(</big><em>settings</em><big>)</big><a class="reference internal" href="_modules/core/base_cnn.html#CNNBase.create_layers_from_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.base_cnn.CNNBase.create_layers_from_settings" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes as input the settings parsed from the proto file
-and sets up the CNN configuration.</p>
+<dd><dl class="docutils">
+<dt>Takes as input the net settings parsed from the proto file</dt>
+<dd>and sets up the CNN configuration.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>settings</strong> (<em>protocol buffer</em>) &#8211; network settings (e.g. layers type, count, poolsize,
+batch size, learning rate)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="core.base_cnn.CNNBase.initialize_logger">
 <tt class="descname">initialize_logger</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/core/base_cnn.html#CNNBase.initialize_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.base_cnn.CNNBase.initialize_logger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes the logging level and the logger
-name based on the path of the weights file</p>
+name based on the path of the weights file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.base_cnn.CNNBase.learning_rate">
+<tt class="descname">learning_rate</tt><em class="property"> = None</em><a class="headerlink" href="#core.base_cnn.CNNBase.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default learning rate for stochastic GD</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="core.base_cnn.CNNBase.load_samples">
 <tt class="descname">load_samples</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/core/base_cnn.html#CNNBase.load_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.base_cnn.CNNBase.load_samples" title="Permalink to this definition">¶</a></dt>
-<dd><p>Abstract method which is implemented by derived classes.
-Loads trin, test and validation samples</p>
+<dd><p>Abstract method implemented by derived classes.
+Loads train, test and validation samples</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="core.base_cnn.CNNBase.load_weights">
 <tt class="descname">load_weights</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/core/base_cnn.html#CNNBase.load_weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.base_cnn.CNNBase.load_weights" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load weights from .npy file. The weights are stored in reverse order:
-b3 W3, b2 W2, b1 W1</p>
+<dd><dl class="docutils">
+<dt>Load weights from .npy file. The weights are stored in reverse order.</dt>
+<dd><dl class="first last docutils">
+<dt>For a 4 layer network that would mean the contents of the weights are:</dt>
+<dd>b3 W3, b2 W2, b1 W1, b0 W0</dd>
+</dl>
+</dd>
+</dl>
+<p>where b are the biases and W are the filters or the linear weights</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.base_cnn.CNNBase.n_epochs">
+<tt class="descname">n_epochs</tt><em class="property"> = None</em><a class="headerlink" href="#core.base_cnn.CNNBase.n_epochs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default nbr of epochs</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.base_cnn.CNNBase.poolsize">
+<tt class="descname">poolsize</tt><em class="property"> = None</em><a class="headerlink" href="#core.base_cnn.CNNBase.poolsize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default poolsize</p>
 </dd></dl>
 
 <dl class="method">
@@ -99,6 +148,18 @@ Theano to copy it into the GPU memory (when code is run on GPU).
 Since copying data into the GPU is slow, copying a minibatch everytime
 is needed (the default behaviour if the data is not in a shared
 variable) would lead to a large decrease in performance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data_xy</strong> &#8211; tuple containing the input and output arrays</li>
+<li><strong>borrow</strong> &#8211; (Default value = True)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -394,23 +455,6 @@ and bias vector <span class="math">\(b\)</span>. Classification is done by proje
 points onto a set of hyperplanes, the distance to which is used to
 determine a class membership probability.</p>
 <dl class="method">
-<dt id="core.logistic_sgd.LogisticRegression.VOC_values">
-<tt class="descname">VOC_values</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/core/logistic_sgd.html#LogisticRegression.VOC_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.logistic_sgd.LogisticRegression.VOC_values" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a float representing the number of errors in the minibatch
-over the total number of examples of the minibatch ; zero one
-loss over the size of the minibatch</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>y</strong> (<em>theano.tensor.TensorType</em>) &#8211; corresponds to a vector that gives for each example the
-correct label</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="core.logistic_sgd.LogisticRegression.errors">
 <tt class="descname">errors</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/core/logistic_sgd.html#LogisticRegression.errors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.logistic_sgd.LogisticRegression.errors" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a float representing the number of errors in the minibatch
@@ -430,17 +474,59 @@ correct label</td>
 <dl class="method">
 <dt id="core.logistic_sgd.LogisticRegression.false_negatives_count">
 <tt class="descname">false_negatives_count</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/core/logistic_sgd.html#LogisticRegression.false_negatives_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.logistic_sgd.LogisticRegression.false_negatives_count" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Compute the number of false negatives.
+Raises exception if the target value y is not int.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>y</strong> (<em>tensor int array</em>) &#8211; array with class index values</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the false negatives count</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">NotImplementedError, TypeError</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="core.logistic_sgd.LogisticRegression.false_positives_count">
 <tt class="descname">false_positives_count</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/core/logistic_sgd.html#LogisticRegression.false_positives_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.logistic_sgd.LogisticRegression.false_positives_count" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Compute the number of false positives.
+Raises exception if the target value y is not int.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>y</strong> (<em>tensor int array</em>) &#8211; array with class index values</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the false positives count</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">NotImplementedError, TypeError</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="core.logistic_sgd.LogisticRegression.false_result_count">
 <tt class="descname">false_result_count</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/core/logistic_sgd.html#LogisticRegression.false_result_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.logistic_sgd.LogisticRegression.false_result_count" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Compute the number of false negatives.
+Raises exception if the target value y is not int.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>y</strong> (<em>tensor int array</em>) &#8211; array with class index values</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the false negatives count</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">NotImplementedError, TypeError</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="core.logistic_sgd.LogisticRegression.negative_log_likelihood">
@@ -479,17 +565,58 @@ correct label</td>
 <dl class="method">
 <dt id="core.logistic_sgd.LogisticRegression.result_count_dictionary">
 <tt class="descname">result_count_dictionary</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/core/logistic_sgd.html#LogisticRegression.result_count_dictionary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.logistic_sgd.LogisticRegression.result_count_dictionary" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns a dictionary containing the count
+of the TP, TN, FP, FN counts. They are
+needed for aggregating the results over the whole
+batches.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="core.logistic_sgd.LogisticRegression.true_negatives_count">
 <tt class="descname">true_negatives_count</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/core/logistic_sgd.html#LogisticRegression.true_negatives_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.logistic_sgd.LogisticRegression.true_negatives_count" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Compute the number of true negatives.
+Raises exception if the target value y is not int.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>y</strong> (<em>tensor int array</em>) &#8211; array with class index values</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the true negatives count</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">NotImplementedError, TypeError</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="core.logistic_sgd.LogisticRegression.true_positives_count">
 <tt class="descname">true_positives_count</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/core/logistic_sgd.html#LogisticRegression.true_positives_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.logistic_sgd.LogisticRegression.true_positives_count" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Compute the number of true positives.
+Raises exception if the target value y is not int.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>y</strong> (<em>tensor int array</em>) &#8211; array with class index values</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the true positives count</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">NotImplementedError, TypeError</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="core.logistic_sgd.LogisticRegression.valid_target_y">
+<tt class="descname">valid_target_y</tt><big>(</big><em>y</em><big>)</big><a class="reference internal" href="_modules/core/logistic_sgd.html#LogisticRegression.valid_target_y"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.logistic_sgd.LogisticRegression.valid_target_y" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verifies that the target values y are integers
+and that the array has same size as the input one.
+:param y: array of target values
+:type y: array of int</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -519,7 +646,7 @@ the problem of MNIST digit classification.</p>
 </div></blockquote>
 <dl class="class">
 <dt id="core.mlp.HiddenLayer">
-<em class="property">class </em><tt class="descclassname">core.mlp.</tt><tt class="descname">HiddenLayer</tt><big>(</big><em>rng</em>, <em>input</em>, <em>n_in</em>, <em>n_out</em>, <em>W=None</em>, <em>b=None</em>, <em>activation=&lt;theano.tensor.elemwise.Elemwise object at 0x1064a5b90&gt;</em><big>)</big><a class="reference internal" href="_modules/core/mlp.html#HiddenLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.mlp.HiddenLayer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">core.mlp.</tt><tt class="descname">HiddenLayer</tt><big>(</big><em>rng</em>, <em>input</em>, <em>n_in</em>, <em>n_out</em>, <em>W=None</em>, <em>b=None</em>, <em>activation=&lt;theano.tensor.elemwise.Elemwise object at 0x106402890&gt;</em><big>)</big><a class="reference internal" href="_modules/core/mlp.html#HiddenLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.mlp.HiddenLayer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 </dd></dl>
 
@@ -528,8 +655,6 @@ the problem of MNIST digit classification.</p>
 <span id="core-retrain-cnn-module"></span><h2>core.retrain_cnn module<a class="headerlink" href="#module-core.retrain_cnn" title="Permalink to this headline">¶</a></h2>
 <p>Created on Tue Oct 21 15:27:51 2014
 &#64;author: vpetresc</p>
-<p>TODO consider using abstract base class
-<a class="reference external" href="http://zaiste.net/2013/01/abstract_classes_in_python/">http://zaiste.net/2013/01/abstract_classes_in_python/</a></p>
 <dl class="class">
 <dt id="core.retrain_cnn.CNNRetrain">
 <em class="property">class </em><tt class="descclassname">core.retrain_cnn.</tt><tt class="descname">CNNRetrain</tt><big>(</big><em>protofile</em>, <em>cached_weights</em><big>)</big><a class="reference internal" href="_modules/core/retrain_cnn.html#CNNRetrain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.retrain_cnn.CNNRetrain" title="Permalink to this definition">¶</a></dt>
@@ -666,12 +791,6 @@ derived classes.</dd>
 </dd></dl>
 
 <dl class="method">
-<dt id="core.test_cnn.CNNTest.compute_test_error">
-<tt class="descname">compute_test_error</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/core/test_cnn.html#CNNTest.compute_test_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.test_cnn.CNNTest.compute_test_error" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loop through the batches and run process_batch</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="core.test_cnn.CNNTest.log_cnn_time_summary">
 <tt class="descname">log_cnn_time_summary</tt><big>(</big><em>timings</em><big>)</big><a class="reference internal" href="_modules/core/test_cnn.html#CNNTest.log_cnn_time_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.test_cnn.CNNTest.log_cnn_time_summary" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
@@ -706,6 +825,12 @@ cnn_time:</dd>
 <p>Returns:</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="core.test_cnn.CNNTest.test_model">
+<tt class="descname">test_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/core/test_cnn.html#CNNTest.test_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.test_cnn.CNNTest.test_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loop through the batches and run process_batch</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -733,7 +858,7 @@ cnn_time:</dd>
 <p>&#64;author: vpetresc</p>
 <dl class="class">
 <dt id="core.test_tp_cnn.CNNTestTP">
-<em class="property">class </em><tt class="descclassname">core.test_tp_cnn.</tt><tt class="descname">CNNTestTP</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/core/test_tp_cnn.html#CNNTestTP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.test_tp_cnn.CNNTestTP" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">core.test_tp_cnn.</tt><tt class="descname">CNNTestTP</tt><big>(</big><em>protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/core/test_tp_cnn.html#CNNTestTP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.test_tp_cnn.CNNTestTP" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#core.test_cnn.CNNTest" title="core.test_cnn.CNNTest"><tt class="xref py py-class docutils literal"><span class="pre">core.test_cnn.CNNTest</span></tt></a></p>
 <dl class="docutils">
 <dt>The class implements the methods for computing the batch</dt>
@@ -806,28 +931,101 @@ classified samples</p>
 <span id="core-train-cnn-module"></span><h2>core.train_cnn module<a class="headerlink" href="#module-core.train_cnn" title="Permalink to this headline">¶</a></h2>
 <p>Created on Tue Oct 21 15:27:51 2014
 &#64;author: vpetresc</p>
-<p>TODO consider using abstract base class
-<a class="reference external" href="http://zaiste.net/2013/01/abstract_classes_in_python/">http://zaiste.net/2013/01/abstract_classes_in_python/</a></p>
 <dl class="class">
 <dt id="core.train_cnn.CNNTrain">
 <em class="property">class </em><tt class="descclassname">core.train_cnn.</tt><tt class="descname">CNNTrain</tt><big>(</big><em>protofile</em>, <em>cached_weights</em><big>)</big><a class="reference internal" href="_modules/core/train_cnn.html#CNNTrain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.train_cnn.CNNTrain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#core.base_cnn.CNNBase" title="core.base_cnn.CNNBase"><tt class="xref py py-class docutils literal"><span class="pre">core.base_cnn.CNNBase</span></tt></a></p>
-<dl class="docutils">
-<dt>The class takes a proto bufer as input, setups a CNN according to the</dt>
-<dd>settings, trains the network and saves the weights in a file</dd>
-</dl>
-<p>Args:</p>
-<p>Returns:</p>
+<p>The class takes a proto bufer as input, setups a CNN according to the
+settings, trains the network and saves the weights in a file</p>
 <dl class="method">
 <dt id="core.train_cnn.CNNTrain.build_model">
 <tt class="descname">build_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/core/train_cnn.html#CNNTrain.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.train_cnn.CNNTrain.build_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates the actual model from the model settings.</p>
+<dd><p>Creates the net&#8217;s layers from the model settings.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.cnntype">
+<tt class="descname">cnntype</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.cnntype" title="Permalink to this definition">¶</a></dt>
+<dd><p>extension that is added to the logfile name</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.cost">
+<tt class="descname">cost</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>The cost that is minimized by the algorithm, usually log likelihood</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.grads">
+<tt class="descname">grads</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.grads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Array of symbolic gradients of the cost wrt. weights</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.index">
+<tt class="descname">index</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>index to a [mini]batch</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.input_shape">
+<tt class="descname">input_shape</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.input_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>The size of the input array that is being passed to the algorithm
+It  has size num samples x num channels x img width x img height</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.n_train_batches">
+<tt class="descname">n_train_batches</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.n_train_batches" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of batches in which train_set_x is divided</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.output_layer">
+<tt class="descname">output_layer</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.output_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Usually logistic regression</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.params">
+<tt class="descname">params</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Array of weights (plus biases) for which the gradient is computed</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="core.train_cnn.CNNTrain.train_model">
 <tt class="descname">train_model</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/core/train_cnn.html#CNNTrain.train_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.train_cnn.CNNTrain.train_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract method to be implemented by subclasses</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.train_set_x">
+<tt class="descname">train_set_x</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.train_set_x" title="Permalink to this definition">¶</a></dt>
+<dd><p>Array of train data of size num samples x dimension of sample</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.train_set_y">
+<tt class="descname">train_set_y</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.train_set_y" title="Permalink to this definition">¶</a></dt>
+<dd><p>Array of target data of size num samples x 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.valid_set_x">
+<tt class="descname">valid_set_x</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.valid_set_x" title="Permalink to this definition">¶</a></dt>
+<dd><p>Array of valid data of size num samples x dimension of sample</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.x">
+<tt class="descname">x</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.x" title="Permalink to this definition">¶</a></dt>
+<dd><p>the data is presented as rasterized images</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="core.train_cnn.CNNTrain.y">
+<tt class="descname">y</tt><em class="property"> = None</em><a class="headerlink" href="#core.train_cnn.CNNTrain.y" title="Permalink to this definition">¶</a></dt>
+<dd><p>the labels are presented as 1D vector of ints</p>
 </dd></dl>
 
 </dd></dl>
@@ -840,7 +1038,7 @@ classified samples</p>
 <dl class="class">
 <dt id="core.train_tp_cnn.CNNTrainTP">
 <em class="property">class </em><tt class="descclassname">core.train_tp_cnn.</tt><tt class="descname">CNNTrainTP</tt><big>(</big><em>cnn_settings_protofile</em>, <em>cached_weights_file</em><big>)</big><a class="reference internal" href="_modules/core/train_tp_cnn.html#CNNTrainTP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.train_tp_cnn.CNNTrainTP" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#core.train_cnn.CNNTrain" title="core.train_cnn.CNNTrain"><tt class="xref py py-class docutils literal"><span class="pre">core.train_cnn.CNNTrain</span></tt></a></p>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">src.core.train_cnn.CNNTrain</span></tt></p>
 <dl class="docutils">
 <dt>The class takes a proto bufer as input, setups a CNN according to the</dt>
 <dd>settings, trains the network and saves the weights in a file</dd>
@@ -959,6 +1157,12 @@ classified samples</p>
 </li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to proto_cnn&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="modules.html"
+                        title="next chapter">src</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/core.txt"
@@ -990,6 +1194,12 @@ classified samples</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="src"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to proto_cnn’s documentation!"
+             >previous</a> |</li>
         <li><a href="index.html">proto_cnn 0 documentation</a> &raquo;</li> 
       </ul>
     </div>
