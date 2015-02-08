@@ -146,7 +146,7 @@ class CNNTest(CNNBase):
                                                      clayer_params.filter_w, clayer_params.filter_w),
                                        Pstruct = self.cached_weights[idx_weight + 1],
                                        b = self.cached_weights[idx_weight],
-                                       poolsize=(self.poolsize, self.poolsize))
+                                       poolsize=(self.poolsize, self.poolsize)).eval()
                 cnn_time.t_convolution.append(round(layer_separable_convolutional.t_conv, 2))
                 cnn_time.t_downsample_activation.append(round(layer_separable_convolutional.t_downsample_activ, 2))
         #   print 'image_shape ', self.batch_size, nbr_feature_maps, pooled_width, pooled_height

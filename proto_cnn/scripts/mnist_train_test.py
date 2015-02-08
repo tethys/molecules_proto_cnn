@@ -46,7 +46,6 @@ def main():
         print 'Retraining model ...'
         cnn = CNNRetrainTPmnist(results.prototxt_file, results.cached_weights_file)
         cnn.build_model()
-        cnn.retrain_model()
 
         print 'Testing model ...'
         file_retrained_weights = os.path.splitext(results.cached_weights_file)[0]

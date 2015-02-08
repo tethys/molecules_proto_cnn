@@ -27,7 +27,7 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         self.nbr_filters = Pstruct[0]['U3'].shape[0]
         initial_n_rows = image_shape[2]
         initial_n_cols = image_shape[3]
-        
+
         # Final number of rows and columns        
         final_n_rows = initial_n_rows - fwidth + 1
         final_n_cols = initial_n_cols - fheight + 1
@@ -74,7 +74,7 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         end = time.time()
         self.t_downsample_activ = (end - start)*1000/ image_shape[0] 
     #    print 'pool+tanh time of batch image {0}'.format(self.t_downsample_activ)        
-        return self.output.eval()
+        return self.output
 
     """TODO change to have an image such as nbr channels as well"""
     def convolve_one_image(self, one_image, img_shape, 

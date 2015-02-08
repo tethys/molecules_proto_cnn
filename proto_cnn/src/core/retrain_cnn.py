@@ -11,6 +11,7 @@ from lenet_conv_pool_layer import LeNetConvPoolLayer
 from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
 import numpy
+import os
 import time
 import theano
 import theano.tensor as T
@@ -62,11 +63,15 @@ class CNNRetrain(CNNBase):
         #print('Size train %d, valid %d, test %d' % (self.train_set_x.shape.eval(), self.valid_set_x.shape.eval(), self.test_set_x.shape.eval())
         print('Size train_batches %d, n_valid_batches %d, n_test_batches %d' % (self.n_train_batches, self.n_valid_batches, self.n_test_batches))
 
-        # allocate symbolic variables for the data
-        self.index = T.lscalar()  # index to a [mini]batch
-        self.x = T.matrix('x')   # the data is presented as rasterized images
-        self.y = T.ivector('y')  # the labels are presented as 1D vector of
-                               # [int] labels
+        for batch_index in xrange(self.n_train_batches):
+            print 'batch nr', batch_index
+            # Create tine object
+            self.process_batch(batch_index)
+
+    def process_batch(self, batch_index):
+        self.x = self.train_set_x[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
+        self.y = self.train_set_y[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
+
 
         ######################
         # BUILD ACTUAL MODEL #
@@ -81,20 +86,20 @@ class CNNRetrain(CNNBase):
         pooled_width = self.input_shape[0];
         pooled_height = self.input_shape[1];
         # Add convolutional layers followed by pooling
-        clayers = []
+
         idx_weight = 0
         for clayer_params in self.convolutional_layers:
             print 'Adding conv layer nbr filter %d, kernel size %d' % (clayer_params.num_filters, clayer_params.filter_w)
             if clayer_params.HasField('rank') == False:
-                layer_conv = LeNetConvPoolNonSymbolic(self.rng)
-                layer_output = layer_convolutoinal.run_batch(layer_input,
+                layer_conv = LeNetLayerConvPoolNonSymbolic(self.rng)
+                layer_output = layer_conv.run_batch(layer_input.eval(),
                                                     image_shape=(self.batch_size, nbr_feature_maps,
                                                     pooled_width, pooled_height),
                                                     filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                             clayer_params.filter_w, clayer_params.filter_w),
                                                     W=self.cached_weights[idx_weight + 1],
                                                     b=self.cached_weights[idx_weight],
-                                                    poolsize=(self.poolsize, self.poolsize)).eval()
+                                                    poolsize=(self.poolsize, self.poolsize))
             else:
                 layer_sep_conv = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
                 print nbr_feature_maps
@@ -115,13 +120,13 @@ class CNNRetrain(CNNBase):
 
         # fully connected sigmoidal layers
         layer_input = layer_input.flatten(2);
-        nbr_input = nbr_feature_maps * pooled_W * pooled_H
+        nbr_input = nbr_feature_maps * pooled_width * pooled_height
         hlayers = []
         for hlayer_params in self.hidden_layers:
             print 'Adding hidden layer fully connected %d' % (hlayer_params.num_outputs)
             layer = HiddenLayer(self.rng, input=layer_input, n_in=nbr_input,
                          n_out=hlayer_params.num_outputs, activation=T.tanh,
-                         W=self.cached_weights[idx_weight +1], b=self.cached_weights[idx_weight])
+                         W=theano.shared(value=self.cached_weights[idx_weight +1]), b=theano.shared(value=self.cached_weights[idx_weight]))
             nbr_input = hlayer_params.num_outputs;
             layer_input = layer.output
             hlayers.append(layer)
@@ -129,8 +134,8 @@ class CNNRetrain(CNNBase):
 
         # classify the values of the fully-connected sigmoidal layer
         self.output_layer = LogisticRegression(input=layer_input, n_in= nbr_input,
-                        n_out = self.last_layer.num_outputs, W=self.cached_weights[idx_weight + 1],
-                        b=self.cached_weights[idx_weight])
+                        n_out = self.last_layer.num_outputs, W=theano.shared(self.cached_weights[idx_weight + 1]),
+                        b=theano.shared(self.cached_weights[idx_weight]))
 
         # the cost we minimize during training is the NLL of the model
         self.cost = self.output_layer.negative_log_likelihood(self.y)
@@ -139,11 +144,16 @@ class CNNRetrain(CNNBase):
         self.params = self.output_layer.params
         for hidden_layer in reversed(hlayers):
             self.params += hidden_layer.params
-        for conv_layer in reversed(clayers):
-            self.params += conv_layer.b_params
 
         # create a list of gradients for all model parameters
         self.grads = T.grad(self.cost, self.params)
+
+        N = 7
+        for param_i, grad_i in zip(self.params, self.grads):
+            self.cached_weights[N] = param_i - self.learning_rate * grad_i
+            self.cached_weights[N] = self.cached_weights[N].eval()
+            N = N - 1
+            print 'N is ', N
 
     def retrain_model(self):
         """Abstract method"""
@@ -151,20 +161,20 @@ class CNNRetrain(CNNBase):
 
     def save_parameters(self):
         """Save the retrained weights"""
-        weights = [i.get_value(borrow=True) for i in self.best_params]
-        ## add here the interleaved convolutional layers
-        nbr_hidden_layers = size(hlayers)
-        # Update the output layer and W,b for every hidden layer
-        toskip = 1 + nbr_hidden_layers * 2
-        retrained_weights = []
-        for widx in xrange(toskip):
-            retrained_weights.append(weights[widx])
-        for c in xrange(size(clayers)):
-            # Add old W weights for conv layers(corresponding to the
-            # filters that were not learned)
-            retrained_weights.append(self.cached_weights[2*c + 1])
-            # Add b for conv layer that was trained
-            retrained_weights.append(weights[toskip])
-            toskip += 1
+#        weights = [i.get_value(borrow=True) for i in self.best_params]
+#        ## add here the interleaved convolutional layers
+#        nbr_hidden_layers = self.hidden_layers.len()
+#        # Update the output layer and W,b for every hidden layer
+#        toskip = 1 + nbr_hidden_layers * 2
+#        retrained_weights = []
+#        for widx in xrange(toskip):
+#            retrained_weights.append(weights[widx])
+#        for c in xrange(self.convolutional_layers.len()):
+#            # Add old W weights for conv layers(corresponding to the
+#            # filters that were not learned)
+#            retrained_weights.append(self.cached_weights[2*c + 1])
+#            # Add b for conv layer that was trained
+#            retrained_weights.append(weights[toskip])
+#            toskip += 1
         file_path = os.path.splitext(self.cached_weights_file)[0]
-        numpy.save(file_path +'_retrain.npy', retrained_weights)
+        numpy.save(file_path +'_retrain.npy', reversed(self.cached_weights))
