@@ -38,20 +38,23 @@ class CNNRetrain(CNNBase):
         datasets = self.load_samples()
         # Train, Validation, Test 100000, 20000, 26... fot Mitocondria set
         # Train, Validation, Test 50000, 10000, 10000 times 28x28 = 784 for MNIST dataset
-        self.train_set_x, self.train_set_y = datasets[0]
-        self.valid_set_x, self.valid_set_y = datasets[1]
-        self.test_set_x, self.test_set_y = datasets[2]
+	train_set_x, self.train_set_y = datasets[0]
+        valid_set_x, self.valid_set_y = datasets[1]
+        test_set_x, self.test_set_y = datasets[2]
+	self.train_set_x = train_set_x.get_value()
+	self.valid_set_x = valid_set_x.get_value()
+	self.test_set_x = test_set_x.get_value()
 
         # assumes the width equals the height
-        img_width_size = numpy.sqrt(self.test_set_x.shape[1].eval()).astype(int)
+        img_width_size = numpy.sqrt(self.test_set_x.shape[1]).astype(int)
         print "Image shape %s x %s" % (img_width_size, img_width_size)
         self.input_shape = (img_width_size, img_width_size)
 
         # Compute number of minibatches for training, validation and testing
         # Divide the total number of elements in the set by the batch size
-        self.n_train_batches = self.train_set_x.get_value(borrow=True).shape[0]
-        self.n_valid_batches = self.valid_set_x.get_value(borrow=True).shape[0]
-        self.n_test_batches = self.test_set_x.get_value(borrow=True).shape[0]
+        self.n_train_batches = self.train_set_x.shape[0]
+        self.n_valid_batches = self.valid_set_x.shape[0]
+        self.n_test_batches = self.test_set_x.shape[0]
         self.n_train_batches /= self.batch_size
         self.n_valid_batches /= self.batch_size
         self.n_test_batches /= self.batch_size
@@ -103,7 +106,7 @@ class CNNRetrain(CNNBase):
                                                                 clayer_params.filter_w, clayer_params.filter_w),
                                                         Pstruct=self.cached_weights[idx_weight+1],
                                                         b=self.cached_weights[idx_weight],
-                                                        poolsize=(self.poolsize, self.poolsize)).eval()
+                                                        poolsize=(self.poolsize, self.poolsize))
             pooled_width = (pooled_width - clayer_params.filter_w + 1) / self.poolsize
             pooled_height = (pooled_height - clayer_params.filter_w + 1) / self.poolsize
             layer_input = layer_output
