@@ -67,6 +67,7 @@ class CNNRetrain(CNNBase):
             print 'batch nr', batch_index
             # Create tine object
             self.process_batch(batch_index)
+        self.save_parameters()
 
     def process_batch(self, batch_index):
         self.x = self.train_set_x[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
