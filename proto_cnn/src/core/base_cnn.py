@@ -111,7 +111,11 @@ class CNNBase(object):
         """Initializes the logging level and the logger
             name based on the path of the weights file.
         """
-
+	## Remove old logger
+	logger = logging.getLogger()
+	if logger is not None:
+	    for handler in logger.handlers[:]:
+		logger.removeHandler(handler)
         # The log file is saved in the same folder with the cached weights file
         # but with a different extension.
         file_path = os.path.splitext(self.cached_weights_file)[0]
