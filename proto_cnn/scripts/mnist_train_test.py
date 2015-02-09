@@ -7,6 +7,7 @@ Created on Tue Oct 21 16:19:55 2014
 """
 
 import argparse
+import os
 import sys
 import src.core
 
@@ -48,9 +49,10 @@ def main():
         cnn.build_model()
 
         print 'Testing model ...'
-        file_retrained_weights = os.path.splitext(results.cached_weights_file)[0]
-        file_retrained_weights.append('_retrained.npy')
-    	cnn = CNNTestTPmnist(results.prototxt_file, file_retrained_weights)
+        file_retrained_weights,ext = os.path.splitext(results.cached_weights_file)
+        print file_retrained_weights
+	temp = file_retrained_weights + '_retrain.npy'
+    	cnn = CNNTestTPmnist(results.prototxt_file, temp)
     	cnn.test_model()
 
 if __name__ == '__main__':

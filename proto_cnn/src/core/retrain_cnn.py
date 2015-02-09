@@ -67,7 +67,7 @@ class CNNRetrain(CNNBase):
             print 'batch nr', batch_index
             # Create tine object
             self.process_batch(batch_index)
-        self.save_parameters()
+        self.save_best_parameters()
 
     def process_batch(self, batch_index):
         self.x = self.train_set_x[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
@@ -92,8 +92,10 @@ class CNNRetrain(CNNBase):
         for clayer_params in self.convolutional_layers:
             print 'Adding conv layer nbr filter %d, kernel size %d' % (clayer_params.num_filters, clayer_params.filter_w)
             if clayer_params.HasField('rank') == False:
+		if not type(layer_input) == numpy.ndarray:
+			layer_input = layer_input.eval()
                 layer_conv = LeNetLayerConvPoolNonSymbolic(self.rng)
-                layer_output = layer_conv.run_batch(layer_input.eval(),
+                layer_output = layer_conv.run_batch(layer_input,
                                                     image_shape=(self.batch_size, nbr_feature_maps,
                                                     pooled_width, pooled_height),
                                                     filter_shape=(clayer_params.num_filters, nbr_feature_maps,
@@ -103,8 +105,8 @@ class CNNRetrain(CNNBase):
                                                     poolsize=(self.poolsize, self.poolsize))
             else:
                 layer_sep_conv = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
-                print nbr_feature_maps
-                print pooled_width, pooled_height
+		if not type(layer_input) == numpy.ndarray:
+			layer_input = layer_input.eval()
                 layer_output = layer_sep_conv.run_batch(layer_input,
                                                         image_shape=(self.batch_size, nbr_feature_maps,
                                                                 pooled_width, pooled_height),
@@ -160,7 +162,7 @@ class CNNRetrain(CNNBase):
         """Abstract method"""
         raise NotImplementedError()
 
-    def save_parameters(self):
+    def save_best_parameters(self):
         """Save the retrained weights"""
 #        weights = [i.get_value(borrow=True) for i in self.best_params]
 #        ## add here the interleaved convolutional layers
@@ -178,4 +180,5 @@ class CNNRetrain(CNNBase):
 #            retrained_weights.append(weights[toskip])
 #            toskip += 1
         file_path = os.path.splitext(self.cached_weights_file)[0]
-        numpy.save(file_path +'_retrain.npy', reversed(self.cached_weights))
+        ll = self.cached_weights[::-1]
+	numpy.save(file_path +'_retrain.npy', ll)

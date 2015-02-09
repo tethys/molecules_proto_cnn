@@ -8,7 +8,7 @@ import os
 
 def main():
    # loop through the  rank of the first layer
-   for r in xrange(14,15,2):
+   for r in xrange(4,15,2):
         test_folder = './src/experiments/mnist/test_l1_{0}_l2_50'.format(r)
         if not os.path.exists(test_folder):
             print "Folder does not exist ", test_folder

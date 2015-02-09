@@ -81,7 +81,7 @@ class CNNTest(CNNBase):
 
         self.log_cnn_time_summary(timings)
         self.log_fit_info()
-        test_score = self.compute_all_saples_error(resultlist)
+        test_score = self.compute_all_samples_error(resultlist)
         print ' Test error of best ', test_score*100
         logging.debug('Test error: ' + str(test_score))
         return test_score
