@@ -231,6 +231,11 @@ class LogisticRegression(object):
         F = T.sum(T.neq(self.y_pred, y))
 	return F
 
+    def true_result_count(self, y):
+	self.valid_target_y(y)
+	T = T.sum(T.eq(self.y_pred, y))
+	return T
+
     def valid_target_y(self, y):
         """ Verifies that the target values y are integers
             and that the array has same size as the input one.
