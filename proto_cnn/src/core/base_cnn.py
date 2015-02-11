@@ -45,16 +45,6 @@ class CNNBase(object):
         self.rng = np.random.RandomState(23455)
         # Create protobuff empty object
         settings = pb_cnn.CNNSettings()
-        try:
-            proto_file = open(cnn_settings_protofile, "r")
-            data = proto_file.read()
-            text_format.Merge(data, settings)
-            print "Network settings are \n %s \n", data
-            logging.debug(data)
-            self.create_layers_from_settings(settings)
-            proto_file.close()
-        except IOError:
-            print "Could not open file " + cnn_settings_protofile
         # Default values for parameters in case they are not
         # provided in the prototxt file.
         #: Default learning rate for stochastic GD
@@ -65,6 +55,16 @@ class CNNBase(object):
         self.batch_size = 100
         #: Default poolsize
         self.poolsize = 2
+        try:
+            proto_file = open(cnn_settings_protofile, "r")
+            data = proto_file.read()
+            text_format.Merge(data, settings)
+            print "Network settings are \n %s \n", data
+            logging.debug(data)
+            self.create_layers_from_settings(settings)
+            proto_file.close()
+        except IOError:
+            print "Could not open file " + cnn_settings_protofile
 
     def create_layers_from_settings(self, settings):
         """Takes as input the net settings parsed from the proto file
