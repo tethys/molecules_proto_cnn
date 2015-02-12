@@ -110,7 +110,8 @@ class LeNetLayerConvPoolNonSymbolic:
         # reshape it to a tensor of shape (1,n_filters,1,1). Each bias will
         # thus be broadcasted across mini-batches and feature map
         # width & height
-        sb = theano.shared(self.b)
-        return T.tanh(pooled_out + sb.dimshuffle('x', 0, 'x', 'x'))
+#        sb = theano.shared(self.b)
+        self.b_params = [b]
+        return T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
    

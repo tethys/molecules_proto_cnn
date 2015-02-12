@@ -65,10 +65,18 @@ class CNNRetrainTPmnist(CNNRetrainTP):
                 tmp_images[i, :, :] = scipy.misc.imresize(train_set[0][i, :, :], (56, 56), interp='nearest')
             train_set_x, train_set_y = self.shared_dataset((tmp_images, train_set[1]))
         else:
-            test_set_x, test_set_y = self.shared_dataset(test_set)
-            valid_set_x, valid_set_y = self.shared_dataset(valid_set)
-            train_set_x, train_set_y = self.shared_dataset(train_set)
+            test_set_x, test_set_y = self.prepare_dataset(test_set)
+            valid_set_x, valid_set_y = self.prepare_dataset(valid_set)
+            train_set_x, train_set_y = self.prepare_dataset(train_set)
 
         rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
                     (test_set_x, test_set_y)]
         return rval
+    
+   def prepare_dataset(self, dataset):
+       """ Reshapes the input array to contain a dimension for
+           the number of channels and made the set into shared variable"""
+       x, y = dataset
+       x = np.reshape(x, (x.shape[0], 1, x.shape[1])) 
+       return self.shared_dataset((x, y))
+       

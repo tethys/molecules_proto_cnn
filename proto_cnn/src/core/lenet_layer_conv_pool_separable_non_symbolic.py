@@ -69,8 +69,9 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
         # reshape it to a tensor of shape (1,n_filters,1,1). Each bias will
         # thus be broadcasted across mini-batches and feature map
         # width & height
-        sb = theano.shared(b)
-        self.output = T.tanh(pooled_out + sb.dimshuffle('x', 0, 'x', 'x'))
+   #     sb = theano.shared(b)
+        self.b_params = [b]
+        self.output = T.tanh(pooled_out + b.dimshuffle('x', 0, 'x', 'x'))
         end = time.time()
         self.t_downsample_activ = (end - start)*1000/ image_shape[0] 
     #    print 'pool+tanh time of batch image {0}'.format(self.t_downsample_activ)        
@@ -110,6 +111,6 @@ class LeNetLayerConvPoolSeparableNonSymbolic:
          #       temp = vertical_conv_out[chanel,:,:,:]*pcoef[filter_index, chanel,:]
          #       output_image[chanel, :, :] = np.sum(temp, axis=2)
             output_image = vertical_conv_out[:,:,:,:]*pcoef[filter_index,:,:]                
-            self.input4D[image_index,filter_index,:,:] =  np.sum(output_image, axis=(3, 2))
+            self.input4D[image_index,filter_index,:,:] =  np.sum(np.sum(output_image, axis=3), axis=2)
         end = (time.time() - start)*1000;
    #     print 'part2 ', end

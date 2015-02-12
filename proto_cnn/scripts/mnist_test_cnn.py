@@ -56,5 +56,13 @@ class CNNTestTPmnist(CNNTestTP):
             test_set_2 = (tmp_images, test_set[1])
             test_set_x, test_set_y = self.shared_dataset(test_set_2)
         else:
-            test_set_x, test_set_y = self.shared_dataset(test_set)
+            test_set_x, test_set_y = self.prepare_dataset(test_set)
         return (test_set_x, test_set_y)
+   
+   def prepare_dataset(self, dataset):
+       """ Reshapes the input array to contain a dimension for
+           the number of channels and made the set into shared variable"""
+       x, y = dataset
+       x = np.reshape(x, (x.shape[0], 1, x.shape[1])) 
+       return self.shared_dataset((x, y))
+
