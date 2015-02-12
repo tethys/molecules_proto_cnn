@@ -18,10 +18,6 @@ class CNNTrainVOC(CNNTrain):
     """The class takes a proto bufer as input, setups a CNN according to the
         settings, trains the network and saves the weights in a file
 
-    Args:
-
-    Returns:
-
     """
     def __init__(self, cnn_settings_protofile, cached_weights_file):
         super(CNNTrainVOC, self).__init__(cnn_settings_protofile, cached_weights_file)
@@ -40,22 +36,20 @@ class CNNTrainVOC(CNNTrain):
         for param_i, grad_i in zip(self.params, self.grads):
             updates.append((param_i, param_i - self.learning_rate * grad_i))
 
-        train_model = theano.function([self.index], [self.cost, self.output_layer.VOC_values(self.y)], updates=updates,
+        train_model = theano.function([self.index], [self.cost], updates=updates,
                     givens={
                     self.x: self.train_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
                     self.y: self.train_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
                     name='train_model')
 
         # create a function to compute the mistakes that are made by the model
-        self.test_model = theano.function([self.index], [self.output_layer.y_pred, self.output_layer.VOC_values(self.y)],
+        self.test_model = theano.function([self.index], [self.output_layer.y_pred],
                         givens={
-                        self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
-                        self.y: self.test_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
+                        self.x: self.test_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
                         name='test_model')
-        self.validate_model = theano.function([self.index], [self.output_layer.y_pred, self.output_layer.VOC_values(self.y)],
+        self.validate_model = theano.function([self.index], [self.output_layer.y_pred],
                             givens={
-                            self.x: self.valid_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
-                            self.y: self.valid_set_y[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
+                            self.x: self.valid_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size]},
                             name='validate_model')
             ###############
             # TRAIN MODEL #
@@ -83,20 +77,21 @@ class CNNTrainVOC(CNNTrain):
                 if iteration % 100 == 0:
                     print 'training @ iter = ', iteration
                     start = time.time()
-                    [train_cost, train_voc_values] = train_model(minibatch_index)
+                    train_cost = train_model(minibatch_index)
                     end = time.time()
                     mean_training_time += end - start
                     cnt_times += 1
-                    logging.info('cost %f, VOC %f', train_cost, train_voc_values)
+                    print 'train cost ', train_cost[0]
+                    logging.info('cost %f', train_cost[0])
 
-                    if (iteration + 1) % 1000 == 0: #validation_frequency == 0:
+                    if iteration % 100 == 0: #validation_frequency == 0:
 
                         # compute zero-one loss on validation set
                         this_validation_loss = self.compute_validation_VOC_loss() 
                         logging.info('epoch %i, minibatch %i/%i, validation error %f %%' % \
                             (epoch, minibatch_index + 1, self.n_train_batches, \
                             this_validation_loss * 100.))
-
+		        print 'validation loss ', this_validation_loss
                         # if we got the best validation score until now
                         if this_validation_loss > best_validation_loss:
 
@@ -117,8 +112,6 @@ class CNNTrainVOC(CNNTrain):
                         if patience <= iteration:
                             done_looping = True
                             break
-                print 'Saving best parameters'
-                self.save_parameters()
             mean_training_time /= cnt_times
             print 'running_times %f', mean_training_time
             logging.info(('running time %f' % (mean_training_time)))
@@ -128,7 +121,7 @@ class CNNTrainVOC(CNNTrain):
         # works for 0-1 loss
         all_y_pred = numpy.empty([])
         for i in xrange(self.n_valid_batches):
-            y_pred = self.validate_model(i)[0]
+            y_pred = self.validate_model(i)
             if i == 0:
                 all_y_pred = y_pred
             else:
@@ -146,7 +139,7 @@ class CNNTrainVOC(CNNTrain):
         # works for 0-1 loss
         all_y_pred = numpy.empty([])
         for i in xrange(self.n_test_batches):
-            y_pred = self.test_model(i)[0]
+            y_pred = self.test_model(i)
             if i == 0:
                 all_y_pred = y_pred
             else:
