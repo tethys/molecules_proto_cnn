@@ -55,9 +55,10 @@ class CNNTrain(CNNBase):
         self.x = T.matrix('x')   #: the data is presented as rasterized images
         self.y = T.ivector('y')  #: the labels are presented as 1D vector of ints
 
-    def build_model(self):
+    def build_model(self, load_previous_weights=False):
         """Creates the net's layers from the model settings."""
-
+	if load_previous_weights == True:
+            self.load_weights()
         # Load the data
         datasets = self.load_samples()
 
@@ -68,10 +69,12 @@ class CNNTrain(CNNBase):
         self.test_set_x, self.test_set_y = datasets[2]
 
         # Assumes the width equals the height
-        img_width_size = numpy.sqrt(self.test_set_x.shape[1].eval()).astype(int)
-        assert self.test_set_x.shape[1] == img_width_size * img_width_size, 'input image not square'
+        img_width_size = numpy.sqrt(self.test_set_x.shape[2].eval()).astype(int)
+	print img_width_size
+        assert self.test_set_x.shape[2].eval() == img_width_size * img_width_size, 'input image not square'
         print "Image shape %s x %s" % (img_width_size, img_width_size)
-        self.input_shape = (img_width_size, img_width_size)
+        nbr_channels = self.test_set_x.shape[1].eval()
+        self.input_shape = (nbr_channels, img_width_size, img_width_size)
 
         # Compute number of minibatches for training, validation and testing
         # Divide the total number of elements in the set by the batch size
@@ -93,25 +96,33 @@ class CNNTrain(CNNBase):
         # The input is an 4D array of size, number of images in the batch size, number of channels
         # (or number of feature maps), image width and height.
         #TODO(vpetresc) make nbr of channels variable (1 or 3)
-        nbr_feature_maps = 1
-        layer_input = self.x.reshape((self.batch_size, nbr_feature_maps, self.input_shape[0], self.input_shape[1]))
-        pooled_width = self.input_shape[0]
-        pooled_height = self.input_shape[1]
+        layer_input = self.x.reshape((self.batch_size, nbr_feature_maps, self.input_shape[1], self.input_shape[2]))
+        pooled_width = self.input_shape[1]
+        pooled_height = self.input_shape[2]
         # Add convolutional layers followed by pooling
         clayers = []
+        idx = 0
         for clayer_params in self.convolutional_layers:
             print 'Adding conv layer nbr filter %d, Ksize %d' % (clayer_params.num_filters, clayer_params.filter_w)
-            layer = LeNetConvPoolLayer(self.rng, input=layer_input,
+            if load_previous_weights == False:
+	    	layer = LeNetConvPoolLayer(self.rng, input=layer_input,
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                      clayer_params.filter_w, clayer_params.filter_w),
                                        poolsize=(self.poolsize, self.poolsize))
+	    else:
+		layer = LeNetConvPoolLayer(self.rng, input=layer_input,
+                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),
+                                       filter_shape=(clayer_params.num_filters, nbr_feature_maps,
+                                                     clayer_params.filter_w, clayer_params.filter_w),
+                                       poolsize=(self.poolsize, self.poolsize),
+                                       W=self.cached_weights[itdx+1], b=self.cached_weights[idx])
             clayers.append(layer)
             pooled_width = (pooled_width - clayer_params.filter_w + 1) / self.poolsize
             pooled_height = (pooled_height - clayer_params.filter_w + 1) / self.poolsize
             layer_input = layer.output
             nbr_feature_maps = clayer_params.num_filters
-
+            idx += 2
 
         # Flatten the output of the previous layers and add
         # fully connected sigmoidal layers
@@ -120,16 +131,28 @@ class CNNTrain(CNNBase):
         hlayers = []
         for hlayer_params in self.hidden_layers:
             print 'Adding hidden layer fully connected %d' % (hlayer_params.num_outputs)
-            layer = HiddenLayer(self.rng, input=layer_input, n_in=nbr_input,
+            if load_previous_weights == False:
+               layer = HiddenLayer(self.rng, input=layer_input, n_in=nbr_input,
                                 n_out=hlayer_params.num_outputs, activation=T.tanh)
-            nbr_input = hlayer_params.num_outputs
+            else:
+               layer = HiddenLayer(self.rng, input=layer_input, n_in=nbr_input,
+                                n_out=hlayer_params.num_outputs, activation=T.tanh,
+                                W=self.cached_weights[idx+1], b=self.cached_weights[idx])
+            idx +=2
+	    nbr_input = hlayer_params.num_outputs
             layer_input = layer.output
             hlayers.append(layer)
 
         # classify the values of the fully-connected sigmoidal layer
-        self.output_layer = LogisticRegression(input=layer_input,
+        if load_previous_weights == False: 
+	    self.output_layer = LogisticRegression(input=layer_input,
                                                n_in=nbr_input,
                                                n_out=self.last_layer.num_outputs)
+        else:
+	    self.output_layer = LogisticRegression(input=layer_input,
+                                               n_in=nbr_input,
+                                               n_out=self.last_layer.num_outputs,
+					       W=self.cached_weights[idx+1], b=self.cached_weights[idx])
 
         # the cost we minimize during training is the NLL of the model
         self.cost = self.output_layer.negative_log_likelihood(self.y)

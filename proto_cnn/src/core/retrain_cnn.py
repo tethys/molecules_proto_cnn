@@ -47,9 +47,10 @@ class CNNRetrain(CNNBase):
 	self.test_set_x = test_set_x.get_value()
 
         # assumes the width equals the height
-        img_width_size = numpy.sqrt(self.test_set_x.shape[1]).astype(int)
+        img_width_size = numpy.sqrt(self.test_set_x.shape[2]).astype(int)
+        nbr_channels = self.test_set_x.shape[0]
         print "Image shape %s x %s" % (img_width_size, img_width_size)
-        self.input_shape = (img_width_size, img_width_size)
+        self.input_shape = (nbr_channels, img_width_size, img_width_size)
 
         # Compute number of minibatches for training, validation and testing
         # Divide the total number of elements in the set by the batch size
@@ -82,12 +83,13 @@ class CNNRetrain(CNNBase):
         #    self.cached_weights[i] = theano.shared(self.cached_weights[i])
         # The input is an 4D array of size, number of images in the batch size, number of channels
         # (or number of feature maps), image width and height.
-        nbr_feature_maps = 1
-        layer_input = self.x.reshape((self.batch_size, nbr_feature_maps, self.input_shape[0], self.input_shape[1]))
-        pooled_width = self.input_shape[0];
-        pooled_height = self.input_shape[1];
+        nbr_feature_maps = self.input_shape[0]
+        layer_input = self.x.reshape((self.batch_size, nbr_feature_maps, self.input_shape[1], self.input_shape[2]))
+        pooled_width = self.input_shape[1];
+        pooled_height = self.input_shape[2];
         # Add convolutional layers followed by pooling
-
+	
+	clayers = []
         idx_weight = 0
         for clayer_params in self.convolutional_layers:
             print 'Adding conv layer nbr filter %d, kernel size %d' % (clayer_params.num_filters, clayer_params.filter_w)
@@ -101,9 +103,10 @@ class CNNRetrain(CNNBase):
                                                     filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                             clayer_params.filter_w, clayer_params.filter_w),
                                                     W=self.cached_weights[idx_weight + 1],
-                                                    b=self.cached_weights[idx_weight],
+                                                    b=theano.shared(self.cached_weights[idx_weight]),
                                                     poolsize=(self.poolsize, self.poolsize))
-            else:
+                clayers.append(layer_conv)
+	    else:
                 layer_sep_conv = LeNetLayerConvPoolSeparableNonSymbolic(self.rng)
 		if not type(layer_input) == numpy.ndarray:
 			layer_input = layer_input.eval()
@@ -113,8 +116,9 @@ class CNNRetrain(CNNBase):
                                                         filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                                 clayer_params.filter_w, clayer_params.filter_w),
                                                         Pstruct=self.cached_weights[idx_weight+1],
-                                                        b=self.cached_weights[idx_weight],
+                                                        b=theano.shared(self.cached_weights[idx_weight]),
                                                         poolsize=(self.poolsize, self.poolsize))
+                clayers.append(layer_sep_conv)
             pooled_width = (pooled_width - clayer_params.filter_w + 1) / self.poolsize
             pooled_height = (pooled_height - clayer_params.filter_w + 1) / self.poolsize
             layer_input = layer_output
@@ -147,16 +151,19 @@ class CNNRetrain(CNNBase):
         self.params = self.output_layer.params
         for hidden_layer in reversed(hlayers):
             self.params += hidden_layer.params
-
+	for clayer in reversed(clayers):
+	    self.params += clayer.b_params
+	    break
         # create a list of gradients for all model parameters
         self.grads = T.grad(self.cost, self.params)
 
         N = 7
         for param_i, grad_i in zip(self.params, self.grads):
-            self.cached_weights[N] = param_i - self.learning_rate * grad_i
+            if N == 3:
+		N = 2
+	    self.cached_weights[N] = param_i - self.learning_rate * grad_i
             self.cached_weights[N] = self.cached_weights[N].eval()
             N = N - 1
-            print 'N is ', N
 
     def retrain_model(self):
         """Abstract method"""

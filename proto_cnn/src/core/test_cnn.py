@@ -8,6 +8,7 @@ Created on Mon Nov 24 14:39:22 2014
 import numpy as np
 import logging
 import time
+import theano
 import theano.tensor as T
 
 from base_cnn import CNNBase
@@ -37,7 +38,7 @@ class CNNTest(CNNBase):
         self.test_set_y = None
         self.x = None
         self.y = None
-        self.input_shape = (0, 0)
+        self.input_shape = (0, 0, 0)
         self.n_test_batches = 0
 
     def test_model(self):
@@ -52,20 +53,21 @@ class CNNTest(CNNBase):
         self.test_set_y = test_set_y
 
         #"Image width is the square root of the x dimenstion of the test x data"
-        image_width_size = np.sqrt(test_set_x.shape[1].eval()).astype(int)
-        self.input_shape = (image_width_size, image_width_size)
+        image_width_size = np.sqrt(test_set_x.shape[2].eval()).astype(int)
+        nbr_channels = test_set_x.shape[1].eval()
+        self.input_shape = (nbr_channels, image_width_size, image_width_size)
 
         # compute number of minibatches for training, validation and testing
         # 50000/50 = 1000, 10000/50 = 200
         self.n_test_batches = self.test_set_x.shape[0]
         self.n_test_batches /= self.batch_size
         logging.debug('nbr batches %d, batch size %d' % (self.n_test_batches, self.batch_size))
-        print self.test_set_y
 
         print 'Running test'
         timings = []
-        resultlist = [dict() for x in xrange(self.n_test_batches)]
-        for batch_index in xrange(self.n_test_batches):
+        # resultlist = [dict() for x in xrange(self.n_test_batches)]
+        resultlist = np.zeros(self.n_test_batches)
+	for batch_index in xrange(self.n_test_batches):
             print 'batch nr', batch_index
             # Create tine object
             cnn_time = CNNTime()
@@ -76,12 +78,12 @@ class CNNTest(CNNBase):
             print 'Batch time ', cnn_time.to_string()
             logging.debug(cnn_time.to_string())
             timings.append(cnn_time)
-            err = self.compute_batch_error(resultlist[batch_index])
+            err = resultlist[batch_index]# self.compute_batch_error(resultlist[batch_index])
             print 'Batch error ', err
 
         self.log_cnn_time_summary(timings)
         self.log_fit_info()
-        test_score = self.compute_all_samples_error(resultlist)
+        test_score = np.mean(resultlist) #self.compute_all_samples_error(resultlist)
         print ' Test error of best ', test_score*100
         logging.debug('Test error: ' + str(test_score))
         return test_score
@@ -100,12 +102,12 @@ class CNNTest(CNNBase):
         self.x = self.test_set_x[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
         self.y = self.test_set_y[batch_index * self.batch_size: (batch_index + 1) * self.batch_size]
 
-        nbr_feature_maps = 1
+        nbr_feature_maps = self.input_shape[0]
         layer_input = self.x.reshape((self.batch_size,
                                       nbr_feature_maps,
-                                      self.input_shape[0], self.input_shape[1]))
-        pooled_width = self.input_shape[0]
-        pooled_height = self.input_shape[1]
+                                      self.input_shape[1], self.input_shape[2]))
+        pooled_width = self.input_shape[1]
+        pooled_height = self.input_shape[2]
         idx_weight = 0
 
         start = time.time()
@@ -120,8 +122,8 @@ class CNNTest(CNNBase):
                                 image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),
                                  filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                      clayer_params.filter_w, clayer_params.filter_w),
-                                 W = self.cached_weights[idx_weight + 1],
-                                 b = self.cached_weights[idx_weight],
+                                 W=self.cached_weights[idx_weight + 1],
+                                 b=theano.shared(self.cached_weights[idx_weight]),
                                  poolsize=(self.poolsize, self.poolsize)).eval()
 #                layer_output = LeNetConvPoolLayer(self.rng, input = layer_input,
 #                                       image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),
@@ -145,7 +147,7 @@ class CNNTest(CNNBase):
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps,
                                                      clayer_params.filter_w, clayer_params.filter_w),
                                        Pstruct = self.cached_weights[idx_weight + 1],
-                                       b = self.cached_weights[idx_weight],
+                                       b =theano.shared(self.cached_weights[idx_weight]),
                                        poolsize=(self.poolsize, self.poolsize)).eval()
                 cnn_time.t_convolution.append(round(layer_separable_convolutional.t_conv, 2))
                 cnn_time.t_downsample_activation.append(round(layer_separable_convolutional.t_downsample_activ, 2))
@@ -181,7 +183,7 @@ class CNNTest(CNNBase):
         cnn_time.t_non_conv_layers = (time.time() - start)*1000 / self.batch_size
         cnn_time.t_non_conv_layers = round(cnn_time.t_non_conv_layers, 2)
 
-        return self.output_layer.result_count_dictionary(self.y)
+        return self.output_layer.errors(self.y).eval() #result_count_dictionary(self.y)
 
     def log_fit_info(self):
         """Logs the fit of the separable filters for the separable layers.
