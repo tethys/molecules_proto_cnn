@@ -72,8 +72,7 @@ class CNNRetrainTPmnist(CNNRetrainTP):
         rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
                     (test_set_x, test_set_y)]
         return rval
-    
-   def prepare_dataset(self, dataset):
+    def prepare_dataset(self, dataset):
        """ Reshapes the input array to contain a dimension for
            the number of channels and made the set into shared variable"""
        x, y = dataset

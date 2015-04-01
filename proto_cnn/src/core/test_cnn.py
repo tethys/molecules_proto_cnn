@@ -53,8 +53,8 @@ class CNNTest(CNNBase):
         self.test_set_y = test_set_y
 
         #"Image width is the square root of the x dimenstion of the test x data"
-        image_width_size = np.sqrt(test_set_x.shape[2].eval()).astype(int)
-        nbr_channels = test_set_x.shape[1].eval()
+        image_width_size = np.sqrt(test_set_x.shape[1].eval()).astype(int)
+        nbr_channels = 1 #test_set_x.shape[1].eval()
         self.input_shape = (nbr_channels, image_width_size, image_width_size)
 
         # compute number of minibatches for training, validation and testing
@@ -67,7 +67,7 @@ class CNNTest(CNNBase):
         timings = []
         # resultlist = [dict() for x in xrange(self.n_test_batches)]
         resultlist = np.zeros(self.n_test_batches)
-	for batch_index in xrange(self.n_test_batches):
+        for batch_index in xrange(self.n_test_batches):
             print 'batch nr', batch_index
             # Create tine object
             cnn_time = CNNTime()

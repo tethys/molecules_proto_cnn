@@ -57,7 +57,8 @@ class CNNTrain(CNNBase):
 
     def build_model(self, load_previous_weights=False):
         """Creates the net's layers from the model settings."""
-	if load_previous_weights == True:
+
+        if load_previous_weights == True:
             self.load_weights()
         # Load the data
         datasets = self.load_samples()
@@ -69,11 +70,11 @@ class CNNTrain(CNNBase):
         self.test_set_x, self.test_set_y = datasets[2]
 
         # Assumes the width equals the height
-        img_width_size = numpy.sqrt(self.test_set_x.shape[2].eval()).astype(int)
-	print img_width_size
-        assert self.test_set_x.shape[2].eval() == img_width_size * img_width_size, 'input image not square'
+        img_width_size = numpy.sqrt(self.test_set_x.shape[1].eval()).astype(int)
+        print img_width_size
+        assert self.test_set_x.shape[1].eval() == img_width_size * img_width_size, 'input image not square'
         print "Image shape %s x %s" % (img_width_size, img_width_size)
-        nbr_channels = self.test_set_x.shape[1].eval()
+        nbr_channels = 1# self.test_set_x.shape[1].eval()
         self.input_shape = (nbr_channels, img_width_size, img_width_size)
 
         # Compute number of minibatches for training, validation and testing
@@ -92,7 +93,7 @@ class CNNTrain(CNNBase):
         # BUILD ACTUAL MODEL #
         ######################
         print 'Building the model ...'
-
+        nbr_feature_maps = nbr_channels
         # The input is an 4D array of size, number of images in the batch size, number of channels
         # (or number of feature maps), image width and height.
         #TODO(vpetresc) make nbr of channels variable (1 or 3)

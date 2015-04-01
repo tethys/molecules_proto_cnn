@@ -73,7 +73,7 @@ class CNNTrainTP(CNNTrain):
                 end = time.time()
                 mean_training_time += end - start
                 cnt_times += 1
-                logging.info('cost %f, VOC %f', train_cost, train_voc_values)
+                logging.info('cost %f, VOC %f', train_cost, train_error_values)
 
                 if (iteration + 1) % 1000 == 0:
                     # compute zero-one loss on validation set

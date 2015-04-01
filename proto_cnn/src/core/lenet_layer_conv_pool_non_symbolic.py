@@ -100,7 +100,7 @@ class LeNetLayerConvPoolNonSymbolic:
         end = time.time()
         self.convolutional_time = (end - start)*1000/image_shape[0]                
         start = time.time()
-        pooled_out = downsample.max_pool_2d(input=conv_out,
+        pooled_out = downsample.max_pool_2d(input=theano.shared(conv_out),
                                             ds=poolsize, ignore_border=True)
         end = time.time()
         self.downsample_time = (end - start)*1000/ batch_size

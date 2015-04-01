@@ -77,5 +77,6 @@ class CNNTrainTPmnist(CNNTrainTP):
        """ Reshapes the input array to contain a dimension for
            the number of channels and made the set into shared variable"""
        x, y = dataset
-       x = np.reshape(x, (x.shape[0], 1, x.shape[1])) 
+       print 'y shape ', y.shape
+       x = np.reshape(x, (x.shape[0], x.shape[1])) 
        return self.shared_dataset((x, y))
