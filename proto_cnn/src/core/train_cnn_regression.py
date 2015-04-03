@@ -9,6 +9,7 @@ Created on Tue Oct 21 15:27:51 2014
 from base_cnn import CNNBase
 from lenet_conv_pool_layer import LeNetConvPoolLayer
 from regression_sgd import Regression
+from logistic_sgd import LogisticRegression
 from mlp import HiddenLayer
 import numpy
 import theano.tensor as T
@@ -26,7 +27,7 @@ class CNNTrainRegression(CNNBase):
 
         """
         self.cnntype = 'TRAIN' #: extension that is added to the logfile name
-        super(CNNTrain, self).__init__(protofile, cached_weights)
+        super(CNNTrainRegression, self).__init__(protofile, cached_weights)
         #: Array of train data of size num samples x dimension of sample
         self.train_set_x = None
         #: Array of target data of size num samples x 1
@@ -69,12 +70,13 @@ class CNNTrainRegression(CNNBase):
         self.test_set_x, self.test_set_y = datasets[2]
 
         # Assumes the width equals the height
-        img_width_size = numpy.sqrt(self.test_set_x.shape[2].eval()).astype(int)
+        img_width_size = self.test_set_x.shape[1].eval().astype(int)
 	print img_width_size
-        assert self.test_set_x.shape[2].eval() == img_width_size * img_width_size, 'input image not square'
+        img_height_size = 1
         print "Image shape %s x %s" % (img_width_size, img_width_size)
-        nbr_channels = self.test_set_x.shape[1].eval()
-        self.input_shape = (nbr_channels, img_width_size, img_width_size)
+        #print "Image shape %s %s" % (self.train_set_y.shape[0].eval(), self.train_set_y.shape[1].eval())
+        nbr_channels = 1 #self.test_set_x.shape[1].eval()
+        self.input_shape = (nbr_channels, img_width_size, img_height_size)
 
         # Compute number of minibatches for training, validation and testing
         # Divide the total number of elements in the set by the batch size
@@ -84,7 +86,7 @@ class CNNTrainRegression(CNNBase):
         self.n_train_batches /= self.batch_size
         self.n_valid_batches /= self.batch_size
         self.n_test_batches /= self.batch_size
-
+        self.pool_size = 1
         print 'Size train_batches %d, n_valid_batches %d, n_test_batches %d' % (self.n_train_batches, self.n_valid_batches, self.n_test_batches)
 
 
@@ -96,6 +98,7 @@ class CNNTrainRegression(CNNBase):
         # The input is an 4D array of size, number of images in the batch size, number of channels
         # (or number of feature maps), image width and height.
         #TODO(vpetresc) make nbr of channels variable (1 or 3)
+        nbr_feature_maps = nbr_channels
         layer_input = self.x.reshape((self.batch_size, nbr_feature_maps, self.input_shape[1], self.input_shape[2]))
         pooled_width = self.input_shape[1]
         pooled_height = self.input_shape[2]
@@ -108,27 +111,28 @@ class CNNTrainRegression(CNNBase):
 	    	layer = LeNetConvPoolLayer(self.rng, input=layer_input,
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps,
-                                                     clayer_params.filter_w, clayer_params.filter_w),
+                                                     clayer_params.filter_w, 1),
                                        poolsize=(self.poolsize, self.poolsize))
 	    else:
 		layer = LeNetConvPoolLayer(self.rng, input=layer_input,
                                        image_shape=(self.batch_size, nbr_feature_maps, pooled_width, pooled_height),
                                        filter_shape=(clayer_params.num_filters, nbr_feature_maps,
-                                                     clayer_params.filter_w, clayer_params.filter_w),
+                                                     clayer_params.filter_w, 1),
                                        poolsize=(self.poolsize, self.poolsize),
                                        W=self.cached_weights[itdx+1], b=self.cached_weights[idx])
             clayers.append(layer)
             pooled_width = (pooled_width - clayer_params.filter_w + 1) / self.poolsize
-            pooled_height = (pooled_height - clayer_params.filter_w + 1) / self.poolsize
+            pooled_height = 1#(pooled_height - 1 + 1) / self.poolsize
             layer_input = layer.output
             nbr_feature_maps = clayer_params.num_filters
             idx += 2
 
         # Flatten the output of the previous layers and add
         # fully connected sigmoidal layers
-        layer_input = layer_input.flatten(2)
+        layer_input = layer_input.flatten(2) #layer_input.flatten(2)
         nbr_input = nbr_feature_maps * pooled_width * pooled_height
         hlayers = []
+        print 'nbr input', nbr_input
         for hlayer_params in self.hidden_layers:
             print 'Adding hidden layer fully connected %d' % (hlayer_params.num_outputs)
             if load_previous_weights == False:
@@ -142,20 +146,20 @@ class CNNTrainRegression(CNNBase):
 	    nbr_input = hlayer_params.num_outputs
             layer_input = layer.output
             hlayers.append(layer)
-
+        print 'nbr_input, n out', nbr_input, self.last_layer.num_outputs
         # classify the values of the fully-connected sigmoidal layer
         if load_previous_weights == False: 
-	    self.output_layer = Regression(input=layer_input,
+	    self.output_layer = LogisticRegression(input=layer_input,
                                                n_in=nbr_input,
                                                n_out=self.last_layer.num_outputs)
         else:
-	    self.output_layer = Regression(input=layer_input,
+	    self.output_layer = LogisticRegression(input=layer_input,
                                                n_in=nbr_input,
                                                n_out=self.last_layer.num_outputs,
 					       W=self.cached_weights[idx+1], b=self.cached_weights[idx])
 
         # the cost we minimize during training is the NLL of the model
-        self.cost = self.output_layer.squared_loss(self.y)
+        self.cost = self.output_layer.negative_log_likelihood(self.y)
 
         # Create a list of all model parameters to be fit by gradient descent.
         # The parameters are added in reversed order because ofthe order

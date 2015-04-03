@@ -91,10 +91,11 @@ class Regression(object):
 
         # compute vector of class-membership probabilities in symbolic form
         self.p_y_given_x = T.dot(input, self.W) + self.b
+        self.p_y_given_x = T.nnet.softmax(self.p_y_given_x)
 
+        self.y_pred = T.argmax(self.p_y_given_x, axis=1)
         # compute prediction as class whose probability is maximal in
         # symbolic form
-        self.y_pred = self.p_y_given_x
 
         # parameters of the model
         self.params = [self.W, self.b]
@@ -139,10 +140,11 @@ class Regression(object):
         """
 
         # check if y has same dimension of y_pred
-        if y.ndim != self.y_pred.ndim:
+        if y.ndim != self.y_pred:
             raise TypeError('y should have the same shape as self.y_pred',
-                ('y', target.type, 'y_pred', self.y_pred.type))
+                ('y', y.type, 'y_pred', self.p_y_given_x.type))
         # check if y is of the correct datatype
+        return T.sqrt(T.mean((self.y_pred - y)**2))
         if y.dtype.startswith('int'):
 	    return T.mean(T.neq(self.y_pred, y))
         else:

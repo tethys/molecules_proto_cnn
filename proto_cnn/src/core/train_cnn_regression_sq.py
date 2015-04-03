@@ -32,7 +32,6 @@ class CNNTrainRegressionSQ(CNNTrainRegression):
         updates = []
         for param_i, grad_i in zip(self.params, self.grads):
             updates.append((param_i, param_i - self.learning_rate * grad_i))
-
         train_model = theano.function([self.index], [self.cost, self.output_layer.errors(self.y)], updates=updates,
                     givens={
                     self.x: self.train_set_x[self.index * self.batch_size: (self.index + 1) * self.batch_size],
@@ -73,7 +72,7 @@ class CNNTrainRegressionSQ(CNNTrainRegression):
                 end = time.time()
                 mean_training_time += end - start
                 cnt_times += 1
-                logging.info('cost %f, VOC %f', train_cost, train_voc_values)
+                logging.info('cost %f, VOC %f', train_cost, train_error_values)
 
                 if (iteration + 1) % 1000 == 0:
                     # compute zero-one loss on validation set
